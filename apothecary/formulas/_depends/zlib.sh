@@ -52,7 +52,6 @@ function build() {
         cmake .. ${DEFS} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
-            -DCMAKE_INSTALL_PREFIX=Release \
             -D CMAKE_VERBOSE_MAKEFILE=ON \
 		    -D BUILD_SHARED_LIBS=ON 
         cmake --build . --config Release --target install
