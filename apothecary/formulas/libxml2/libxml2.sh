@@ -13,7 +13,7 @@ FORMULA_DEPENDS=( "zlib" )
 
 
 # define the version by sha
-VER=2.12.5
+VER=2.12.7
 URL=https://github.com/GNOME/libxml2/archive/refs/tags/v${VER}
 
 GIT_URL=https://github.com/GNOME/libxml2.git
@@ -122,10 +122,28 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
-        EXTRA_DEFS="-DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=Release \
+        EXTRA_DEFS="
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
+        cmake .. ${DEFS} \
+            ${EXTRA_DEFS} \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+            -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -D_POSIX_C_SOURCE" \
+            -DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -D_POSIX_C_SOURCE" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=Debug \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            ${CMAKE_WIN_SDK} \
+            -DCMAKE_PREFIX_PATH="${ZLIB_ROOT}" \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -A "${PLATFORM}" \
+            -G "${GENERATOR_NAME}"
+        cmake --build . --config Debug --target install
         cmake .. ${DEFS} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
@@ -134,6 +152,7 @@ function build() {
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             ${CMAKE_WIN_SDK} \
             -DCMAKE_PREFIX_PATH="${ZLIB_ROOT}" \
