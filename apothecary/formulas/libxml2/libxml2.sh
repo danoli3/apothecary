@@ -222,6 +222,7 @@ function build() {
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DCMAKE_BUILD_TYPE=Release \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \

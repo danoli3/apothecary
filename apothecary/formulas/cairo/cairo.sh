@@ -252,6 +252,7 @@ function build() {
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
             -DENABLE_VISIBILITY=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DNO_FONTCONFIG=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \

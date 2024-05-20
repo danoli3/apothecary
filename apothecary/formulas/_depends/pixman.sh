@@ -73,6 +73,7 @@ function build() {
             -DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DBUILD_SHARED_LIBS=OFF \

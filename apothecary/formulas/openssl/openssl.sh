@@ -137,6 +137,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             ${DEFS} \
 	        -DCMAKE_INSTALL_INCLUDEDIR=include \

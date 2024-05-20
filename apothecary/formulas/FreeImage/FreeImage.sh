@@ -100,6 +100,7 @@ function build() {
 			-DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DBUILD_ZLIB=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 	        -DCMAKE_INSTALL_INCLUDEDIR=include \

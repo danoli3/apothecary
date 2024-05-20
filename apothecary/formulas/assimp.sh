@@ -72,6 +72,7 @@ function build() {
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \

@@ -140,6 +140,7 @@ function build() {
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
             -DENABLE_VISIBILITY=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \

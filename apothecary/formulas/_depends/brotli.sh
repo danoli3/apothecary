@@ -83,6 +83,7 @@ function build() {
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DZLIB_BUILD_EXAMPLES=OFF \
         -DSKIP_EXAMPLE=ON \
+        -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
         -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \

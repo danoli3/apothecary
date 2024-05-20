@@ -80,6 +80,7 @@ function build() {
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DCMAKE_INSTALL_PREFIX=Release \

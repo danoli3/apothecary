@@ -140,6 +140,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
          		-DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
@@ -148,10 +149,9 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-	        -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
-
         cmake --build . --config Release
         rm -f CMakeCache.txt
         cd ..      

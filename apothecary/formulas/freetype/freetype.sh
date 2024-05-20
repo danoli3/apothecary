@@ -89,6 +89,11 @@ function build() {
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT} \
+            -DCMAKE_C_STANDARD=17 \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
 		    -DBUILD_SHARED_LIBS=OFF \
 		    -DENABLE_STATIC=ON"
@@ -136,6 +141,10 @@ function build() {
             -DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_C_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=bin \
@@ -147,7 +156,7 @@ function build() {
 
          cmake .. ${DEFS} \
          	${EXTRA_DEFS} \
-            -D CMAKE_VERBOSE_MAKEFILE=ON \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=OFF \
 		    ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
@@ -171,7 +180,7 @@ function build() {
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}"
         cmake .. ${DEFS} \
-            -D CMAKE_VERBOSE_MAKEFILE=ON \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=OFF \
 		    ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
@@ -191,9 +200,7 @@ function build() {
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT} 
-        cmake --build . --config Debug --target install 
-        unset CXXFLAGS
-
+        cmake --build . --config Debug --target install
         cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
