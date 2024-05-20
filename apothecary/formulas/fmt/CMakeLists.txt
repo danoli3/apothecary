@@ -178,7 +178,7 @@ math(EXPR CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
 math(EXPR CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 join(FMT_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.
                  ${CPACK_PACKAGE_VERSION_PATCH})
-message(STATUS "Version: ${FMT_VERSION}")
+message(STATUS "{fmt} version: ${FMT_VERSION}")
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
@@ -340,6 +340,12 @@ endif ()
 
 add_library(fmt-header-only INTERFACE)
 add_library(fmt::fmt-header-only ALIAS fmt-header-only)
+
+if (MSVC)
+  # Unicode support requires compiling with /utf-8.
+  target_compile_options(fmt PUBLIC /utf-8)
+  target_compile_options(fmt-header-only INTERFACE /utf-8)
+endif ()
 
 target_compile_definitions(fmt-header-only INTERFACE FMT_HEADER_ONLY=1)
 target_compile_features(fmt-header-only INTERFACE cxx_std_11)
