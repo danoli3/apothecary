@@ -105,16 +105,17 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     WATCHOS_MIN_SDK_VER=6.0
 
     if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
-        MIN_SDK_VER=${IOS_MIN_SDK_VER}
+        export MIN_SDK_VER=${IOS_MIN_SDK_VER}
     elif [[ "$TYPE" =~ ^(osx)$ ]]; then
-        MIN_SDK_VER=${OSX_MIN_SDK_VER}
+        export MIN_SDK_VER=${OSX_MIN_SDK_VER}
     elif [[ "$TYPE" =~ ^(tvos)$ ]]; then
-        MIN_SDK_VER=${TVOS_MIN_SDK_VER}
+        export MIN_SDK_VER=${TVOS_MIN_SDK_VER}
     elif [[ "$TYPE" =~ ^(xros)$ ]]; then
-        MIN_SDK_VER=${XROS_MIN_SDK_VER}
+        export MIN_SDK_VER=${XROS_MIN_SDK_VER}
     elif [[ "$TYPE" =~ ^(watchos)$ ]]; then
-        MIN_SDK_VER=${WATCHOS_MIN_SDK_VER}
+        export MIN_SDK_VER=${WATCHOS_MIN_SDK_VER}
     else
+        export MIN_SDK=${IOS_MIN_SDK_VER}
         echo "MIN_SDK not set for $TYPE"
     fi
 
