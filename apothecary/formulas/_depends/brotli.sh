@@ -97,6 +97,7 @@ function build() {
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_INSTALL_BINARY_DIR=lib \
         -DCMAKE_INSTALL_FULL_LIBDIR=lib \
+        -DBROTLI_BUNDLED_MODE=OFF \
         -DPLATFORM=$PLATFORM \
         -DENABLE_BITCODE=OFF \
         -DENABLE_ARC=OFF \
