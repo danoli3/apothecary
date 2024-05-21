@@ -12,7 +12,7 @@ VER=1.1.0
 GIT_URL=https://github.com/google/brotli
 GIT_TAG=v$VER
 
-FORMULA_TYPES=( "vs" )
+FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" )
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -109,11 +109,11 @@ function build() {
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
   mkdir -p $1/lib/$TYPE
-	if [ "$TYPE" == "osx" ] ; then
+	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include    
     mkdir -p $1/lib/$TYPE/$PLATFORM/
     cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
-    cp -v "build_${TYPE}_${PLATFORM}/Release/lib/brotli.a" $1/lib/$TYPE/$PLATFORM/brotli.a
+    cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
     . "$SECURE_SCRIPT"
     secure $1/lib/$TYPE/$PLATFORM/zlib.a 
 	elif [ "$TYPE" == "vs" ] ; then
