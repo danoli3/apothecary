@@ -105,7 +105,7 @@ function build() {
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DENABLE_VISIBILITY=OFF
 
-     cmake --build . --config Release --target install
+     cmake --build . --config Release
      cd ..
 	fi
 }
