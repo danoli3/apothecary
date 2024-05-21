@@ -80,7 +80,7 @@ function build() {
     cmake .. \
       -DCMAKE_INSTALL_PREFIX=Release \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
-        -DBUILD_SHARED_LIBS=OFF \
+        -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
         -DCMAKE_BUILD_TYPE=Release \
@@ -97,14 +97,15 @@ function build() {
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_INSTALL_BINARY_DIR=lib \
         -DCMAKE_INSTALL_FULL_LIBDIR=lib \
-        -DBROTLI_BUNDLED_MODE=OFF \
+        -DCMAKE_INSTALL_BINDIR=lib \
+        -DBROTLI_BUNDLED_MODE=ON \
         -DPLATFORM=$PLATFORM \
         -DENABLE_BITCODE=OFF \
         -DENABLE_ARC=OFF \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DENABLE_VISIBILITY=OFF
 
-     cmake --build . --config Release
+     cmake --build . --config Release --target install
      cd ..
 	fi
 }
@@ -115,8 +116,7 @@ function copy() {
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include    
     mkdir -p $1/lib/$TYPE/$PLATFORM/
-    cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
-    cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
+    cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/$PLATFORM/
     . "$SECURE_SCRIPT"
     secure $1/lib/$TYPE/$PLATFORM/zlib.a 
 	elif [ "$TYPE" == "vs" ] ; then
