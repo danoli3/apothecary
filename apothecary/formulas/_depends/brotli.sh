@@ -116,6 +116,7 @@ function copy() {
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include    
     mkdir -p $1/lib/$TYPE/$PLATFORM/
+    cp -v -r c/include/* $1/include
     cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/$PLATFORM/
     . "$SECURE_SCRIPT"
     secure $1/lib/$TYPE/$PLATFORM/zlib.a 
