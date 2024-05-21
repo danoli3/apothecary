@@ -549,14 +549,16 @@ if [ "$TYPE" = "vs" ]; then
     if [ $VS_COMPILER == "LLVM" ]; then
         export VS_C_FLAGS="-Wno-error" # warnings will not be treated as errors
         export EXCEPTION_FLAGS="-fexceptions"
+        export FLAGS_RELEASE="-O3"
+        export FLAGS_DEBUG="-O0"
     else
         if [ $ARCH == "arm64ec" ]; then              
             export VS_C_FLAGS="/Gy /GL- /guard:cf"
         else
             export VS_C_FLAGS="/GL-"
         fi
-        export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} -O3"
-        export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION}"
+        export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} /O2"
+        export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION} /Od"
         export EXCEPTION_FLAGS="/EHsc"
     fi
 
@@ -626,6 +628,9 @@ if [ "$TYPE" = "vs" ]; then
         BUILD_PLATFORM="arm64"
     elif [ $ARCH == "arm" ]; then
         BUILD_PLATFORM="arm"
+    else
+        echoError "Apothecary -a not a valid passed architecture:[${ARCH}]"
+        exit;
     fi 
     if [ $ARCH == 32 ] ; then
         PLATFORM="Win32"
@@ -2088,7 +2093,6 @@ fi
 DEPENDS_FORMULA_DIR=$FORMULAS_DIR/$DEPENDS_SUBDIR
 BUILD_ROOT_DIR=$BUILD_DIR/$BUILDROOT_SUBDIR
 
-# set for android sdk info
 # set for android sdk info
 if [[ "$TYPE" == "android" ]] ; then
 	if [[ -e ${APOTHECARY_DIR}/paths.make ]] ; then
