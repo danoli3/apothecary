@@ -44,6 +44,7 @@ function build() {
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.lib *.o *.wasm
+        env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}"
         cmake .. \
             -G "${GENERATOR_NAME}" \
             -A "${PLATFORM}" \
@@ -51,7 +52,6 @@ function build() {
 		    -D BUILD_SHARED_LIBS=ON \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
-		    -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -60,8 +60,9 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
-            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -UCMAKE_CXX_FLAGS \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 		    ${CMAKE_WIN_SDK} 
         cmake --build . --config Release --target install
         cd ..
@@ -76,7 +77,6 @@ function build() {
 		    -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
-		    -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -112,7 +112,6 @@ function build() {
 				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -std=c17" \
 				-DCMAKE_C_COMPILER=${CC} \
 				-DCMAKE_INSTALL_PREFIX=Release \
-				-DCMAKE_BUILD_TYPE=Release \
 	     	 	-D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
 	     	 	-D CMAKE_C_COMPILER_RANLIB=${RANLIB} \
 	     	 	-D CMAKE_CXX_COMPILER_AR=${AR} \
@@ -136,7 +135,6 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o *.wasm
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	-DCMAKE_BUILD_TYPE=Release \
 	    	-DCMAKE_INSTALL_LIBDIR="build_${TYPE}" \
 	    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	    	-D BUILD_SHARED_LIBS=OFF \

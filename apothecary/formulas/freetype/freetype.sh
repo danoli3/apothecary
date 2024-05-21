@@ -8,7 +8,7 @@
 
 FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "emscripten" )
 
-FORMULA_DEPENDS=( "zlib" "libpng" )
+FORMULA_DEPENDS=( "zlib" "libpng" "brotli")
 
 # define the version
 VER=2.13.2
@@ -58,6 +58,10 @@ function build() {
             -DFT_DISABLE_BZIP2=TRUE \
             -DFT_DISABLE_PNG=FALSE \
             -DFT_DISABLE_HARFBUZZ=TRUE \
+            -D FT_REQUIRE_ZLIB=TRUE \
+			-D FT_REQUIRE_BZIP2=FALSE \
+			-D FT_REQUIRE_PNG=TRUE \
+			-D FT_REQUIRE_HARFBUZZ=FALSE \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -74,19 +78,29 @@ function build() {
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a" 
 
-        NO_LINK_BROTLI=ON
+        LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
+        LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotli.a"
+        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlienc.a"
+        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlidec.a"
+
+		BROTLI="
+			-DFT_REQUIRE_BROTLI=TRUE \
+			-DFT_DISABLE_BROTLI=FALSE"
         # if [ "$PLATFORM" == "arm64" ] ; then
-       		# NO_LINK_BROTLI=ON
-      	# fi
+            # NO_LINK_BROTLI=FALSE
+        # fi
 
 		EXTRA_DEFS="
-			-DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} \
+			${BROTLI} \
+			-DBROTLI_ROOT=${LIBBROTLI_ROOT} \
+			-DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
 			-DCMAKE_BUILD_TYPE=Release \
-		    -DZLIB_ROOT=${ZLIB_LIBRARY} \
-		    -DZLIB_LIBRARY=${ZLIB_INCLUDE_DIR} \
-		    -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-		    -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+			-DZLIB_ROOT=${ZLIB_LIBRARY} \
+			-DZLIB_LIBRARY=${ZLIB_INCLUDE_DIR} \
+			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+			-DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT} \
             -DCMAKE_C_STANDARD=17 \
@@ -109,6 +123,7 @@ function build() {
 				-DENABLE_ARC=OFF \
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+				-BROTLIDEC_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_ENC_LIB};${LIBBROTLI_DEC_LIB}"
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
 					
 		cmake --build . --config Release --target install
@@ -128,17 +143,27 @@ function build() {
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib" 
 
+        LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
+        LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM"
+        LIBBROTLI_COMMON_LIB="$LIBBROTLI_LIBRARY/brotlicommon.lib"
+		LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
+		LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
+
+		BROTLI="
+			-DFT_REQUIRE_BROTLI=TRUE \
+			-DFT_DISABLE_BROTLI=FALSE"
+
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.lib *.o
-
-        NO_LINK_BROTLI=OFF
         if [ "$PLATFORM" == "ARM64EC" ] ; then
-       		NO_LINK_BROTLI=ON
+            BROTLI="
+			-DFT_REQUIRE_BROTLI=FALSE \
+			-DFT_DISABLE_BROTLI=TRUE"
       	fi
-
         EXTRA_DEFS="
-            -DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} \
+            ${BROTLI} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=17 \
@@ -151,9 +176,7 @@ function build() {
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=lib \
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=bin"
-
 		 env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}"
-
          cmake .. ${DEFS} \
          	${EXTRA_DEFS} \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -175,7 +198,11 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_ROOT=${LIBPNG_ROOT} 
+            -DPNG_ROOT=${LIBPNG_ROOT} \
+            -DBROTLI_ROOT=${LIBBROTLI_ROOT} \
+            -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLIDEC_LIBRARIES=${LIBBROTLI_DEC_LIB}
         cmake --build . --config Release --target install   
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}"
@@ -199,7 +226,11 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_ROOT=${LIBPNG_ROOT} 
+            -DPNG_ROOT=${LIBPNG_ROOT} \
+            -DBROTLI_ROOT=${LIBBROTLI_ROOT} \
+            -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLIDEC_LIBRARIES=${LIBBROTLI_DEC_LIB}
         cmake --build . --config Debug --target install
         cd ..
 
