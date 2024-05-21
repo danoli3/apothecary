@@ -354,13 +354,15 @@ function build() {
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.wasm" 
-        NO_LINK_BROTLI=ON
+        BROTLI="
+			-DFT_REQUIRE_BROTLI=FALSE \
+			-DFT_DISABLE_BROTLI=TRUE"
         mkdir -p build_$TYPE
         cd build_$TYPE
         rm -f CMakeCache.txt *.a *.o *.wasm
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
-	    	-DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} \
+	    	${BROTLI} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     		-DCMAKE_C_STANDARD=17 \
 			-DCMAKE_CXX_STANDARD=17 \
@@ -382,6 +384,8 @@ function build() {
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT}
 
