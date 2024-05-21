@@ -56,11 +56,9 @@ function build() {
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
             -DFT_DISABLE_ZLIB=FALSE \
             -DFT_DISABLE_BZIP2=TRUE \
-            -DFT_DISABLE_PNG=FALSE \
             -DFT_DISABLE_HARFBUZZ=TRUE \
             -D FT_REQUIRE_ZLIB=TRUE \
 			-D FT_REQUIRE_BZIP2=FALSE \
-			-D FT_REQUIRE_PNG=TRUE \
 			-D FT_REQUIRE_HARFBUZZ=FALSE \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
@@ -93,6 +91,8 @@ function build() {
 
 		EXTRA_DEFS="
 			${BROTLI} \
+			-DFT_DISABLE_PNG=FALSE \
+            -D FT_REQUIRE_PNG=TRUE \
 			-DBROTLI_ROOT=${LIBBROTLI_ROOT} \
 			-DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -164,6 +164,8 @@ function build() {
       	fi
         EXTRA_DEFS="
             ${BROTLI} \
+            -DFT_DISABLE_PNG=FALSE \
+            -D FT_REQUIRE_PNG=TRUE \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=17 \
@@ -254,6 +256,8 @@ function build() {
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DFT_DISABLE_PNG=FALSE \
+            -DFT_REQUIRE_PNG=TRUE \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
@@ -270,6 +274,8 @@ function build() {
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFS} \
+	    	-DFT_DISABLE_PNG=FALSE \
+            -D FT_REQUIRE_PNG=TRUE \
 	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
@@ -322,6 +328,8 @@ function build() {
      	 	-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_INSTALL_PREFIX=Release \
+            -DFT_DISABLE_PNG=FALSE \
+            -D FT_REQUIRE_PNG=TRUE \
         	-D ANDROID_ABI=${ABI} \
         	-D CMAKE_CXX_STANDARD_LIBRARIES=${LIBS} \
         	-D CMAKE_C_STANDARD_LIBRARIES=${LIBS} \
@@ -383,11 +391,13 @@ function build() {
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_ROOT=${LIBPNG_ROOT}
+            -DFT_DISABLE_PNG=TRUE \
+            -D FT_REQUIRE_PNG=FALSE 
+            # -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            # -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            # -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            # -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            # -DPNG_ROOT=${LIBPNG_ROOT}
 
         cmake --build . --config Release --target install 
         cd ..
