@@ -80,10 +80,8 @@ function build() {
     cmake .. \
       -DCMAKE_INSTALL_PREFIX=Release \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
-        -D BUILD_SHARED_LIBS=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-        -DZLIB_BUILD_EXAMPLES=OFF \
-        -DSKIP_EXAMPLE=ON \
         -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_C_STANDARD=17 \
@@ -96,6 +94,9 @@ function build() {
         -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
         -DCMAKE_INSTALL_INCLUDEDIR=include \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DCMAKE_INSTALL_BINARY_DIR=lib \
+        -DCMAKE_INSTALL_FULL_LIBDIR=lib \
         -DPLATFORM=$PLATFORM \
         -DENABLE_BITCODE=OFF \
         -DENABLE_ARC=OFF \
