@@ -2,11 +2,16 @@ project(pixman)
 set(PACKAGE pixman)
 cmake_minimum_required(VERSION 2.8.8)
 
-# detect version
-file (READ configure.ac configure_ac)
-string (REGEX REPLACE ".*pixman_major], ([0-9]+).*" "\\1" PIXMAN_VERSION_MAJOR ${configure_ac})
-string (REGEX REPLACE ".*pixman_minor], ([0-9]+).*" "\\1" PIXMAN_VERSION_MINOR ${configure_ac})
-string (REGEX REPLACE ".*pixman_micro], ([0-9]+).*" "\\1" PIXMAN_VERSION_MICRO ${configure_ac})
+# detect version (old)
+#file (READ configure.ac configure_ac)
+#string (REGEX REPLACE ".*pixman_major], ([0-9]+).*" "\\1" PIXMAN_VERSION_MAJOR ${configure_ac})
+#string (REGEX REPLACE ".*pixman_minor], ([0-9]+).*" "\\1" PIXMAN_VERSION_MINOR ${configure_ac})
+#string (REGEX REPLACE ".*pixman_micro], ([0-9]+).*" "\\1" PIXMAN_VERSION_MICRO ${configure_ac})
+
+#set version
+set(PIXMAN_VERSION_MAJOR 0)
+set(PIXMAN_VERSION_MINOR 43)
+set(PIXMAN_VERSION_MICRO 4)
 set(PIXMAN_VERSION "${PIXMAN_VERSION_MAJOR}.${PIXMAN_VERSION_MINOR}.${PIXMAN_VERSION_MICRO}")
 
 if(NOT MSVC)
@@ -37,6 +42,7 @@ include_directories(/opt/local/include)
 include_directories(
     ${CMAKE_BINARY_DIR}/pixman
     ${CMAKE_SOURCE_DIR}/pixman
+    ${CMAKE_BINARY_DIR}/include/pixman
 )
 
 if(MSVC)

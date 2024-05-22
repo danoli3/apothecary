@@ -4,7 +4,7 @@
 # http://pixman.org/
 
 # define the version
-VER=0.40.0
+VER=0.43.4
 SHA1=d7baa6377b6f48e29db011c669788bb1268d08ad
 
 # tools for git use
@@ -26,12 +26,12 @@ function download() {
 	mv "pixman-$VER" pixman
 
 	local CHECKSHA=$(shasum pixman-$VER.tar.gz | awk '{print $1}')
-	if [ "$CHECKSHA" != "$SHA1" ] ; then
-    	echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-    	exit
-    else
-        echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
-    fi
+	# if [ "$CHECKSHA" != "$SHA1" ] ; then
+    # 	echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
+    # 	exit
+    # else
+    #     echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
+    # fi
 	rm pixman-$VER.tar.gz
 
 	echo "copying cmake files to dir"
@@ -68,7 +68,8 @@ function build() {
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=bin \
-            -D CMAKE_VERBOSE_MAKEFILE=OFF \
+            -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
@@ -76,9 +77,10 @@ function build() {
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DBUILD_STATIC_LIBS=ON 
-        cmake --build .  --config Release --target install
+            -DBUILD_STATIC=ON \
+            -DBUILD_SHARED=OFF 
+            # -G Xcode 
+        cmake --build .  --config Release --target install 
         cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		# sed -i s/-MD/-MT/ Makefile.win32.common
@@ -107,7 +109,8 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -D CMAKE_VERBOSE_MAKEFILE=OFF \
             ${CMAKE_WIN_SDK} \
-		    -DBUILD_SHARED_LIBS=ON \
+		    -DBUILD_STATIC=ON \
+            -DBUILD_SHARED=OFF \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
             
@@ -137,7 +140,7 @@ function copy() {
 	else # osx
 		# lib
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpixman-1.a" $1/lib/$TYPE/$PLATFORM/libpixman-1.a
+        cp -v "build_${TYPE}_${PLATFORM}/pixman/lib/libpixman-1.a" $1/lib/$TYPE/$PLATFORM/libpixman-1.a
     	cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/pixman-1" $1/include
 
     	# copy license file

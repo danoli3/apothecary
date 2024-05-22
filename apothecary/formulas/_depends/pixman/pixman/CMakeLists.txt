@@ -118,4 +118,4 @@ if(BUILD_STATIC)
     install(TARGETS pixman-1_static EXPORT PixmanTargets RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 endif(BUILD_STATIC)
 
-install(FILES pixman.h ${CMAKE_CURRENT_BINARY_DIR}/pixman-version.h DESTINATION include/pixman-1)
+install(FILES pixman.h ${CMAKE_BINARY_DIR}/include/pixman/pixman-version.h ${CMAKE_BINARY_DIR}/include/pixman/pixman-config.h DESTINATION include/pixman-1)
