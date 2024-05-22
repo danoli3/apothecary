@@ -55,20 +55,13 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "automake" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    echo "load file ${SAVE_FILE}"
-
-    if loadsave ${TYPE} "automake" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      echo "The entry exists and doesn't need to be rebuilt."
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "automake" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      echo "The entry doesn't exist or needs to be rebuilt."
-      return 1;
+        echo 0
     fi
 }

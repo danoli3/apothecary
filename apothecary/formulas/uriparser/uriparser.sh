@@ -189,20 +189,24 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -R "build_${TYPE}_${ARCH}/Release/include/" $1/
 		cp -Rv "build_${TYPE}_${ARCH}/UriConfig.h" $1/include/uriparser/
-    	cp -f "build_${TYPE}_${ARCH}/Release/lib/uriparser.lib" $1/lib/$TYPE/$PLATFORM/uriparser.lib
+    cp -f "build_${TYPE}_${ARCH}/Release/lib/uriparser.lib" $1/lib/$TYPE/$PLATFORM/uriparser.lib
+    secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		cp -Rv "build_${TYPE}_${PLATFORM}/UriConfig.h" $1/include/uriparser/
     mkdir -p $1/lib/$TYPE/$PLATFORM/
     cp -Rv build_${TYPE}_${PLATFORM}/liburiparser.a $1/lib/$TYPE/$PLATFORM/uriparser.a
+    secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
 	elif [ "$TYPE" == "emscripten" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE
 		cp -Rv "build_${TYPE}/uriparser_wasm.wasm" $1/lib/$TYPE/uriparser.wasm
+		secure $1/lib/$TYPE/$PLATFORM/uriparser.wasm
     elif [ "$TYPE" == "android" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE/$ABI/
 		cp -Rv build/$TYPE/$ABI/liburiparser.a $1/lib/$TYPE/$ABI/liburiparser.a
+		secure $1/lib/$TYPE/$ABI/liburiparser.a
 	fi
 	if [ -d "$1/license" ]; then
         rm -rf $1/license
@@ -234,16 +238,14 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "uriparser" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
 
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "uriparser" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "uriparser" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

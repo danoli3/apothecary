@@ -1961,10 +1961,6 @@ function framework() {
     echoWarning " Framework function not implemented"
 }
 
-function save() {
-	echoWarning " Save function not implemented"
-}
-
 function load() {
 	echoWarning " Load function not implemented"
 }

@@ -100,14 +100,14 @@ function copy() {
     	cp -f "build_${TYPE}_${ARCH}/Release/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib
 
     	. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib
+		secure $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib libusb-1.0.lib
 	fi
 
     if [ "$TYPE" == "osx" ] ; then
         mkdir -p $1/lib/$TYPE
-        cp -v libusb/.libs/libusb-1.0.a $1/lib/$TYPE/usb-1.0.a
+        cp -v libusb/.libs/libusb-1.0.a $1/lib/$TYPE/$PLATFORM/usb-1.0.a
         . "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/usb-1.0.a
+		secure $1/lib/$TYPE/$PLATFORM/usb-1.0.a libusb-1.0.lib
 	fi
 
 	echoWarning "TODO: License Copy"
@@ -128,4 +128,15 @@ function clean() {
         cd Xcode
     	xcodebuild -configuration Release -target libusb -project libusb.xcodeproj/ clean
 	fi
+}
+
+function load() {
+    . "$LOAD_SCRIPT"
+    LOAD_RESULT=$(loadsave ${TYPE} "libusb" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
 }

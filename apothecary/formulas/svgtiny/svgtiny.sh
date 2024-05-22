@@ -306,33 +306,33 @@ function copy() {
 		cp -v "build_${TYPE}_${ARCH}/Release/svgtiny.lib" $1/lib/$TYPE/$PLATFORM/svgtiny.lib
         cp -v "build_${TYPE}_${ARCH}/Debug/svgtiny.lib" $1/lib/$TYPE/$PLATFORM/svgtinyD.lib
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
+        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
 		. "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
+        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "android" ] ; then
 	    mkdir -p $1/lib/$TYPE/$ABI
         cp -f "build_${TYPE}_${ABI}/libsvgtiny.a" $1/lib/$TYPE/$ABI/libsvgtiny.a
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$ABI/libsvgtiny.a
+        secure $1/lib/$TYPE/$ABI/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p $1/lib/$TYPE/$
 		cp -Rv "include/" $1/ 
         cp -f "build_${TYPE}/svgtiny_wasm.wasm" $1/lib/$TYPE/svgtiny.wasm        
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/svgtiny.wasm
+        secure $1/lib/$TYPE/svgtiny.wasm svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
 		mkdir -p $1/lib/$TYPE/$
 		cp -Rv "include/" $1/ 
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/libsvgtiny.a
+        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
     elif [ "$TYPE" == "msys2" ] ; then
 		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
 		. "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/libsvgtiny.a
+        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	fi
 
 	# copy license file
@@ -347,30 +347,26 @@ function copy() {
 function clean() {
 	if [ "$TYPE" == "vs" ] ; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
-            rm -r build_${TYPE}_${PLATFORM}     
+            rm -r build_${TYPE}_${PLATFORM}
         fi
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
-            rm -r build_${TYPE}_${PLATFORM}     
+            rm -r build_${TYPE}_${PLATFORM}
         fi
     elif [ "$TYPE" == "emscripten" ] ; then
     	if [ -d "build_${TYPE}" ]; then
-            rm -r build_${TYPE}     
+            rm -r build_${TYPE}
         fi
 	fi
 }
 
-
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "svgtiny" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "svgtiny" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "svgtiny" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }
