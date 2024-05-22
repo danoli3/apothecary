@@ -11,7 +11,7 @@ GIT_URL=http://anongit.freedesktop.org/git/pkg-config.git
 GIT_TAG=pkg-config-$VER
 URL="https://pkgconfig.freedesktop.org/releases"
 
-FORMULA_TYPES=( "osx" )
+FORMULA_TYPES=(  )
 
 # download the source code and unpack it into LIB_NAME
 function download() {

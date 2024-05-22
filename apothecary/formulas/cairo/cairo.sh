@@ -14,7 +14,7 @@
 
 FORMULA_TYPES=( "osx" "vs" )
 
-FORMULA_DEPENDS=( "pkg-config" "zlib" "libpng" "pixman" "freetype"  )
+FORMULA_DEPENDS=( "zlib" "libpng" "pixman" "freetype" )
 
 # tell apothecary we want to manually call the dependency commands
 # as we set some env vars for osx the depends need to know about
@@ -90,9 +90,9 @@ function prepare() {
 		# generate the configure script if it's not there
 		
 		# Build and copy all dependencies in preparation
-		apothecaryDepend download pkg-config
-		apothecaryDepend prepare pkg-config
-		apothecaryDepend build pkg-config
+		# apothecaryDepend download pkg-config
+		# apothecaryDepend prepare pkg-config
+		# apothecaryDepend build pkg-config
 		apothecaryDepend copy pkg-config
 		apothecaryDepend download zlib
 		apothecaryDepend prepare zlib
@@ -148,6 +148,12 @@ function build() {
 		FREETYPE_INCLUDE_DIR="$LIBS_ROOT/freetype/include"
 		FREETYPE_LIBRARY="$LIBS_ROOT/freetype/lib/$TYPE/$PLATFORM/libfreetype.lib"
 
+		LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
+        LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotli.a"
+        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlienc.a"
+        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlidec.a"
+
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.a *.o *.lib
@@ -173,13 +179,20 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DFREETYPE_LIBRARY=${FREETYPE_LIBRARY} \
             -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} \
-            -DFREETYPE_CFLAGS=-I${FREETYPE_ROOT}/freetype2 \
+            -DFREETYPE_INCLUDE_DIRS=${FREETYPE_INCLUDE_DIR} \
+            -DFREETYPE_CFLAGS=-I${FREETYPE_INCLUDE_DIR}/freetype \
         	-DFREETYPE_LIBS=${FREETYPE_LIBRARY} \
+        	-DBROTLI_ROOT=${LIBBROTLI_ROOT} \
+            -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLIDEC_LIBRARIES=${LIBBROTLI_LIBRARY};${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB} \
         	-DBUILD_GTK_DOC=OFF -DBUILD_TESTS=OFF -DBUILD_DEPENDENCY_TRACKING=OFF -DBUILD_XLIB=OFF -DBUILD_QT=OFF -DBUILD_QUARTZ_FONT=OFF -DBUILD_QUARTZ=OFF -DBUILD_QUARTZ_IMAGE=OFF"
          
         cmake .. ${DEFS} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
+            -DCMAKE_INCLUDE_PATH="$LIBBROTLI_INCLUDE_DIR;$FREETYPE_INCLUDE_DIR;$LIBPNG_INCLUDE_DIR;$ZLIB_INCLUDE_DIR;$PIXMAN_INCLUDE_DIR" \
+            -DCMAKE_LIBRARY_PATH="$LIBBROTLI_DEC_LIB;${FREETYPE_LIBRARY};${LIBPNG_LIBRARY};${ZLIB_LIBRARY};${PIXMAN_LIBRARY}" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -D CMAKE_VERBOSE_MAKEFILE=ON \
 		    -D BUILD_SHARED_LIBS=OFF \
@@ -215,9 +228,15 @@ function build() {
 		FREETYPE_INCLUDE_DIR="$LIBS_ROOT/freetype/include"
 		FREETYPE_LIBRARY="$LIBS_ROOT/freetype/lib/$TYPE/$PLATFORM/libfreetype.a"
 
+		LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
+        LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlicommon.a"
+        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlienc.a"
+        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
+
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
-         rm -f CMakeCache.txt *.a *.o 
+        rm -f CMakeCache.txt *.a *.o 
         DEFS="
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=17 \
@@ -242,15 +261,24 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DFREETYPE_LIBRARY=${FREETYPE_LIBRARY} \
             -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} \
-            -DFREETYPE_CFLAGS=-I${FREETYPE_ROOT}/freetype2 \
+            -DFREETYPE_INCLUDE_DIRS=${FREETYPE_INCLUDE_DIR} \
+            -DFREETYPE_CFLAGS=-I${FREETYPE_INCLUDE_DIR}/freetype \
         	-DFREETYPE_LIBS=${FREETYPE_LIBRARY} \
+        	-DBROTLI_ROOT=${LIBBROTLI_ROOT} \
+            -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLIDEC_LIBRARIES=${LIBBROTLI_LIBRARY};${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB} \
         	-DBUILD_GTK_DOC=OFF -DNO_BUILD_TESTS=ON -DNO_DEPENDENCY_TRACKING=ON -DBUILD_XLIB=OFF -DNO_QT=ON -DBUILD_SHARED_LIBS=OFF -DNO_QUARTZ_FONT=OFF -DNO_QUARTZ=OFF -DNO_QUARTZ_IMAGE=OFF"
          
         cmake .. ${DEFS} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
+            -DCMAKE_INCLUDE_PATH="$LIBBROTLI_INCLUDE_DIR;$FREETYPE_INCLUDE_DIR;$LIBPNG_INCLUDE_DIR;$ZLIB_INCLUDE_DIR;$PIXMAN_INCLUDE_DIR" \
+            -DCMAKE_LIBRARY_PATH="${LIBBROTLI_LIBRARY};${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB};${FREETYPE_LIBRARY};${LIBPNG_LIBRARY};${ZLIB_LIBRARY};${PIXMAN_LIBRARY}" \
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
+            -G Xcode \
+            -D BUILD_SHARED_LIBS=OFF \
             -DENABLE_VISIBILITY=OFF \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
