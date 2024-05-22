@@ -56,9 +56,9 @@ function build() {
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
             -DFT_DISABLE_ZLIB=FALSE \
             -DFT_DISABLE_BZIP2=TRUE \
+            -DFT_REQUIRE_BZIP2=FALSE \
             -DFT_DISABLE_HARFBUZZ=TRUE \
             -D FT_REQUIRE_ZLIB=TRUE \
-			-D FT_REQUIRE_BZIP2=FALSE \
 			-D FT_REQUIRE_HARFBUZZ=FALSE \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
@@ -115,6 +115,8 @@ function build() {
 
 			cmake .. ${DEFS} \
 				${EXTRA_DEFS} \
+				-DFT_DISABLE_BZIP2=TRUE \
+				-DFT_DISABLE_BZIP2=TRUE \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
@@ -188,6 +190,8 @@ function build() {
 		    ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
+            -DFT_DISABLE_BZIP2=TRUE \
+            -DFT_REQUIRE_BZIP2=FALSE \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -UCMAKE_CXX_FLAGS \
