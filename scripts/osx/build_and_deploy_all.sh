@@ -41,14 +41,13 @@ fi
 # Set OUTPUT_FOLDER for the build
 export OUTPUT_FOLDER="${ROOT}/out"
 
-echo " Verify Locations:"
-echo " SCRIPT_DIR: $SCRIPT_DIR"
-echo " OF_LIBS: $OF_LIBS"
-echo " OF_ADDONS: $OF_ADDONS"
-echo " ROOT: $ROOT"
-echo " APOTHECARY_PATH: $APOTHECARY_PATH"
-echo " OUTPUT_FOLDER: $OUTPUT_FOLDER"
-echo " XCFRAMEWORK: $XCFRAMEWORK"
+echo "Verify Locations:"
+echo "SCRIPT_DIR: $SCRIPT_DIR"
+echo "OF_LIBS: $OF_LIBS"
+echo "OF_ADDONS: $OF_ADDONS"
+echo "ROOT: $ROOT"
+echo "APOTHECARY_PATH: $APOTHECARY_PATH"
+echo "OUTPUT_FOLDER: $OUTPUT_FOLDER"
 
 
 build_libraries() {
@@ -132,16 +131,16 @@ build_xcframework() {
 sort_libraries() {
     if [ "$PLATFORM" == "osx" ]; then
         addonslibs=("opencv" "ippicv" "libusb" "assimp" "libxml2" "svgtiny" "poco" "openssl")
-        addons=("ofxOpenCv" "ofxOpenCv" "ofxKinect" "ofxAssimpModelLoader" "ofxSvg" "ofxPoco" "ofxPoco")
+        addons=("ofxOpenCv" "ofxOpenCv" "ofxKinect" "ofxAssimpModelLoader" "ofxSvg" "ofxSvg" "ofxPoco" "ofxPoco")
     elif [ "$PLATFORM" == "vs" ]; then
         addonslibs=("opencv" "ippicv" "libusb" "assimp" "libxml2" "svgtiny" "poco")
-        addons=("ofxOpenCv" "ofxOpenCv" "ofxKinect" "ofxAssimpModelLoader" "ofxSvg" "ofxPoco")
+        addons=("ofxOpenCv" "ofxOpenCv" "ofxKinect" "ofxAssimpModelLoader" "ofxSvg" "ofxSvg" "ofxPoco")
     elif [ "$PLATFORM" == "ios" ] || [ "$PLATFORM" == "tvos" ]; then
         addonslibs=("opencv" "ippicv" "assimp" "libxml2" "svgtiny" "poco" "openssl")
-        addons=("ofxOpenCv" "ofxOpenCv" "ofxAssimpModelLoader" "ofxSvg" "ofxPoco" "ofxPoco")
+        addons=("ofxOpenCv" "ofxOpenCv" "ofxAssimpModelLoader" "ofxSvg" "ofxSvg" "ofxPoco" "ofxPoco")
     else
         addonslibs=("opencv" "ippicv" "assimp" "libxml2" "svgtiny" "poco")
-        addons=("ofxOpenCv" "ofxOpenCv" "ofxAssimpModelLoader" "ofxSvg" "ofxPoco")
+        addons=("ofxOpenCv" "ofxOpenCv" "ofxAssimpModelLoader" "ofxSvg" "ofxSvg" "ofxPoco")
     fi
 
     for ((i=0;i<${#addonslibs[@]};++i)); do
@@ -171,14 +170,11 @@ fi
 
 if [ ${XCFRAMEWORK} == 1 ]; then
    build_xcframework
-else
-     echo "========================"
-     echo "Not building XCFRAMEWORK you must do this seperately"
 fi
 
 if [ ${MOVE_LIBRARIES} == 1 ]; then
 
-   echo "========================"
+  echo "========================"
 
    echo "Moving Latest Libraries to openFrameworks core libs directory"
    move_libraries
