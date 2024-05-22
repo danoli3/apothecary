@@ -103,21 +103,6 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     TVOS_MIN_SDK_VER=13.0
     XROS_MIN_SDK_VER=1.1
     WATCHOS_MIN_SDK_VER=6.0
-
-    if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
-        export MIN_SDK_VER=${IOS_MIN_SDK_VER}
-    elif [[ "$TYPE" =~ ^(osx)$ ]]; then
-        export MIN_SDK_VER=${OSX_MIN_SDK_VER}
-    elif [[ "$TYPE" =~ ^(tvos)$ ]]; then
-        export MIN_SDK_VER=${TVOS_MIN_SDK_VER}
-    elif [[ "$TYPE" =~ ^(xros)$ ]]; then
-        export MIN_SDK_VER=${XROS_MIN_SDK_VER}
-    elif [[ "$TYPE" =~ ^(watchos)$ ]]; then
-        export MIN_SDK_VER=${WATCHOS_MIN_SDK_VER}
-    else
-        export MIN_SDK=${IOS_MIN_SDK_VER}
-        echo "MIN_SDK not set for $TYPE"
-    fi
     if ! which realpath >&/dev/null; then
       if ! which brew >&/dev/null; then
         msg="ERROR: This script requires brew. See https://brew.sh for installation instructions."
