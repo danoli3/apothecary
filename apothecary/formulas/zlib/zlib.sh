@@ -160,7 +160,7 @@ function copy() {
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include    
 	    mkdir -p $1/lib/$TYPE
-		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/ > /dev/null 2>&1
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a
         . "$SECURE_SCRIPT"
@@ -168,9 +168,9 @@ function copy() {
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/include    
 	    mkdir -p $1/lib/$TYPE
-		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/
+		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${ARCH}/Release/z.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib
+        cp -v "build_${TYPE}_${ARCH}/Release/z.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib > /dev/null 2>&1
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/zlib.lib
     elif [ "$TYPE" == "android" ] ; then
@@ -232,13 +232,11 @@ function save() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    echo "load file ${SAVE_FILE}"
-
-    if loadsave ${TYPE} "zlib" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      echo "The entry exists and doesn't need to be rebuilt."
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "zlib" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      echo "The entry doesn't exist or needs to be rebuilt."
-      return 1;
+        echo 0
     fi
 }

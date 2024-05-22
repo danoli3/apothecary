@@ -17,6 +17,39 @@ SITE=https://www.openssl.org
 MIRROR=https://www.openssl.org
 GIT_URL=https://github.com/danoli3/openssl-cmake
 
+DEFS=" -DOPENSSL_NO_DEPRECATED=ON \
+	-DOPENSSL_NO_COMP=ON \
+	-DOPENSSL_NO_EC_NISTP_64_GCC_128=ON \
+	-DOPENSSL_NO_ENGINE=ON \
+	-DOPENSSL_NO_MD2=ON \
+	-DOPENSSL_NO_RC5=ON \
+	-DOPENSSL_NO_RFC3779=ON \
+	-DOPENSSL_NO_SCTP=ON \
+	-DOPENSSL_NO_SSL_TRACE=ON \
+	-DOPENSSL_NO_SSL3=OFF \
+	-DOPENSSL_NO_STORE=ON \
+	-DOPENSSL_NO_UNIT_TEST=ON \
+	-DOPENSSL_NO_WEAK_SSL_CIPHERS=ON \
+	-DOPENSSL_NO_ASAN=ON \
+	-DOPENSSL_NO_ASM=ON \
+	-DOPENSSL_NO_CRYPTO_MDEBUG=ON \
+	-DOPENSSL_NO_DEVCRYPTOENG=ON \
+	-DOPENSSL_NO_EGD=ON \
+	-DOPENSSL_NO_EXTERNAL_TESTS=ON \
+	-DOPENSSL_NO_FUZZ_AFL=ON \
+	-DOPENSSL_NO_FUZZ_LIBFUZZER=ON \
+	-DOPENSSL_NO_MSAN=ON \
+	-DOPENSSL_NO_UBSAN=ON \
+	-DOPENSSL_NO_UNIT_TEST=ON \
+	-DOPENSSL_NO_WEAK_SSL_CIPHERS=ON \
+	-DOPENSSL_NO_STATIC_ENGINE=OFF \
+	-DOPENSSL_STATIC_ENGINE=ON \
+	-DOPENSSL_THREADS=ON \
+	-DBUILD_TESTING=ON \
+	-DOPENSSL_NO_AFALGENG=ON \
+	-DOPENSSL_ZLIB=ON \
+	-DOPENSSL_BUILD_DOCS=OFF"
+
 # download the source code and unpack it into LIB_NAME
 function download() {
 
@@ -69,40 +102,6 @@ function prepare() {
 function build() {
 
 	LIBS_ROOT=$(realpath $LIBS_DIR)
-
-	DEFS=" -DOPENSSL_NO_DEPRECATED=ON \
-	-DOPENSSL_NO_COMP=ON \
-	-DOPENSSL_NO_EC_NISTP_64_GCC_128=ON \
-	-DOPENSSL_NO_ENGINE=ON \
-	-DOPENSSL_NO_MD2=ON \
-	-DOPENSSL_NO_RC5=ON \
-	-DOPENSSL_NO_RFC3779=ON \
-	-DOPENSSL_NO_SCTP=ON \
-	-DOPENSSL_NO_SSL_TRACE=ON \
-	-DOPENSSL_NO_SSL3=OFF \
-	-DOPENSSL_NO_STORE=ON \
-	-DOPENSSL_NO_UNIT_TEST=ON \
-	-DOPENSSL_NO_WEAK_SSL_CIPHERS=ON \
-	-DOPENSSL_NO_ASAN=ON \
-	-DOPENSSL_NO_ASM=ON \
-	-DOPENSSL_NO_CRYPTO_MDEBUG=ON \
-	-DOPENSSL_NO_DEVCRYPTOENG=ON \
-	-DOPENSSL_NO_EGD=ON \
-	-DOPENSSL_NO_EXTERNAL_TESTS=ON \
-	-DOPENSSL_NO_FUZZ_AFL=ON \
-	-DOPENSSL_NO_FUZZ_LIBFUZZER=ON \
-	-DOPENSSL_NO_MSAN=ON \
-	-DOPENSSL_NO_UBSAN=ON \
-	-DOPENSSL_NO_UNIT_TEST=ON \
-	-DOPENSSL_NO_WEAK_SSL_CIPHERS=ON \
-	-DOPENSSL_NO_STATIC_ENGINE=OFF \
-	-DOPENSSL_STATIC_ENGINE=ON \
-	-DOPENSSL_THREADS=ON \
-	-DBUILD_TESTING=ON \
-	-DOPENSSL_NO_AFALGENG=ON \
-	-DOPENSSL_ZLIB=ON \
-	-DOPENSSL_BUILD_DOCS=OFF"
-
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		ZLIB_ROOT="$LIBS_ROOT/zlib/"
 	    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
@@ -344,7 +343,8 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libssl.a" $1/lib/$TYPE/$PLATFORM/libssl.a
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include" $1/
 		. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/libssl.a
+		secure $1/lib/$TYPE/$PLATFORM/libssl.a openssl.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libcrypto.a crypto.pkl
 
 	elif [ "$TYPE" == "vs" ]; then
 		mkdir -p $1/include    
@@ -358,7 +358,8 @@ function copy() {
         cp -f "build_${TYPE}_${ARCH}/Release/lib/libcrypto.lib" $1/lib/$TYPE/$PLATFORM/libcrypto.lib
         cp -f "build_${TYPE}_${ARCH}/Release/lib/libssl.lib" $1/lib/$TYPE/$PLATFORM/libssl.lib
         . "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/libssl.lib
+		secure $1/lib/$TYPE/$PLATFORM/libssl.lib openssl.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libcrypto.a crypto.pkl
 
 	elif [ "$TYPE" == "android" ] ; then
 		if [ -d $1/lib/$TYPE/$ABI ]; then
@@ -404,9 +405,11 @@ function save() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "openssl" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "openssl" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

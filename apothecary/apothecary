@@ -51,8 +51,6 @@ HOST_OS= # compile os ("osx", "windows", "linux")
 if [ -z "${TYPE+x}" ]; then
     #echo "No TYPE argument provided."
     TYPE=
-else
-    echo "TYPE : $TYPE"
 fi
 ARCH=64 # library build arch, 32 or 64 bit (not used for some build types)
 
@@ -81,7 +79,7 @@ SAVE_FILE="$(realpath "$APOTHECARY_DIR/../scripts")/status.txt"
 SECURE_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/secure.sh")"
 FORMAT_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/format.sh")"
 
-USE_SAVE=0
+USE_SAVE=1
 
 ### Xcode/ios specific settings
 
@@ -161,24 +159,38 @@ CHECKOUT=YES
 
 # ansi console escape codes
 CON_DEFAULT="\033[0m"
+CON_WHITE="\033[37m"
+CON_LIGHT_GRAY="\033[37;1m"
 CON_BOLD="\033[1m"
 CON_RED="\033[31m"
 CON_YELLOW="\033[33m"
+CON_YELLOW_GREEN="\033[33m"
 CON_GREEN="\033[32m"
 
 # used to filter out bad build types
 VALID_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" )
 
 # verbose mode bool
-A_VERBOSE=0
+if [ -z "${A_VERBOSE+x}" ]; then
+    export A_VERBOSE=0
+fi
 
 # If formula already exists force download
-FORCE_DOWNLOAD=0
+if [ -z "${FORCE_DOWNLOAD+x}" ]; then
+    export FORCE_DOWNLOAD=0
+fi
+
+if [ -z "${LIBS_DIR_REAL+x}" ]; then
+    export LIBS_DIR_REAL=
+fi
 
 # prefer git instead of download tarballs
 # This remains _UNSET_ if git is not in use.
 # To use, set USE_GIT=1
-USE_GIT=
+
+if [ -z "${USE_GIT+x}" ]; then
+    export USE_GIT=
+fi
 
 # by default assume visual studio pro
 # -x changes to visual studio express
@@ -193,6 +205,10 @@ TARGET_WIN_11=0
 
 if [ -z "${XCFRAMEWORK_ALL+x}" ]; then
     export XCFRAMEWORK_ALL=false
+fi
+
+if [ -z "${LOADSAVE_RESULT+x}" ]; then
+    declare -a LOADSAVE_RESULT=0
 fi
 
 # nice, detailed help message
@@ -300,20 +316,6 @@ trap "trapSignal SIGHUP" SIGHUP
 trap "trapSignal SIGINT" SIGINT
 trap "trapSignal SIGTERM" SIGTERM
 
-trapSignal() {
-	echo
-	echoError " Received signal $1"
-	exit 1
-}
-
-# trap any script errors and exit
-trap "trapError" ERR
-
-trapError() {
-	echo
-	echoError " ^ Received error ^"
-	exit 1
-}
 
 # console printing functions (with color)
 echoError()		{
@@ -323,7 +325,13 @@ echoWarning()	{
 	echo -e "$CON_BOLD$CON_YELLOW$1$CON_DEFAULT"
 }
 echoInfo()		{
-	echo -e "$CON_BOLD$1$CON_DEFAULT"
+	echo -e "$CON_BOLD$CON_WHITE$1$CON_DEFAULT"
+}
+echoStart()   {
+    echo -e "$CON_BOLD$CON_LIGHT_GRAY$1$CON_DEFAULT"
+}
+echoNotice()   {
+    echo -e "$CON_BOLD$CON_YELLOW_GREEN$1$CON_DEFAULT"
 }
 echoSuccess()	{
 	echo -e "$CON_BOLD$CON_GREEN$1$CON_DEFAULT"
@@ -332,6 +340,21 @@ echoVerbose() {
 	if [ $A_VERBOSE == 1 ] ; then
 		echoInfo "$1"
 	fi
+}
+
+trapSignal() {
+    echo
+    echoError " Received signal $1"
+    exit 1
+}
+
+# trap any script errors and exit
+trap "trapError $LINENO" ERR
+
+trapError() {
+    echo
+    echoError " ^ Received errexit on line $(caller)" >&2
+    exit 1
 }
 
 ################################################################################
@@ -357,7 +380,9 @@ while getopts t:a:b:d:s:j:m:c:x:hgvfpew opt ; do
 		h) # print help and exit
 		   echo "$HELP" ; exit 0 ;;
 		v) # verbose mode = true
-		   export A_VERBOSE=1 ;;
+		   export A_VERBOSE=1
+           VERBOSE_MAKEFILE=YES
+           ;;
 		e) # use visual enterprise
 		   export VS_TYPE=Enterprise ;;
         f) # force download
@@ -781,6 +806,12 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
     PLATFORM=ABI
 fi
 
+# Check if PLATFORM is not set or is empty
+if [ -z "$PLATFORM" ]; then
+  PLATFORM="Unknown Platform"
+  echoWarning " PLATFORM missing report'."
+fi
+
 
 # get command
 if [ $# -gt 0 ] ; then
@@ -1037,7 +1068,6 @@ function doCommand() {
 	local shouldSource=$1
 	local cmd=$2
 	shift 2
-
 	# process given lib targets
 	while [ $# -gt 0 ] ; do
 
@@ -1045,17 +1075,15 @@ function doCommand() {
 		if [ "$1" == "core" ] ; then
 			local formula
 			for formula in $( ls -1 $FORMULAS_DIR | grep -v $DEPENDS_SUBDIR) ; do
-				doCommand $shouldSource $cmd "${formula%.*}" # remove extension
+                doCommand $shouldSource $cmd "${formula%.*}"
 			done
-
 			echoInfo " ----- Apothecary Core Build Sucessfully completed for $TYPE -----"
-
 		# process all addons in the addons dir
 		elif [ "$1" == "addons" ] ; then
 			local addon
 			for addon in $(ls -1 $REL_ADDONS_DIR) ; do
 				if [ -d $REL_ADDONS_DIR/$addon ] ; then
-					doCommand $shouldSource $cmd $addon
+                    doCommand $shouldSource $cmd $addon
 				fi
 			done
 
@@ -1068,7 +1096,7 @@ function doCommand() {
 				# if [ -f "$LIBS_DIR/${depends}/$TYPE/$ABI/lib.a" ]; then
 				#      echo "Build Already exists at $LIBS_DIR/${depends}/$TYPE/ skipping"
 				# fi
-				doCommand $shouldSource $cmd "${depend%.*}" # remove extension
+                doCommand $shouldSource $cmd "${depend%.*}"
 			done
 
 		else # process given lib, addon, or dependency
@@ -1089,13 +1117,12 @@ function doCommand() {
 					if [ $IS_CUSTOM_LIBS_DIR == 0 ] ; then
 						LIBS_DIR=$ADDONS_DIR/$1/libs
 					fi
-
 					# process all formulas in scripts/formulas
 					local addonFormula
 					for addonFormula in $( ls -1 $FORMULA_DIR) ; do
 						# is the file in the directory a valid formula extension
 						if [ -e $FORMULA_DIR -a "${addonFormula##*.}" == "sh" ] ; then
-							doCommand $shouldSource $cmd $FORMULA_DIR/$addonFormula
+                            doCommand $shouldSource $cmd $FORMULA_DIR/$addonFormula
 						else
 							echoVerbose "Unknown formula extension '$addonFormula' with extension: ${addonFormula##*.}"
 						fi
@@ -1130,7 +1157,7 @@ function doCommand() {
 						echoInfo " Skipping \"$currentLib\": $cmd not needed for type \"$TYPE\""
 					else
 						# do command
-						$cmd $currentLib
+                        $cmd $currentLib
 					fi
 				else
 					# do command
@@ -1138,7 +1165,6 @@ function doCommand() {
 				fi
 			fi
 		fi
-
 		shift 1
 
 		# reset to all types & depends
@@ -1152,28 +1178,29 @@ function doCommand() {
 function updateFormula() {
 
 	echo
-	echoInfo " ----- $1 -----"
-
-	# if [ -e $BUILD_DIR/$1 ] ; then
-	# 	cleanFormula $1
-	# fi
-	downloadFormula $1
-	prepareFormula $1
-
-	if [ $USE_SAVE == 1 ]; then
-		if load $1; then
-		   echoInfo "Skipping - target ${1} already built and up to date"
-		else
-		    echoVerbose "Building ${1} as deployed library doesn't exist or does needs to be rebuilt as out of date."
-		    buildFormula $1
-		    copyFormula $1
-		    save $1
-		fi
-	else
-		buildFormula $1
-		copyFormula $1
+	echoStart " ----- $1 -----"
+	if  [ $FORCE_DOWNLOAD -eq 1 ] ; then
+		cleanFormula $1
 	fi
+    echoStart " Building \"$1\" ...."
 
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " $1 - Checking if Precompiled binary :[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping updateFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue updateFormula for \"$1\" "
+            fi
+        fi
+    fi
+
+    downloadFormula $1
+    prepareFormula $1
+	buildFormula $1
+	copyFormula $1
 	echo
 	echoSuccess " Finished \"$1\""
 }
@@ -1182,26 +1209,37 @@ function updateFormula() {
 function downloadFormula(){
 
 	echo
-	echoInfo " Downloading \"$1\""
-	echoVerbose " Formula dir: $FORMULA_DIR"
-	echoVerbose " Formula build types: ${FORMULA_TYPES[*]}"
-	echoVerbose " Build dir: $BUILD_DIR"
-	echoVerbose " Depends formula dir: $DEPENDS_FORMULA_DIR"
-	if [ ${#FORMULA_DEPENDS[@]} -gt 0 ] ; then
-		echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
-	fi
-	echo
-
+    echoInfo " Downloading \"$1\" "
+    echoVerbose " Formula dir: $FORMULA_DIR"
+    echoVerbose " Formula build types: ${FORMULA_TYPES[*]}"
+    echoVerbose " Build dir: $BUILD_DIR"
+    echoVerbose " Depends formula dir: $DEPENDS_FORMULA_DIR"
+    if [ ${#FORMULA_DEPENDS[@]} -gt 0 ] ; then
+        echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
+    fi
+    echo
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping download"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue downloadFormula for \"$1\" "
+            fi
+        fi
+    fi
 	mkdir -p $BUILD_DIR
 	mkdir -p $BUILD_ROOT_DIR
 	cd $BUILD_DIR
 
 	if [ -e $1 ] ; then
         if [ $FORCE_DOWNLOAD -eq 1 ]; then
-			echo "removing already existing $1"
+			echoNotice " Removing past download -F $1"
             rm -rf ${PWD}/${1}*
         else
-            echo "... skipping, $1 src dir already exists in ${PWD}/${1}"
+            echoInfo " Already downloaded... "
         fi
     fi
 
@@ -1217,40 +1255,45 @@ function downloadFormula(){
 		    exit 1
 	    fi
     fi
-
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies download
 	fi
-
 	cd $APOTHECARY_DIR
 }
 
 # prepare a given library, arg is library name
 function prepareFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	# run prepare command in src dir
 	echo
 	echoInfo " Preparing \"$1\""
-	echoVerbose " Lib src dir: $BUILD_DIR/$1"
 	echo
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping prepare"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue prepareFormula for \"$1\" "
+            fi
+        fi
+    fi
 
 	if [ ! -e $BUILD_DIR/$1 ] ; then
 		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
 		echoError " Did you download the formula?"
 		exit 1
 	fi
-
 	cd $BUILD_DIR/$1
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies prepare $1
 	fi
-
 	prepare $1
-
 	cd $APOTHECARY_DIR
 }
 
@@ -1258,29 +1301,39 @@ function prepareFormula() {
 function buildFormula() {
 
 	# run build command in src dir
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
 	echoInfo " Building \"$1\""
-	echoVerbose " Lib src dir: $BUILD_DIR/$1"
 	echo
-
 	if [ ! -e $BUILD_DIR/$1 ] ; then
 		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
 		echoError " Did you download the formula?"
 		exit 1
 	fi
 
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping buildFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue buildFormula for \"$1\" "
+            fi
+        fi
+    fi
 	cd $BUILD_DIR/$1
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies build
 		apothecaryDependencies copy
-        echoInfo "apothecaryDependency built "
+        echoSuccess " \"$1\" dependencies build success"
+        echo
         echoInfo " Now Building \"$1\""
 	fi
     echoInfo "--------------------"
 	build $1
-
 	cd $APOTHECARY_DIR
 }
 
@@ -1289,11 +1342,24 @@ function copyFormula() {
 
 	# dest arg path relative to src dir
 	echo
-    LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echoInfo " Copying \"$1\""
 	echoVerbose " Lib src dir: $BUILD_DIR/$1"
 	echoInfo " Lib dest dir: $LIBS_DIR_REAL/$1"
 	echo
+
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping copyFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue copyFormula for \"$1\" "
+            fi
+        fi
+    fi
 
 	if [ ! -e $BUILD_DIR/$1 ] ; then
 		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
@@ -1349,7 +1415,7 @@ function cleanFormula() {
 
 function frameworkFormula() {
 
-    LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
     if [ ! -e "$LIBS_DIR/$1" ] ; then
         echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
     else
@@ -1494,7 +1560,7 @@ function frameworkFormula() {
 function xframeworkFormula() {
 
     TYPE=macos
-    LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
     PLATFORM_TYPES=("ios" "osx" "catos" "xros" "tvos" "watchos")
     VERSION=""
     DEFINES=""
@@ -1897,7 +1963,6 @@ function save() {
 
 function load() {
 	echoWarning " Load function not implemented"
-	return 1
 }
 
 # do a command on a given dependency in a separate apothecary run
@@ -1920,24 +1985,29 @@ function apothecaryDepend() {
         echoError " Cannot $1, no formula for dependency \"$depend\""
         exit 1
     fi
-
-    # Skip building if dependency is already up to date
-    if [ $USE_SAVE == 1 ] && load $depend ; then
-        echoInfo "Skipping - dependency $depend already built and up to date"
-        return
-    fi
-
+    echoStart " $depend $1 dependency"
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    # exit 1
+    # echo "${APOTHECARY_SCRIPT} -t$TYPE -a$ARCH -j$PARALLEL_MAKE load $2"
+    # result=$(${APOTHECARY_SCRIPT} -t$TYPE -a$ARCH -j$PARALLEL_MAKE load $2| tail -n 1)
+    # LOAD_RESULT=$?
+    # # Check the return value
+    # if [ $LOADSAVE_RESULT -eq 0 ]; then
+    #     echoError "apothecaryDepend $2 not updated will need to build. $LOADSAVE_RESULT."
+    # else
+    #     echoSuccess "apothecaryDepend $2 - skipping ! $LOADSAVE_RESULT."
+    #     return 0
+    # fi
+    #set -e
     # Capture the returned path into a variable
     DIRECTORY_PATH=$(get_directory_path "$TYPE" "$1" "$PLATFORM" "$ARCH")
-    echo "Presumed directory path: $DIRECTORY_PATH"
-
+    #echo "Presumed directory path: $DIRECTORY_PATH"
     # Use git if the USE_GIT variable is set
     if [ $FORCE_DOWNLOAD -eq 1 ]; then
-        $APOTHECARY_SCRIPT -f -t $TYPE -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
+        $APOTHECARY_SCRIPT -f -t $TYPE -d$LIBS_DIR_REAL -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
     else
-        $APOTHECARY_SCRIPT -t $TYPE -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
+        $APOTHECARY_SCRIPT -t $TYPE -d$LIBS_DIR_REAL -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1  $depend
     fi
-
     # Return to the original directory
     cd $ROOT
 }
@@ -1955,7 +2025,6 @@ function apothecaryDependencies() {
             #change back to APOTHECARY_DIR to run new script
             cd $APOTHECARY_DIR
             apothecaryDepend $1 $depend
-
             #restore dir to where we are
             cd $CUR_DIR
 		done
@@ -2151,6 +2220,7 @@ if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" ==
     fi
 fi
 
+
 # handle commands
 echoVerbose "Running: $A_CMD $*"
 case "$A_CMD" in
@@ -2200,5 +2270,4 @@ case "$A_CMD" in
 		echoError " Unknown command \"$A_CMD\""
 		exit 1 ;;
 esac
-
 exit 0
