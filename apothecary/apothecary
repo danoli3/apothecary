@@ -1177,6 +1177,7 @@ function doCommand() {
 # update a given library
 function updateFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
 	echoStart " ----- $1 -----"
 	if  [ $FORCE_DOWNLOAD -eq 1 ] ; then
@@ -1208,6 +1209,7 @@ function updateFormula() {
 # download a given library into the build cache, arg is library name
 function downloadFormula(){
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
     echoInfo " Downloading \"$1\" "
     echoVerbose " Formula dir: $FORMULA_DIR"
@@ -1220,9 +1222,10 @@ function downloadFormula(){
     echo
     if [ ! -e $1 ] ; then
         if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-            result=$(load $1 | tail -n 1)
-            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-            if [ $result -eq 1 ]; then
+            LOAD_RESULT=$(load $1)
+            FINAL_RESULT=$(echo "$LOAD_RESULT" | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$FINAL_RESULT] - [$LOAD_RESULT]"
+            if [ $FINAL_RESULT -eq 1 ]; then
                 echoInfo " \"$1\" Precompiled binary validated. Skipping download"
                 return 0
             else
@@ -1375,6 +1378,7 @@ function copyFormula() {
 # clean a given library, arg is library name
 function cleanFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	# run build command in src dir
 	echo
 	echoInfo " Cleaning \"$1\""
