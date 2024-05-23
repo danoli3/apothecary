@@ -429,7 +429,7 @@ function copy() {
 	mkdir -p $1/include/freetype/
 
 	# copy files from the build root
-	cp -R include/* $1/include/freetype/
+	cp -R include/* $1/include/
 
 	mkdir -p $1/lib/$TYPE
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -440,7 +440,7 @@ function copy() {
 		secure $1/lib/$TYPE/$PLATFORM/libfreetype.a
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -RT "build_${TYPE}_${ARCH}/Release/include" $1/include
+		cp -Rv "build_${TYPE}_${ARCH}/include/" $1/
         cp -v "build_${TYPE}_${ARCH}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/
         . "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$PLATFORM/libfreetype.lib

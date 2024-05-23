@@ -146,13 +146,13 @@ function build() {
 
 		FREETYPE_ROOT="$LIBS_ROOT/freetype/"
 		FREETYPE_INCLUDE_DIR="$LIBS_ROOT/freetype/include"
-		FREETYPE_LIBRARY="$LIBS_ROOT/freetype/lib/$TYPE/$PLATFORM/libfreetype.lib"
+		FREETYPE_LIBRARY="$LIBS_ROOT/freetype/lib/$TYPE/$PLATFORM/freetype.lib"
 
 		LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
         LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
-        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotli.a"
-        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlienc.a"
-        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlidec.a"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlicommon.lib"
+        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlienc.lib"
+        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/brotlidec.lib"
 
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
@@ -180,7 +180,9 @@ function build() {
             -DFREETYPE_LIBRARY=${FREETYPE_LIBRARY} \
             -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} \
             -DFREETYPE_INCLUDE_DIRS=${FREETYPE_INCLUDE_DIR} \
-            -DFREETYPE_CFLAGS=-I${FREETYPE_INCLUDE_DIR}/freetype \
+            -DFREETYPE_INCLUDE_DIR_ft2build=${FREETYPE_INCLUDE_DIR} \
+            -DFREETYPE_INCLUDE_DIR_freetype2="${FREETYPE_INCLUDE_DIR}/freetype" \
+            -DFREETYPE_CFLAGS="-I${FREETYPE_INCLUDE_DIR}" \
         	-DFREETYPE_LIBS=${FREETYPE_LIBRARY} \
         	-DBROTLI_ROOT=${LIBBROTLI_ROOT} \
             -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
