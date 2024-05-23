@@ -126,11 +126,7 @@ function build() {
 
         ROOT=$(realpath ${PWD}/..) 
 
-        echo "ROOT $ROOT"
-
         LIBS_ROOT=$(realpath $LIBS_DIR)
-
-        echo "LIBS_ROOT ${LIBS_ROOT}"
 
 		CAIRO_HAS_PNG_FUNCTIONS=1
 
