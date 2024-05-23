@@ -42,7 +42,7 @@ if(FREETYPE_FOUND)
     find_package(BrotliDec)
     include_directories(${FREETYPE_INCLUDE_DIRS})
     include_directories(${BROTLIDEC_INCLUDE_DIRS})
-    include_directories(${BZIP2_INCLUDE_DIR})
+    #include_directories(${BZIP2_INCLUDE_DIR})
     list(APPEND CAIRO_LIBS ${FREETYPE_LIBRARIES} ${BROTLIDEC_LIBRARIES})
     # ${BZIP2_LIBRARIES}
 endif()
