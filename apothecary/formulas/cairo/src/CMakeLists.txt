@@ -745,38 +745,51 @@ endif()
 
 set(SOURCES ${enabled_cairo_sources})
 
-add_library(cairo SHARED ${SOURCES})
-target_link_libraries(cairo ${CAIRO_LIBS})
+if(BUILD_SHARED_LIBS)
+	add_library(cairo SHARED ${SOURCES})
+	target_link_libraries(cairo ${CAIRO_LIBS})
+endif()
 
-
-add_library(cairo-static ${SOURCES} ${STATIC_SOURCES})
-target_link_libraries(cairo-static ${CAIRO_LIBS})
+if(BUILD_STATIC_LIBS)
+	add_library(cairo-static ${SOURCES} ${STATIC_SOURCES})
+	target_link_libraries(cairo-static ${CAIRO_LIBS})
+endif()
 
 if(APPLE)
-find_library(IMAGEIO_FRAMEWORK ImageIO)
-find_library(CORE_GRAPHICS_FRAMEWORK CoreGraphics)
-find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
-find_library(QUARTZ_CORE_FRAMEWORK QuartzCore)
-find_library(CORE_TEXT_FRAMEWORK CoreText)
-target_link_libraries(cairo
-  ${CORE_GRAPHICS_FRAMEWORK}
-  ${CORE_FOUNDATION_FRAMEWORK}
-  ${QUARTZ_CORE_FRAMEWORK}
-  ${IMAGEIO_FRAMEWORK}
-  ${CORE_TEXT_FRAMEWORK}
-)
-target_link_libraries(cairo-static
-  ${CORE_GRAPHICS_FRAMEWORK}
-  ${CORE_FOUNDATION_FRAMEWORK}
-  ${QUARTZ_CORE_FRAMEWORK}
-  ${IMAGEIO_FRAMEWORK}
-  ${CORE_TEXT_FRAMEWORK}
-)
+	find_library(IMAGEIO_FRAMEWORK ImageIO)
+	find_library(CORE_GRAPHICS_FRAMEWORK CoreGraphics)
+	find_library(CORE_FOUNDATION_FRAMEWORK CoreFoundation)
+	find_library(QUARTZ_CORE_FRAMEWORK QuartzCore)
+	find_library(CORE_TEXT_FRAMEWORK CoreText)
 
-endif() 
+	if(BUILD_SHARED_LIBS)
+		target_link_libraries(cairo
+			${CORE_GRAPHICS_FRAMEWORK}
+			${CORE_FOUNDATION_FRAMEWORK}
+			${QUARTZ_CORE_FRAMEWORK}
+			${IMAGEIO_FRAMEWORK}
+			${CORE_TEXT_FRAMEWORK}
+		)
+	endif()
 
-install(TARGETS cairo RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-install(TARGETS cairo-static RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+	if(BUILD_STATIC_LIBS)
+		target_link_libraries(cairo-static
+			${CORE_GRAPHICS_FRAMEWORK}
+			${CORE_FOUNDATION_FRAMEWORK}
+			${QUARTZ_CORE_FRAMEWORK}
+			${IMAGEIO_FRAMEWORK}
+			${CORE_TEXT_FRAMEWORK}
+		)
+	endif()
+endif()
+
+if(BUILD_SHARED_LIBS)
+	install(TARGETS cairo RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+endif()
+
+if(BUILD_STATIC_LIBS)
+	install(TARGETS cairo-static RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+endif()
 
 install(FILES ${enabled_cairo_headers} DESTINATION include/cairo)
 install(FILES cairo-version.h DESTINATION include/cairo)
