@@ -1180,9 +1180,9 @@ function updateFormula() {
     export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
 	echoStart " ----- $1 -----"
-	if  [ $FORCE_DOWNLOAD -eq 1 ] ; then
-		cleanFormula $1
-	fi
+	# if  [ $FORCE_DOWNLOAD -eq 1 ] ; then
+	# 	cleanFormula $1
+	# fi
     echoStart " Building \"$1\" ...."
 
     if [ ! -e $1 ] ; then
