@@ -281,16 +281,13 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "fmt" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "fmt" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "fmt" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

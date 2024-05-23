@@ -127,14 +127,14 @@ function copy() {
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
 		. "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/libGLEW.a
+        secure $1/lib/$TYPE/$PLATFORM/libGLEW.a glew.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/		
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
         # cp -v "build_${TYPE}_${ARCH}/Release/bin/glew32.dll" $1/lib/$TYPE/$PLATFORM/glew32_s.dll
         cp -v "build_${TYPE}_${ARCH}/Release/lib/libglew32.lib" $1/lib/$TYPE/$PLATFORM/libglew32.lib
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/libglew32.lib
+        secure $1/lib/$TYPE/$PLATFORM/libglew32.lib glew.pkl
 	elif [ "$TYPE" == "msys2" ] ; then
 		# TODO: add cb formula
 		mkdir -p $1/lib/$TYPE
@@ -159,4 +159,15 @@ function clean() {
 		make clean
 		rm -f *.a *.lib
 	fi
+}
+
+function load() {
+    . "$LOAD_SCRIPT"
+    LOAD_RESULT=$(loadsave ${TYPE} "glew" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
 }

@@ -92,22 +92,18 @@ function copy() {
 	# headers
 	mkdir -p $1/include
 	cp -Rv libusb/libusb.h $1/include
-
+	. "$SECURE_SCRIPT"
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/ 
     	cp -f "build_${TYPE}_${ARCH}/Release/libusb-1.0.dll" $1/lib/$TYPE/$PLATFORM/libusb-1.0.dll
     	cp -f "build_${TYPE}_${ARCH}/Release/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib
-
-    	. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib libusb-1.0.lib
+		secure $1/lib/$TYPE/$PLATFORM/libusb-1.0.lib libusb
 	fi
-
     if [ "$TYPE" == "osx" ] ; then
         mkdir -p $1/lib/$TYPE
         cp -v libusb/.libs/libusb-1.0.a $1/lib/$TYPE/$PLATFORM/usb-1.0.a
-        . "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/usb-1.0.a libusb-1.0.lib
+		secure $1/lib/$TYPE/$PLATFORM/usb-1.0.a libusb
 	fi
 
 	echoWarning "TODO: License Copy"

@@ -42,6 +42,8 @@ function copy() {
 	mkdir -p $1/include
 	cp -v json.hpp $1/include
 
+	secure $1/include/json.hpp json.pkl
+
 	# copy license file
 	if [ -d "$1/license" ]; then
         rm -rf $1/license
@@ -59,7 +61,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include" ${PLATFORM} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1

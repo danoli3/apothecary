@@ -293,7 +293,7 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
 		cp Source/FreeImage.h $1/include
 		 . "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/FreeImage.a
+		secure $1/lib/$TYPE/$PLATFORM/FreeImage.a FreeImage.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/include
 	    mkdir -p $1/lib/$TYPE
@@ -302,14 +302,14 @@ function copy() {
         cp -v "build_${TYPE}_${ARCH}/Release/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImage.lib  
         cp -v "build_${TYPE}_${ARCH}/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
          . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/FreeImage.lib
+        secure $1/lib/$TYPE/$PLATFORM/FreeImage.lib FreeImage.pkl
 	elif [ "$TYPE" == "android" ] ; then
         cp Source/FreeImage.h $1/include
         rm -rf $1/lib/$TYPE/$ABI
         mkdir -p $1/lib/$TYPE/$ABI
 	    cp -v build_$ABI/libFreeImage.a $1/lib/$TYPE/$ABI/libFreeImage.a
 	    . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$ABI/libFreeImage.a
+        secure $1/lib/$TYPE/$ABI/libFreeImage.a FreeImage.pkl
     elif [ "$TYPE" == "emscripten" ]; then
         cp Source/FreeImage.h $1/include
         if [ -d $1/lib/$TYPE/ ]; then
@@ -318,7 +318,7 @@ function copy() {
         mkdir -p $1/lib/$TYPE
         cp -v build_${TYPE}/build/libFreeImage.a $1/lib/$TYPE/libfreeimage.a
 		. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/libfreeimage.a
+		secure $1/lib/$TYPE/libfreeimage.a FreeImage.pkl
 	fi
 
     # copy license files
@@ -357,16 +357,13 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "freeimage" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "freeimage" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "FreeImage" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

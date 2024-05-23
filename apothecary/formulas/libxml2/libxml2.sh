@@ -337,40 +337,33 @@ function copy() {
     
     # create a common lib directory path
     mkdir -p $1/lib/$TYPE
-
+    . "$SECURE_SCRIPT"
     # copy files specific to each build TYPE
     if [ "$TYPE" == "vs" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        mkdir -p $1/include/libxml
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/"* $1/include/
         cp -v "build_${TYPE}_${PLATFORM}/Release/libxml2.lib" $1/lib/$TYPE/$PLATFORM/libxml2.lib
         cp -v "build_${TYPE}_${PLATFORM}/Release/libxml2.dll" $1/lib/$TYPE/$PLATFORM/libxml2.dll     
-        . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libxml2.lib
     elif [ "$TYPE" == "android" ] ; then
         mkdir -p $1/lib/$TYPE/$ABI
         cp -Rv include/libxml/* $1/include/libxml/
         cp -Rv build_${TYPE}_${ABI}/libxml2.a $1/lib/$TYPE/$ABI/libxml2.a
-        . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/libxml2.a
+        secure $1/lib/$TYPE/$ABI/libxml2.a
         cp -Rv build_${TYPE}_${ABI}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [ "$TYPE" == "emscripten" ]; then
         cp -Rv include/libxml/* $1/include/libxml/
         cp -v "build_${TYPE}/xml2_wasm.wasm" $1/lib/$TYPE/libxml2.wasm
-        . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/libxml2.wasm
         cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        mkdir -p $1/include/libxml
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
-        . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/libxml2.a
+        secure $1/lib/$TYPE/$PLATFORM/libxml2.a
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
         cp -v "build_${TYPE}/libxml2.a" $1/lib/$TYPE/libxml2.a
-        . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/libxml2.a
         cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
         cp -Rv include/libxml/* $1/include/libxml/
@@ -394,7 +387,7 @@ function clean() {
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
-    elif [ "$TYPE" == "osx" ] || [ "$TYPE" == "ios" ] || [ "$TYPE" == "tvos" ] || [ "$TYPE" == "xros" ]; then
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
@@ -403,21 +396,14 @@ function clean() {
     fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "libxml2" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    echo "load file ${SAVE_FILE}"
-
-    if loadsave ${TYPE} "libxml2" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      echo "The entry exists and doesn't need to be rebuilt."
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "libxml2" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      echo "The entry doesn't exist or needs to be rebuilt."
-      return 1;
+        echo 0
     fi
 }
 

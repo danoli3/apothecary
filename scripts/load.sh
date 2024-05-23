@@ -5,8 +5,6 @@
 # load "ios" "freeimage" "arm64" "true" "v9.1.0" "v9.1.0"
 set +e
 
-
-
 function loadsave() {
   if [ -z "$2" ]; then
     echo "Load function not implemented - Param error"
@@ -60,22 +58,22 @@ function loadsave() {
   fi
 
   # Check if the entry needs to be rebuilt based on buildTime
-  local now=$(date -u +%s)
-  if [[ $(uname) == "Darwin" ]]; then
-    local saved=$(date -ju -f "%Y-%m-%dT%H:%M:%SZ" "$buildTime" +%s)
-  else
-    local saved=$(date -u -d "$buildTime" +%s)
-  fi
-  local diff=$(( (now - saved) / (60 * 60 * 24) ))
+  # local now=$(date -u +%s)
+  # if [[ $(uname) == "Darwin" ]]; then
+  #   local saved=$(date -jf "%Y-%m-%dT%H:%M:%SZ" "$buildTime" +%s)
+  # else
+  #   local saved=$(date -d "$buildTime" +%s)
+  # fi
+  # local diff=$(( (now - saved) / (60 * 60 * 24) ))
 
-  if [[ "$buildTime" == "false" || "$diff" -ge 90 ]]; then
-    echo " Build confirmed. Previous Build time is older than 90 days (${diff}) - Rebuilding"
-    echo 0
-    return 0
-  fi
+  # if [[ "$buildTime" == "false" || "$diff" -ge 90 ]]; then
+  #   echo " Build confirmed. Previous Build time is older than 90 days (${diff}) - Rebuilding"
+  #   echo 0
+  #   return 0
+  # fi
 
   # Entry exists and doesn't need to be rebuilt
-  echo " Build skipped. $2 past output is all up to date. $version built at : $saved"
+  # echo " Build skipped. $2 past output is all up to date. $version built at : $saved"
   echo 1
   return 0
 

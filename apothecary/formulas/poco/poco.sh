@@ -288,6 +288,8 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/ 
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/poco.a poco.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/include    
         mkdir -p $1/lib/$TYPE
@@ -346,17 +348,14 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "poco" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "poco" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "poco" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }
 

@@ -211,39 +211,32 @@ function copy() {
 	rm -rf $1/include
 	mkdir -p $1/include
 	cp -Rv Include/* $1/include/
-
+	. "$SECURE_SCRIPT"
 	# lib
 	mkdir -p $1/lib/$TYPE
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/ 
     	cp -f "build_${TYPE}_${ARCH}/Release/lib/tess2.lib" $1/lib/$TYPE/$PLATFORM/tess2.lib
-		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$PLATFORM/tess2.lib tess2
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		mkdir -p $1/include
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libtess2.a" $1/lib/$TYPE/$PLATFORM/libtess2.a
-		. "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/libtess2.a tess2
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ]; then
 		cp -v build/libtess2.a $1/lib/$TYPE/libtess2.a
-		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/tess2.lib tess2
 	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
 		cp -v build/libtess2.a $1/lib/$TYPE/libtess2.a
-		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/libtess2.a tess2
 	elif [ "$TYPE" == "android" ]; then
 	    rm -rf $1/lib/$TYPE/$ABI
 	    mkdir -p $1/lib/$TYPE/$ABI
 		cp -v build_$ABI/libtess2.a $1/lib/$TYPE/$ABI/libtess2.a
-		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$ABI/libtess2.a tess2
 	else
 		cp -v build/$TYPE/libtess2.a $1/lib/$TYPE/libtess2.a
-		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/libtess2.a tess2
 	fi
 
