@@ -185,6 +185,7 @@ function copy() {
 	mkdir -p $1/include/uriparser
 	# prepare libs directory if needed
 	mkdir -p $1/lib/$TYPE
+	. "$SECURE_SCRIPT"
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -R "build_${TYPE}_${ARCH}/Release/include/" $1/
