@@ -12,6 +12,7 @@ FORMULA_TYPES=( "osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" )
 
 VER=4.9.0
 
+FORMULA_DEPENDS=( "zlib" "libpng" )
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv.git
@@ -48,6 +49,10 @@ function build() {
     ZLIB_ROOT="$LIBS_ROOT/zlib/"
     ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
     ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
+    LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
 
     mkdir -p "build_${TYPE}_${PLATFORM}"
     cd "build_${TYPE}_${PLATFORM}"
@@ -104,10 +109,11 @@ function build() {
       -DBUILD_opencv_stitching=ON \
       -DBUILD_opencv_calib3d=ON \
       -DBUILD_opencv_objdetect=ON \
+      -DWITH_PNG=ON \
+      -DBUILD_PNG=OFF \
       -DWITH_1394=OFF \
       -DWITH_CARBON=OFF \
       -DWITH_JPEG=OFF \
-      -DWITH_PNG=OFF \
       -DWITH_TIFF=OFF \
       -DWITH_FFMPEG=OFF \
       -DWITH_OPENCL=OFF \
@@ -149,7 +155,6 @@ function build() {
       -DWITH_1394=OFF \
       -DWITH_ADE=OFF \
       -DWITH_JPEG=OFF \
-      -DWITH_PNG=OFF \
       -DWITH_FFMPEG=OFF \
       -DWITH_GIGEAPI=OFF \
       -DWITH_CUDA=OFF \
@@ -200,6 +205,15 @@ function build() {
     mkdir -p "build_${TYPE}_${ARCH}"
     cd "build_${TYPE}_${ARCH}"
     rm -f CMakeCache.txt || true
+
+    ZLIB_ROOT="$LIBS_ROOT/zlib/"
+    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+
+    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
+    LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib"
+
     DEFS="
         -DCMAKE_C_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
@@ -210,7 +224,6 @@ function build() {
         -DCMAKE_INSTALL_INCLUDEDIR=include \
         -DCMAKE_INSTALL_LIBDIR="lib" \
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-        -DBUILD_PNG=OFF \
         -DWITH_OPENCLAMDBLAS=OFF \
         -DBUILD_TESTS=OFF \
         -DWITH_CUDA=OFF \
@@ -252,7 +265,8 @@ function build() {
         -DBUILD_OPENEXR=OFF \
         -DWITH_DSHOW=OFF \
         -DWITH_VFW=OFF \
-        -DWITH_PNG=OFF \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_PVAPI=OFF\
         -DBUILD_OBJC=OFF \
@@ -263,7 +277,6 @@ function build() {
         -DWITH_1394=OFF \
         -DWITH_ADE=OFF \
         -DWITH_JPEG=OFF \
-        -DWITH_PNG=OFF \
         -DWITH_FFMPEG=OFF \
         -DWITH_GIGEAPI=OFF \
         -DWITH_CUDA=OFF \
@@ -288,7 +301,8 @@ function build() {
         -DWITH_OPENCLCLAMDFFT=OFF \
         -DWITH_OPENCL_SVM=OFF \
         -DWITH_LAPACK=OFF \
-        -DBUILD_ZLIB=ON \
+        -DBUILD_ZLIB=OFF \
+        -DWITH_ZLIB=ON \
         -DWITH_WEBP=OFF \
         -DWITH_VTK=OFF \
         -DWITH_PVAPI=OFF \
@@ -309,6 +323,7 @@ function build() {
     cmake .. ${DEFS} \
         -A "${PLATFORM}" \
         -G "${GENERATOR_NAME}" \
+        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Debug \
         -DCMAKE_BUILD_TYPE="Debug" \
         -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
@@ -318,11 +333,18 @@ function build() {
         -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
         ${EXTRA_DEFS} \
         ${CMAKE_WIN_SDK} \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
         -DBUILD_WITH_STATIC_CRT=OFF 
      cmake --build . --target install --config Debug
      cmake .. ${DEFS} \
         -A "${PLATFORM}" \
         -G "${GENERATOR_NAME}" \
+        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Release \
         -DCMAKE_BUILD_TYPE="Release" \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -331,6 +353,12 @@ function build() {
         -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
         -D BUILD_SHARED_LIBS=ON \
         ${EXTRA_DEFS} \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
         -DBUILD_WITH_STATIC_CRT=OFF \
         ${CMAKE_WIN_SDK}
     cmake --build . --target install --config Release
@@ -381,9 +409,10 @@ function build() {
     else 
       EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
     fi
-
+    rm -f CMakeCache.txt || true
     cmake  \
       -DANDROID_TOOLCHAIN=clang++ \
+      -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake  \
       -DCMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
       -DCMAKE_CXX_FLAGS="" \
@@ -481,7 +510,7 @@ function build() {
     mkdir -p build_${TYPE}
     cd build_${TYPE}
     find ./ -name "*.o" -type f -delete
-        rm -f CMakeCache.txt || true
+    rm -f CMakeCache.txt || true
     emcmake cmake .. \
       -B build \
       -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -492,6 +521,7 @@ function build() {
       -DCPU_BASELINE='' \
       -DCPU_DISPATCH='' \
       -DCV_TRACE=OFF \
+      -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_C_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DCMAKE_CXX_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DBUILD_SHARED_LIBS=OFF \
@@ -634,16 +664,28 @@ function copy() {
     mkdir -p $1/bin//$PLATFORM/Debug
     mkdir -p $1/bin/$PLATFORM/Release
 
-    OUTPUT_FOLDER=${BUILD_PLATFORM}
+    if [[ "$ARCH" =~ ^(64|x64)$ ]]; then
 
-    cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
-    cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+      OUTPUT_FOLDER=${BUILD_PLATFORM}
 
-    cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Release
-    cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Debug
+      cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+      cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+
+      cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Release
+      cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Debug
+    else
+
+      cp -v "build_${TYPE}_${ARCH}/Release/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+      cp -v "build_${TYPE}_${ARCH}/Debug/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+
+      cp -v "build_${TYPE}_${ARCH}/Release/bin/"*.dll $1/bin/$PLATFORM/Release
+      cp -v "build_${TYPE}_${ARCH}/Debug/bin/"*.dll $1/bin/$PLATFORM/Debug
+
+    fi
 
     cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Release/"*.lib $1/lib/$TYPE/$PLATFORM/Release
     cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+
 
     cp -Rv "build_${TYPE}_${ARCH}/Release/etc/" $1/etc
 
