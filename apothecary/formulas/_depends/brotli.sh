@@ -65,6 +65,9 @@ function build() {
           -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
           -DCMAKE_INSTALL_LIBDIR="lib" \
           -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+          -DBUILD_TESTING=OFF \
+          -DBROTLI_BUILD_TOOLS=OFF \
+          -DBROTLI_BUNDLED_MODE=ON \
           -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
           -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
           -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -97,14 +100,18 @@ function build() {
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_INSTALL_BINARY_DIR=lib \
         -DCMAKE_INSTALL_FULL_LIBDIR=lib \
+        -DCMAKE_INSTALL_LIBDIR="lib" \
         -DBROTLI_BUNDLED_MODE=OFF \
         -DPLATFORM=$PLATFORM \
         -DENABLE_BITCODE=OFF \
+        -DBUILD_TESTING=OFF \
+        -DBROTLI_BUILD_TOOLS=OFF \
+        -DBROTLI_BUNDLED_MODE=ON \
         -DENABLE_ARC=OFF \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DENABLE_VISIBILITY=OFF
 
-     cmake --build . --config Release
+     cmake --build . --config Release --target install
      cd ..
 	fi
 }
@@ -112,17 +119,18 @@ function build() {
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
   mkdir -p $1/lib/$TYPE
+  mkdir -p $1/include 
+  . "$SECURE_SCRIPT"
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-		mkdir -p $1/include    
     mkdir -p $1/lib/$TYPE/$PLATFORM/
-    cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
-    cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
-    . "$SECURE_SCRIPT"
-    secure $1/lib/$TYPE/$PLATFORM/zlib.a 
+    cp -v -r c/include/* $1/include
+    cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/$PLATFORM/
+    secure $1/lib/$TYPE/$PLATFORM/libbrotlidec.a brotli.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		cp -v -r c/include/* $1/include
     mkdir -p $1/lib/$TYPE/$PLATFORM/
     cp -v "build_${TYPE}_${PLATFORM}/Release/"*.lib $1/lib/$TYPE/$PLATFORM/
+    secure $1/lib/$TYPE/$PLATFORM/brotlidec.lib brotli.pkl
 	fi
 }
 

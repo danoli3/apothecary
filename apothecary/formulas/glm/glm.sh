@@ -11,6 +11,7 @@ FORMULA_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch6
 GIT_URL=https://github.com/g-truc/glm
 #GIT_TAG=1.0.0.0
 GIT_TAG=master
+VER=1.0.1
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -34,7 +35,8 @@ function copy() {
 	# headers
 	mkdir -p $1/include
 	cp -rv glm $1/include
-
+	
+	. "$SECURE_SCRIPT"
 	secure $1/include/glm/glm.hpp glm.pkl
 
 	# copy license file
