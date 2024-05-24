@@ -42,6 +42,7 @@ function copy() {
 	mkdir -p $1/include
 	cp -v json.hpp $1/include
 
+	. "$SECURE_SCRIPT"
 	secure $1/include/json.hpp json.pkl
 
 	# copy license file
