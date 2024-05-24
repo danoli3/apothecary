@@ -9,9 +9,9 @@ FORMULA_TYPES=( "osx" "vs" )
 #for vs 1.0.21 is good - but needs an unmerged PR / patch to fix iso transfers
 
 GIT_URL=https://github.com/libusb/libusb
-GIT_TAG=1.0.26
+GIT_TAG=1.0.27
 GIT_BRANCH_VS=master
-VER=1.0.26
+VER=1.0.27
 
 URL=https://github.com/libusb/libusb/releases/download/v${GIT_TAG}/libusb-${GIT_TAG}.tar.bz2
 
@@ -53,6 +53,7 @@ function build() {
 	    GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
+        rm -f CMakeCache.txt *.lib *.o
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=17 \
@@ -82,6 +83,38 @@ function build() {
     	./autogen.sh
 		CFLAGS="-arch arm64 -arch x86_64 -mmacosx-version-min=${OSX_MIN_SDK_VER}" ./configure --disable-shared --enable-static
  		make -j${PARALLEL_MAKE}
+
+ 		# GENERATOR_NAME="Xcode"
+	    # mkdir -p "build_${TYPE}_${PLATFORM}"
+	    # cd "build_${TYPE}_${PLATFORM}"
+	    # rm -f CMakeCache.txt *.lib *.o
+	    # DEFS="-DLIBRARY_SUFFIX=${PLATFORM} \
+	    #     -DCMAKE_BUILD_TYPE=Release \
+	    #     -DCMAKE_C_STANDARD=17 \
+	    #     -DCMAKE_CXX_STANDARD=17 \
+	    #     -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	    #     -DCMAKE_CXX_EXTENSIONS=OFF
+	    #     -DBUILD_SHARED_LIBS=ON \
+	    #     -DCMAKE_INSTALL_PREFIX=Release \
+	    #     -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+	    #     -DCMAKE_INSTALL_INCLUDEDIR=include"         
+	    # cmake .. ${DEFS} \
+	    # 	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
+        #     -DPLATFORM=$PLATFORM \
+        #     -DENABLE_BITCODE=OFF \
+        #     -DENABLE_ARC=OFF \
+        #     -DENABLE_VISIBILITY=OFF \
+        #     -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+        #     -DCMAKE_BUILD_TYPE=Release \
+        #     -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
+	    #     -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
+	    #     -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+	    #     -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+        #     -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+	    #     -DCMAKE_INSTALL_LIBDIR="lib" \
+	    #     -DCMAKE_VERBOSE_MAKEFILE=ON
+	    # cmake --build . --config Release --target install
+	    # cd ..
 	fi
 
 }
