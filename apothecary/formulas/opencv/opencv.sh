@@ -664,7 +664,7 @@ function copy() {
     mkdir -p $1/bin//$PLATFORM/Debug
     mkdir -p $1/bin/$PLATFORM/Release
 
-    if [[ "$ARCH" =~ ^(64|x64)$ ]]; then
+    # if [[ "$ARCH" =~ ^(64|x64)$ ]]; then
 
       OUTPUT_FOLDER=${BUILD_PLATFORM}
 
@@ -673,15 +673,15 @@ function copy() {
 
       cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Release
       cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Debug
-    else
+    # else
 
-      cp -v "build_${TYPE}_${ARCH}/Release/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
-      cp -v "build_${TYPE}_${ARCH}/Debug/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+    #   cp -v "build_${TYPE}_${ARCH}/Release/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+    #   cp -v "build_${TYPE}_${ARCH}/Debug/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
 
-      cp -v "build_${TYPE}_${ARCH}/Release/bin/"*.dll $1/bin/$PLATFORM/Release
-      cp -v "build_${TYPE}_${ARCH}/Debug/bin/"*.dll $1/bin/$PLATFORM/Debug
+    #   cp -v "build_${TYPE}_${ARCH}/Release/bin/"*.dll $1/bin/$PLATFORM/Release
+    #   cp -v "build_${TYPE}_${ARCH}/Debug/bin/"*.dll $1/bin/$PLATFORM/Debug
 
-    fi
+    # fi
 
     cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Release/"*.lib $1/lib/$TYPE/$PLATFORM/Release
     cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug

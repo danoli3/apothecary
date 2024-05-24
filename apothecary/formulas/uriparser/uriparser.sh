@@ -202,7 +202,7 @@ function copy() {
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE
 		cp -Rv "build_${TYPE}/uriparser_wasm.wasm" $1/lib/$TYPE/uriparser.wasm
-		secure $1/lib/$TYPE/$PLATFORM/uriparser.wasm
+		secure $1/lib/$TYPE/uriparser.wasm
     elif [ "$TYPE" == "android" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE/$ABI/
