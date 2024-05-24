@@ -36,6 +36,7 @@ function download() {
 	. "$DOWNLOADER_SCRIPT"
     downloader "${URL}/${PKG}"
 	tar xjf $PKG
+	rm "${PKG}"
 }
 
 # prepare the build environment, executed inside the lib src dir
