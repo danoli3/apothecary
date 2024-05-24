@@ -807,7 +807,7 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
 fi
 
 # Check if PLATFORM is not set or is empty
-if [ -z "$PLATFORM" ]; then
+if [ -z "${PLATFORM+x}" ]; then
   PLATFORM="Unknown Platform"
   echoWarning " PLATFORM missing report'."
 fi
@@ -942,6 +942,8 @@ function installAndroidToolchain() {
 				--stl=libc++
 		fi
 	fi
+
+    PLATFORM=$ARCH
 
 	cd $WD
 
@@ -2148,6 +2150,12 @@ BUILD_ROOT_DIR=$BUILD_DIR/$BUILDROOT_SUBDIR
 
 # set for android sdk info
 if [[ "$TYPE" == "android" ]] ; then
+
+    if [ -z "${NDK_ROOT+x}" ]; then
+        NDK_ROOT=NDK_ROOT=/Users/one/Library/Android/sdk/ndk/25.2.9519653
+        echoError " NDK_ROOT not defined! This is ussually /Users/{username}/Library/Android/sdk/ndk on macOS"
+    fi
+
 	if [[ -e ${APOTHECARY_DIR}/paths.make ]] ; then
 		source ${APOTHECARY_DIR}/paths.make
 		ANDROID_NDK_ROOT=${NDK_ROOT}
