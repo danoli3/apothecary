@@ -25,17 +25,18 @@ function download() {
     mv libsvgtiny svgtiny
     cd svgtiny
 
-    git -c advice.detachedHead=false clone -b release/0.4.2 --depth 1 git://git.netsurf-browser.org/libdom.git
+    # git -c advice.detachedHead=false clone -b release/0.4.2 --depth 1 git://git.netsurf-browser.org/libdom.git
+    git -c advice.detachedHead=false clone -b master --depth 1 https://github.com/danoli3/libdom.git #0.2.5
     git -c advice.detachedHead=false clone -b release/0.2.5 --depth 1 git://git.netsurf-browser.org/libparserutils.git
     git -c advice.detachedHead=false clone -b release/0.4.3 --depth 1 git://git.netsurf-browser.org/libwapcaplet.git
 
     #if [ "$TYPE" == "vs" ]; then
 		#dos2unix $FORMULA_DIR/libdom.patch
-		cd libdom
-		if git apply $FORMULA_DIR/libdompatch.diff  --check; then
-	 	 	git apply $FORMULA_DIR/libdompatch.diff
-		fi
-		cd ../
+		# cd libdom
+		# if git apply $FORMULA_DIR/libdompatch.diff  --check; then
+	 	#  	git apply $FORMULA_DIR/libdompatch.diff
+		# fi
+		# cd ../
 		# sed -i -e 's/restrict//g' libwapcaplet/src/libwapcaplet.c
 	#else
 		# Use custom Makefile
