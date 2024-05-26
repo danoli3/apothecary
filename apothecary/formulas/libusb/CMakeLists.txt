@@ -21,58 +21,70 @@ project(usb-1.0
 # This function generates all the local variables what end up getting written to config.
 # We use a function as any vars set in this context don't mess with the rest of the file.
 # e.g. Logging LIBUSB_ENABLE_LOGGING mapps to ENABLE_LOGGING in the config, keeps it clean
-function(generate_config_file)
-    include(CheckIncludeFiles)
-    include(CheckFunctionExists)
-    include(CheckSymbolExists)
-    include(CheckStructHasMember)
-    include(CheckCCompilerFlag)
+if(APPLE)
+    function(generate_config_file)
+        file(MAKE_DIRECTORY "${LIBUSB_GEN_INCLUDES}")
+        configure_file(
+            "Xcode/config.h"
+            "${LIBUSB_GEN_INCLUDES}/config.h"
+            COPYONLY
+        )
+    endfunction()
+else()
+    function(generate_config_file)
+        include(CheckIncludeFiles)
+        include(CheckFunctionExists)
+        include(CheckSymbolExists)
+        include(CheckStructHasMember)
+        include(CheckCCompilerFlag)
 
-    check_function_exists(clock_gettime             HAVE_CLOCK_GETTIME)
-    check_function_exists(pthread_condattr_setclock HAVE_PTHREAD_CONDATTR_SETCLOCK)
-    check_function_exists(pthread_setname_np        HAVE_PTHREAD_SETNAME_NP)
-    check_function_exists(pthread_threadid_np       HAVE_PTHREAD_THREADID_NP)
-    check_function_exists(eventfd                   HAVE_EVENTFD)
-    check_function_exists(pipe2                     HAVE_PIPE2)
-    check_function_exists(syslog                    HAVE_SYSLOG)
+        check_function_exists(clock_gettime             HAVE_CLOCK_GETTIME)
+        check_function_exists(pthread_condattr_setclock HAVE_PTHREAD_CONDATTR_SETCLOCK)
+        check_function_exists(pthread_setname_np        HAVE_PTHREAD_SETNAME_NP)
+        check_function_exists(pthread_threadid_np       HAVE_PTHREAD_THREADID_NP)
+        check_function_exists(eventfd                   HAVE_EVENTFD)
+        check_function_exists(pipe2                     HAVE_PIPE2)
+        check_function_exists(syslog                    HAVE_SYSLOG)
 
-    check_include_files(asm/types.h      HAVE_ASM_TYPES_H)
-    check_include_files(sys/eventfd.h    HAVE_EVENTFD)
-    check_include_files(string.h         HAVE_STRING_H)
-    check_include_files(sys/time.h       HAVE_SYS_TIME_H)
+        check_include_files(asm/types.h      HAVE_ASM_TYPES_H)
+        check_include_files(sys/eventfd.h    HAVE_EVENTFD)
+        check_include_files(string.h         HAVE_STRING_H)
+        check_include_files(sys/time.h       HAVE_SYS_TIME_H)
 
-    check_symbol_exists(timerfd_create  "sys/timerfd.h" HAVE_TIMERFD)
-    check_symbol_exists(nfds_t  "poll.h" HAVE_NFDS_T)
+        check_symbol_exists(timerfd_create  "sys/timerfd.h" HAVE_TIMERFD)
+        check_symbol_exists(nfds_t  "poll.h" HAVE_NFDS_T)
 
-    check_struct_has_member("struct timespec" tv_sec time.h HAVE_STRUCT_TIMESPEC)
+        check_struct_has_member("struct timespec" tv_sec time.h HAVE_STRUCT_TIMESPEC)
 
-    if(HAVE_VISIBILITY)
-        set(DEFAULT_VISIBILITY "__attribute__((visibility(\"default\")))")
-    else()
-        set(DEFAULT_VISIBILITY "" )
-    endif()
+        if(HAVE_VISIBILITY)
+            set(DEFAULT_VISIBILITY "__attribute__((visibility(\"default\")))")
+        else()
+            set(DEFAULT_VISIBILITY "" )
+        endif()
 
-    # Set vars that will be written into the config file.
-    if(WIN32)
-        set(PLATFORM_WINDOWS 1)
-    else()
-        set(PLATFORM_POSIX 1)
-    endif()
+        # Set vars that will be written into the config file.
+        if(WIN32)
+            set(PLATFORM_WINDOWS 1)
+        else()
+            set(PLATFORM_POSIX 1)
+        endif()
 
-    if(LIBUSB_ENABLE_LOGGING)
-        set(ENABLE_LOGGING ${LIBUSB_ENABLE_LOGGING})
-    endif()
-    if(LIBUSB_ENABLE_DEBUG_LOGGING)
-        set(ENABLE_DEBUG_LOGGING ${LIBUSB_ENABLE_DEBUG_LOGGING})
-    endif()
+        if(LIBUSB_ENABLE_LOGGING)
+            set(ENABLE_LOGGING ${LIBUSB_ENABLE_LOGGING})
+        endif()
+        if(LIBUSB_ENABLE_DEBUG_LOGGING)
+            set(ENABLE_DEBUG_LOGGING ${LIBUSB_ENABLE_DEBUG_LOGGING})
+        endif()
 
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        check_c_compiler_flag("-fvisibility=hidden" HAVE_VISIBILITY)
-    endif()
+        if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
+            check_c_compiler_flag("-fvisibility=hidden" HAVE_VISIBILITY)
+        endif()
 
-    file(MAKE_DIRECTORY "${LIBUSB_GEN_INCLUDES}")
-    configure_file(config.h.in "${LIBUSB_GEN_INCLUDES}/config.h" @ONLY)
-endfunction()
+        file(MAKE_DIRECTORY "${LIBUSB_GEN_INCLUDES}")
+        configure_file(config.h.in "${LIBUSB_GEN_INCLUDES}/config.h" @ONLY)
+    endfunction()
+endif()
+
 
 if(BUILD_SHARED_LIBS)
     set(LIBUSB_BUILD_SHARED_LIBS_DEFAULT ON)
@@ -179,11 +191,18 @@ else()
             "${LIBUSB_ROOT}/os/darwin_usb.c"
             "${LIBUSB_ROOT}/os/darwin_usb.h"
         )
-        target_link_libraries(usb-1.0 PRIVATE
-            "-framework Foundation"
-            "-framework IOKit"
-            "-framework Security"
+        find_library(IOKIT_FRAMEWORK IOKit)
+        find_library(SECURITY_FRAMEWORK Security)
+        find_library(FOUNDATION_FRAMEWORK Foundation)
+        find_library(OBJC_LIBRARY objc)
+ 
+        target_link_libraries(usb-1.0
+            ${IOKIT_FRAMEWORK}
+            ${FOUNDATION_FRAMEWORK}
+            ${SECURITY_FRAMEWORK}
+            ${OBJC_LIBRARY}
         )
+        
     elseif(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
         target_sources(usb-1.0 PRIVATE
             "${LIBUSB_ROOT}/os/netbsd_usb.c"
