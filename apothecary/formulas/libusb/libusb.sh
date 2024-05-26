@@ -56,8 +56,8 @@ function build() {
 		echo "building libusb $TYPE | $ARCH | $VS_VER | vs: Visual Studio ${VS_VER_GEN} -A ${PLATFORM}"
 	    echo "--------------------"
 	    GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-	    mkdir -p "build_${TYPE}_${ARCH}"
-	    cd "build_${TYPE}_${ARCH}"
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+	    cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.lib *.o
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
@@ -142,8 +142,9 @@ function copy() {
 	. "$SECURE_SCRIPT"
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-    	cp -f "build_${TYPE}_${PLATFORM}/Release/bin/libusb-1.0.dll" $1/lib/$TYPE/$PLATFORM/libusb.dll
-    	cp -f "build_${TYPE}_${PLATFORM}/Release/lib/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb.lib
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libusb-1.0/" $1/
+    	cp -f "build_${TYPE}_${PLATFORM}/Release/libusb-1.0.dll" $1/lib/$TYPE/$PLATFORM/libusb.dll
+    	cp -f "build_${TYPE}_${PLATFORM}/Release/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb.lib
 		secure $1/lib/$TYPE/$PLATFORM/libusb.lib libusb
 	fi
     if [ "$TYPE" == "osx" ] ; then
