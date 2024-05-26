@@ -122,6 +122,7 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.lib *.o
         EXTRA_DEFS="
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
@@ -176,7 +177,7 @@ function build() {
 
         mkdir -p build_${TYPE}_${ABI}
         cd build_${TYPE}_${ABI}
-        
+        rm -f CMakeCache.txt *.a *.o
         export CMAKE_CFLAGS="$CFLAGS"
         export CFLAGS=""
         export CMAKE_LDFLAGS="$LDFLAGS"

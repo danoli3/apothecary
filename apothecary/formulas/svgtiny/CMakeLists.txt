@@ -75,6 +75,10 @@ if(EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 endif()
 
+if(DO_XML_INSTALL)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dom/bindings/xml/xmlerror.h ${CMAKE_CURRENT_SOURCE_DIR}/dom/bindings/xml/xmlparser.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
+
 
 install(TARGETS svgtiny DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES include/svgtiny.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
