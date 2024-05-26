@@ -32,8 +32,8 @@ function download() {
     #if [ "$TYPE" == "vs" ]; then
 		#dos2unix $FORMULA_DIR/libdom.patch
 		cd libdom
-		if git apply $FORMULA_DIR/libdom.patch  --check; then
-	 	 	git apply $FORMULA_DIR/libdom.patch
+		if git apply $FORMULA_DIR/libdompatch.diff  --check; then
+	 	 	git apply $FORMULA_DIR/libdompatch.diff
 		fi
 		cd ../
 		# sed -i -e 's/restrict//g' libwapcaplet/src/libwapcaplet.c
@@ -99,6 +99,7 @@ function build() {
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DDO_XML_INSTALL=ON \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
     		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
@@ -131,9 +132,9 @@ function build() {
 	        -DCMAKE_INSTALL_INCLUDEDIR=include"
 	    cmake .. ${DEFS} \
 			-UCMAKE_CXX_FLAGS \
-			-DCMAKE_C_STANDARD=99 \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+	        -DDO_XML_INSTALL=ON \
 	        -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
 	        -DCMAKE_BUILD_TYPE=Debug \
@@ -154,6 +155,7 @@ function build() {
 			-UCMAKE_CXX_FLAGS \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+	        -DDO_XML_INSTALL=ON \
 	        -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Debug \
@@ -195,6 +197,7 @@ function build() {
             -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_SYSROOT=$SYSROOT \
+            -DDO_XML_INSTALL=ON \
             -DANDROID_NDK=$NDK_ROOT \
             -DANDROID_ABI=$ABI \
             -DANDROID_STL=c++_shared \
@@ -240,6 +243,7 @@ function build() {
 		    -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
+            -DDO_XML_INSTALL=ON \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=ON \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
@@ -275,6 +279,7 @@ function build() {
 	    	-DCMAKE_C_STANDARD=17 \
 			-DCMAKE_CXX_STANDARD=17 \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DDO_XML_INSTALL=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \

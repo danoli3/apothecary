@@ -76,7 +76,7 @@ if(EMSCRIPTEN)
 endif()
 
 if(DO_XML_INSTALL)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dom/bindings/xml/xmlerror.h ${CMAKE_CURRENT_SOURCE_DIR}/dom/bindings/xml/xmlparser.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlerror.h ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlparser.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 endif()
 
 
