@@ -142,8 +142,8 @@ function copy() {
 	. "$SECURE_SCRIPT"
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-    	cp -f "build_${TYPE}_${PLATFORM}/Release/libusb-1.0.dll" $1/lib/$TYPE/$PLATFORM/libusb.dll
-    	cp -f "build_${TYPE}_${PLATFORM}/Release/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb.lib
+    	cp -f "build_${TYPE}_${PLATFORM}/Release/bin/libusb-1.0.dll" $1/lib/$TYPE/$PLATFORM/libusb.dll
+    	cp -f "build_${TYPE}_${PLATFORM}/Release/lib/usb-1.0.lib" $1/lib/$TYPE/$PLATFORM/libusb.lib
 		secure $1/lib/$TYPE/$PLATFORM/libusb.lib libusb
 	fi
     if [ "$TYPE" == "osx" ] ; then
