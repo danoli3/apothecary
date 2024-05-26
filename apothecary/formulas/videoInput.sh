@@ -63,7 +63,7 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
             -DCMAKE_INSTALL_PREFIX=Release \
-            -D CMAKE_VERBOSE_MAKEFILE=ON 
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
             
         cmake --build . --config Release
 
@@ -77,7 +77,7 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} " \
             -DCMAKE_INSTALL_PREFIX=Debug \
-            -D CMAKE_VERBOSE_MAKEFILE=ON 
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
             
         cmake --build . --config Debug
  

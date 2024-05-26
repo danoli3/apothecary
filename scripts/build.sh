@@ -9,6 +9,12 @@ else
     export FORCE=""
 fi
 
+if [ -z "${FORCE+x}" ]; then
+    export FORCE=""
+else
+    export FORCE="-f"
+fi
+
 
 # trap any script errors and exit
 # trap "trapError" ERR
