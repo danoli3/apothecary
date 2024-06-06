@@ -82,7 +82,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-
+            // https://api.github.com/repos/openframeworks/apothecary/actions/artifacts?per_page=100
             // Ensure the output directory exists
             const outputDir = path.join(process.env.GITHUB_WORKSPACE, 'out');
             if (!fs.existsSync(outputDir)){
@@ -93,22 +93,29 @@ jobs:
             const artifacts = await github.rest.actions.listArtifactsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              per_page: 18
+              sort: 'created_at',
+              direction: 'desc',
+              per_page: 30
             });
 
+            const artifactNamesToDownload = ['libs-ios-ios-1', 'libs-ios-ios-2', 'libs-ios-ios-3', 'libs-macos-osx-1', 'libs-macos-osx-2', 'libs-macos-osx-3', 'libs-tvos-tvos-1', 'libs-tvos-tvos-2', 'libs-tvos-tvos-3];
+            let count = 0;
+            
             for (const artifact of artifacts.data.artifacts) {
-              
-              // Download each artifact
-              const download = await github.rest.actions.downloadArtifact({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                artifact_id: artifact.id,
-                archive_format: 'zip',
-              });
+              if (artifactNamesToDownload.includes(artifact.name) && !artifact.expired) {
+                // Download the artifact
+                const download = await github.rest.actions.downloadArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                  archive_format: 'zip',
+                });
 
-              const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
-              fs.writeFileSync(artifactPath, Buffer.from(download.data));
-              console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
+                const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
+                fs.writeFileSync(artifactPath, Buffer.from(download.data));
+                console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
+                count++;
+              }
             }
       - name: Extract Artifacts to /out
         run: |
