@@ -40,52 +40,67 @@ jobs:
       - name: Scripts Install
         run: ./scripts/osx/install.sh
       - name: Download prior build artifact
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const path = require('path');
-
-          // Ensure the output directory exists
-          const outputDir = path.join(process.env.GITHUB_WORKSPACE, 'out');
-          if (!fs.existsSync(outputDir)){
-            fs.mkdirSync(outputDir);
-          }
-
-          // Artifact name format used in the upload step
-          const artifactName = `libs-ios-${process.env.TARGET}-${process.env.MATRIX_BUNDLE}`;
-
-          // List all artifacts for the repository
-          const artifacts = await github.rest.actions.listArtifactsForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            per_page: 18 // Ensure you list all artifacts, adjust if necessary
-          });
-
-          // Find the specific artifact by name
-          const artifact = artifacts.data.artifacts.find(a => a.name === artifactName);
-
-          if (artifact) {
-            // Download the specific artifact
-            const download = await github.rest.actions.downloadArtifact({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              artifact_id: artifact.id,
-              archive_format: 'zip',
-            });
-
-            const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
-            fs.writeFileSync(artifactPath, Buffer.from(download.data));
-            console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
-
-            // Extract the artifact
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
             const unzipper = require('unzipper');
-            fs.createReadStream(artifactPath)
-              .pipe(unzipper.Extract({ path: outputDir }))
-              .on('close', () => console.log(`Extracted ${artifact.name} to ${outputDir}`));
-          } else {
-            console.log(`Artifact ${artifactName} not found`);
-          }
+
+            // Ensure the output directory exists
+            const outputDir = path.join(process.env.GITHUB_WORKSPACE, 'out');
+            if (!fs.existsSync(outputDir)){
+              fs.mkdirSync(outputDir, { recursive: true });
+            }
+
+            // Artifact name format used in the upload step
+            const artifactName = `libs-osx-${process.env.TARGET}-${process.env.MATRIX_BUNDLE}`;
+
+            async function downloadArtifact() {
+              try {
+                // List all artifacts for the repository
+                const { data: { artifacts } } = await github.rest.actions.listArtifactsForRepo({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  per_page: 100 // Ensure you list all artifacts, adjust if necessary
+                });
+
+                // Find the specific artifact by name
+                const artifact = artifacts.find(a => a.name === artifactName);
+
+                if (artifact) {
+                  // Download the specific artifact
+                  const { data: download } = await github.rest.actions.downloadArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id,
+                    archive_format: 'zip',
+                  });
+
+                  const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
+                  fs.writeFileSync(artifactPath, Buffer.from(download));
+
+                  console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
+
+                  // Extract the artifact
+                  await new Promise((resolve, reject) => {
+                    fs.createReadStream(artifactPath)
+                      .pipe(unzipper.Extract({ path: outputDir }))
+                      .on('close', resolve)
+                      .on('error', reject);
+                  });
+
+                  console.log(`Extracted ${artifact.name} to ${outputDir}`);
+                } else {
+                  console.log(`Artifact ${artifactName} not found`);
+                }
+              } catch (error) {
+                console.error(`Error downloading artifact: ${error.message}`);
+                process.exit(1);
+              }
+            }
+
+            downloadArtifact();
       - name: Extract Artifacts to /out
         run: |
           mkdir -p out
@@ -141,7 +156,7 @@ jobs:
           rm -f out/*.tar.bz2
           rm -f xout/*.tar.bz2
           echo "Cleanup complete."
-      - name: Merge our libaries into XC Framework 
+      - name: Merge our libraries into XC Framework 
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/osx/xcframework_all.sh
         env:
