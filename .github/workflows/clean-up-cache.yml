@@ -27,16 +27,17 @@ jobs:
           cacheKeysForPR=$(gh actions-cache list -R $REPO -B $BRANCH -L 100 | cut -f 1 )
 
          
-          LIST=$(gh actions-cache list -R $REPO -B $BRANCH -L 100 --sort size --order desc)
-          echo "list all repo -100 [${LIST}]"
-          ## Setting this to not fail the workflow while deleting cache keys.
-          # set +e
-          # echo "Deleting caches..."
-          # for cacheKey in $cacheKeysForPR
-          # do
-          #     gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
-          # done
-          # echo "Done"
+          LIST=$(gh actions-cache list -R $REPO -B $BRANCH -L 100 | cut -f 1 )
+          echo "List: [${LIST}]"
+          echo "cachekeys: [${cacheKeysForPR}]"
+          # Setting this to not fail the workflow while deleting cache keys.
+          set +e
+          echo "Deleting caches..."
+          for cacheKey in $cacheKeysForPR
+          do
+              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          done
+          echo "Done"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
