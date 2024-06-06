@@ -45,7 +45,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-
+            // https://api.github.com/repos/openframeworks/apothecary/actions/artifacts?per_page=100
             // Ensure the output directory exists
             const outputDir = path.join(process.env.GITHUB_WORKSPACE, 'out');
             if (!fs.existsSync(outputDir)){
@@ -129,7 +129,7 @@ jobs:
         with:
           name: libs-macos-${{ env.TARGET }}-${{ matrix.bundle }}
           path: out/openFrameworksLibs_${{ env.release }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
-          retention-days: 14
+          retention-days: 31
       - name: Remove .tar.bz2 files
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         run: |
