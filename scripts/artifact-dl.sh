@@ -11,13 +11,14 @@ fi
 
 OWNER="openframeworks"
 REPO="apothecary"
-PER_PAGE=18
+PER_PAGE=9
 OUTPUT_DIR="./out"
 
 TOKEN="$1"
 # Check if the argument is provided
 if [ -z "${TOKEN+x}" ]; then
     echo "No Github token argument provided. Required for Artifacts - even from public please pass in like ./scripts/artifact-dl.sh github_pat_1147"
+    echo "https://github.com/settings/tokens?type=beta"
     exit 1
 else
     echo "Github token set!"
