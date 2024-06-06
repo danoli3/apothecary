@@ -56,6 +56,8 @@ jobs:
             const artifacts = await github.rest.actions.listArtifactsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
+              sort: 'created_at',
+              direction: 'desc'
               per_page: 30
             });
 
@@ -63,7 +65,7 @@ jobs:
             let count = 0;
             
             for (const artifact of artifacts.data.artifacts) {
-              if (artifactNamesToDownload.includes(artifact.name)) {
+              if (artifactNamesToDownload.includes(artifact.name) && !artifact.expired) {
                 // Download the artifact
                 const download = await github.rest.actions.downloadArtifact({
                   owner: context.repo.owner,
