@@ -59,34 +59,34 @@ jobs:
               per_page: 18
             });
 
+            const artifactNamesToDownload = ['libs-macos-osx-1', 'libs-macos-osx-2', 'libs-macos-osx-3'];
             let count = 0;
+            
             for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name.startsWith('libs-macos-osx')) {
-                // Download only the first 3 artifacts starting with 'osx'
-                if (count < 3) {
-                  const download = await github.rest.actions.downloadArtifact({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    artifact_id: artifact.id,
-                    archive_format: 'zip',
-                  });
+              if (artifactNamesToDownload.includes(artifact.name)) {
+                // Download the artifact
+                const download = await github.rest.actions.downloadArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                  archive_format: 'zip',
+                });
 
-                  const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
-                  fs.writeFileSync(artifactPath, Buffer.from(download.data));
-                  console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
+                const artifactPath = path.join(outputDir, `${artifact.name}.zip`);
+                fs.writeFileSync(artifactPath, Buffer.from(download.data));
+                console.log(`Downloaded ${artifact.name} to ${artifactPath}`);
 
-                  // Extract the artifact
-                  const unzipper = require('unzipper');
-                  await new Promise((resolve, reject) => {
-                    fs.createReadStream(artifactPath)
-                      .pipe(unzipper.Extract({ path: outputDir }))
-                      .on('close', resolve)
-                      .on('error', reject);
-                  });
+                // Extract the artifact
+                const unzipper = require('unzipper');
+                await new Promise((resolve, reject) => {
+                  fs.createReadStream(artifactPath)
+                    .pipe(unzipper.Extract({ path: outputDir }))
+                    .on('close', resolve)
+                    .on('error', reject);
+                });
 
-                  console.log(`Extracted ${artifact.name} to ${outputDir}`);
-                  count++;
-                }
+                console.log(`Extracted ${artifact.name} to ${outputDir}`);
+                count++;
               }
             }
       - name: Extract Artifacts to /out
