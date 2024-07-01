@@ -14,7 +14,7 @@ VER=1.12.5p2-release
 GIT_URL=https://github.com/pocoproject/poco
 GIT_TAG=poco-${VER}
 
-FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "osx" "vs"  )
 
 #dependencies
 FORMULA_DEPENDS=( "openssl" )
@@ -140,6 +140,7 @@ function build() {
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
             -DENABLE_VISIBILITY=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
@@ -287,6 +288,8 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/ 
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/poco.a poco.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/include    
         mkdir -p $1/lib/$TYPE
@@ -345,17 +348,14 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "poco" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "poco" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "poco" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }
 

@@ -11,7 +11,7 @@ FORMULA_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch6
 VER=3.11.2
 
 # tools for git use
-GIT_URL=
+GIT_URL=https://github.com/nlohmann/json
 GIT_TAG=v$VER
 
 # download the source code and unpack it into LIB_NAME
@@ -19,7 +19,7 @@ function download() {
 	. "$DOWNLOADER_SCRIPT"
     mkdir json
     cd json    
-    downloader "https://github.com/nlohmann/json/releases/download/v$VER/json.hpp"
+    downloader "${GIT_URL}/releases/download/v$VER/json.hpp"
 	downloader "https://raw.githubusercontent.com/nlohmann/json/master/LICENSE.MIT"
 }
 
@@ -42,6 +42,9 @@ function copy() {
 	mkdir -p $1/include
 	cp -v json.hpp $1/include
 
+	. "$SECURE_SCRIPT"
+	secure $1/include/json.hpp json.pkl
+
 	# copy license file
 	if [ -d "$1/license" ]; then
         rm -rf $1/license
@@ -57,16 +60,13 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "json" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "json" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

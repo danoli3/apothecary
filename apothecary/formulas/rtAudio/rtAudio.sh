@@ -26,10 +26,11 @@ URL=https://www.music.mcgill.ca/~gary/rtaudio/release/
 function download() {
 	#curl -O https://www.music.mcgill.ca/~gary/rtaudio/release/rtaudio-$VER.tar.gz
 	. "$DOWNLOADER_SCRIPT"
-	downloader ${URL}/rtaudio-${VER}.tar.gz
-	tar -xf rtaudio-${VER}.tar.gz
-	mv rtaudio-${VER} rtAudio
-	rm rtaudio-${VER}.tar.gz
+	# downloader ${URL}/rtaudio-${VER}.tar.gz 
+	downloader ${GIT_URL}/archive/refs/tags/$VER.tar.gz
+	tar -xf ${VER}.tar.gz
+	mv rtaudio-${VER} rtaudio
+	rm ${VER}.tar.gz
 }
 
 # # prepare the build environment, executed inside the lib src dir
@@ -51,6 +52,7 @@ function build() {
 	if [ "$TYPE" == "osx" ] ; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.a *.o
 		cmake .. ${DEFS} \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
@@ -61,12 +63,13 @@ function build() {
 				-DBUILD_SHARED_LIBS=OFF \
 				-DCMAKE_BUILD_TYPE=Release \
 				-DCMAKE_CXX_FLAGS="-fPIC -DUSE_PTHREADS=1" \
-			    -DCMAKE_C_FLAGS="-fPIC -DUSE_PTHREADS=1" \
-			    -DCMAKE_C_STANDARD=17 \
-			    -DCMAKE_CXX_STANDARD=17 \
-			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			    -DCMAKE_CXX_EXTENSIONS=OFF \
-			    -DCMAKE_INSTALL_PREFIX=Release \
+			  -DCMAKE_C_FLAGS="-fPIC -DUSE_PTHREADS=1" \
+			  -DCMAKE_C_STANDARD=17 \
+			  -DCMAKE_CXX_STANDARD=17 \
+			  -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			  -DCMAKE_CXX_EXTENSIONS=OFF \
+			  -DCMAKE_INSTALL_PREFIX=Release \
+			  -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DRTAUDIO_API_ASIO=OFF \
@@ -81,9 +84,9 @@ function build() {
 		echo "building rtAudio $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
 	    echo "--------------------"
 	    GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-	    mkdir -p "build_${TYPE}_${ARCH}"
-	    cd "build_${TYPE}_${ARCH}"
-
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+	    cd "build_${TYPE}_${PLATFORM}"
+			rm -f CMakeCache.txt *.lib *.o
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}"
 	    VS_DEFS="
 	        -DRTAUDIO_API_WASAPI=ON \
@@ -126,6 +129,7 @@ function build() {
 		local API="--with-wasapi --with-ds " # asio as well?
 		mkdir -p build
 		cd build
+		rm -f CMakeCache.txt *.a *.o
 		cmake .. -G "Unix Makefiles" \
 			-DAUDIO_WINDOWS_WASAPI=ON \
 			-DAUDIO_WINDOWS_DS=ON \
@@ -145,15 +149,15 @@ function copy() {
 	mkdir -p $1/include
 	cp -v RtAudio.h $1/include
 	#cp -v RtError.h $1/include #no longer a part of rtAudio
-
+	. "$SECURE_SCRIPT"
 	# libs
 	mkdir -p $1/lib/$TYPE
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -Rv build_${TYPE}_${ARCH}/Release/include/rtaudio/* $1/include/
-    	cp -vf "build_${TYPE}_${ARCH}/Release/lib/rtaudio.lib" $1/lib/$TYPE/$PLATFORM/rtaudio.lib
-    	cp -vf "build_${TYPE}_${ARCH}/Debug/lib/rtaudiod.lib" $1/lib/$TYPE/$PLATFORM/rtaudioD.lib
-
+		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
+    cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/rtaudio.lib" $1/lib/$TYPE/$PLATFORM/rtaudio.lib
+    cp -vf "build_${TYPE}_${PLATFORM}/Debug/lib/rtaudiod.lib" $1/lib/$TYPE/$PLATFORM/rtaudioD.lib
+		secure $1/lib/$TYPE/$PLATFORM/rtaudio.lib rtaudio
 	elif [ "$TYPE" == "msys2" ] ; then
 		cd build
 		ls
@@ -163,7 +167,8 @@ function copy() {
 	elif [ "$TYPE" == "osx" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
-    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+    cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+		secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
 	fi
 
 	# copy license file
@@ -190,16 +195,13 @@ function clean() {
 	#apothecaryDependencies clean
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "rtaudio" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "rtaudio" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "rtaudio" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

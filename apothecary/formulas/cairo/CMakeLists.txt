@@ -38,10 +38,13 @@ else()
 endif()
 
 if(FREETYPE_FOUND)
-    find_package(BZip2)
+    #find_package(BZip2)
+    find_package(BrotliDec)
     include_directories(${FREETYPE_INCLUDE_DIRS})
-    include_directories(${BZIP2_INCLUDE_DIR})
-    list(APPEND CAIRO_LIBS ${FREETYPE_LIBRARIES} ${BZIP2_LIBRARIES})
+    include_directories(${BROTLIDEC_INCLUDE_DIRS})
+    #include_directories(${BZIP2_INCLUDE_DIR})
+    list(APPEND CAIRO_LIBS ${FREETYPE_LIBRARIES} ${BROTLIDEC_LIBRARIES})
+    # ${BZIP2_LIBRARIES}
 endif()
 
 # Use options to disable features

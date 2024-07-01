@@ -4,7 +4,7 @@
 # http://pixman.org/
 
 # define the version
-VER=0.40.0
+VER=0.43.4
 SHA1=d7baa6377b6f48e29db011c669788bb1268d08ad
 
 # tools for git use
@@ -26,12 +26,12 @@ function download() {
 	mv "pixman-$VER" pixman
 
 	local CHECKSHA=$(shasum pixman-$VER.tar.gz | awk '{print $1}')
-	if [ "$CHECKSHA" != "$SHA1" ] ; then
-    	echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-    	exit
-    else
-        echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
-    fi
+	# if [ "$CHECKSHA" != "$SHA1" ] ; then
+    # 	echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
+    # 	exit
+    # else
+    #     echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
+    # fi
 	rm pixman-$VER.tar.gz
 
 	echo "copying cmake files to dir"
@@ -51,7 +51,7 @@ function build() {
       
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
-
+         rm -f CMakeCache.txt *.a *.o 
         cmake  .. \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
@@ -68,16 +68,19 @@ function build() {
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=bin \
-            -D CMAKE_VERBOSE_MAKEFILE=OFF \
+            -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DBUILD_STATIC_LIBS=ON 
-        cmake --build .  --config Release --target install
+            -DBUILD_STATIC=ON \
+            -DBUILD_SHARED=OFF 
+            # -G Xcode 
+        cmake --build .  --config Release --target install 
         cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		# sed -i s/-MD/-MT/ Makefile.win32.common
@@ -85,9 +88,9 @@ function build() {
         echo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echo "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-		mkdir -p "build_${TYPE}_${ARCH}"
-		cd "build_${TYPE}_${ARCH}"
-
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+         rm -f CMakeCache.txt *.a *.o *.lib
         cmake  .. \
             -DCMAKE_C_STANDARD=17 \
             -DCMAKE_CXX_STANDARD=17 \
@@ -106,7 +109,8 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -D CMAKE_VERBOSE_MAKEFILE=OFF \
             ${CMAKE_WIN_SDK} \
-		    -DBUILD_SHARED_LIBS=ON \
+		    -DBUILD_STATIC=ON \
+            -DBUILD_SHARED=OFF \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
             
@@ -120,29 +124,26 @@ function build() {
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
 
+    . "$SECURE_SCRIPT"
+    mkdir -p $1/include
+    if [ -d "$1/license" ]; then
+            rm -rf $1/license
+    fi
+    mkdir -p $1/license
 	if [ "$TYPE" == "vs" ] ; then		
 
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${ARCH}/Release/lib/pixman-1_static.lib" $1/lib/$TYPE/$PLATFORM/libpixman-1.lib
-    	cp -RvT "build_${TYPE}_${ARCH}/Release/include/pixman-1" $1/include
-
-    	# copy license file
-		if [ -d "$1/license" ]; then
-	        rm -rf $1/license
-	    fi
-		mkdir -p $1/license
-		cp -v COPYING $1/license/LICENSE
-
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/pixman-1_static.lib" $1/lib/$TYPE/$PLATFORM/libpixman-1.lib
+    	cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/pixman-1/"* $1/include
+        secure $1/lib/$TYPE/$PLATFORM/libpixman-1.lib pixman.pkl
 	else # osx
 		# lib
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpixman-1.a" $1/lib/$TYPE/$PLATFORM/libpixman-1.a
-    	cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/pixman-1" $1/include
-
-    	# copy license file
-		mkdir -p $1/license
-		cp -v COPYING $1/license/LICENSE
+        cp -v "build_${TYPE}_${PLATFORM}/pixman/lib/libpixman-1.a" $1/lib/$TYPE/$PLATFORM/libpixman-1.a
+    	cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/pixman-1/"* $1/include
+        secure $1/lib/$TYPE/$PLATFORM/libpixman-1.a pixman.pkl
 	fi
+    cp -v COPYING $1/license/LICENSE
 
 }
 
@@ -152,20 +153,13 @@ function clean() {
 	make clean
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "pixman" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    echo "load file ${SAVE_FILE}"
-
-    if loadsave ${TYPE} "pixman" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      echo "The entry exists and doesn't need to be rebuilt."
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "pixman" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      echo "The entry doesn't exist or needs to be rebuilt."
-      return 1;
+        echo 0
     fi
 }

@@ -35,6 +35,7 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     downloader "${URL}/${PKG}"
 	tar xjf $PKG
+	rm "${PKG}"
 }
 
 # prepare the build environment, executed inside the lib src dir
@@ -61,10 +62,26 @@ function build() {
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
-	cp -r ../fmod $1/
+	cp -r ../fmod/ $1/
+
+	if [ "$TYPE" == "osx" ]; then
+		. "$SECURE_SCRIPT"
+		secure $1/lib/$TYPE/libfmod.dylib fmod
+	fi
 }
 
 # executed inside the lib src dir
 function clean() {
 	: # noop
+}
+
+function load() {
+    . "$LOAD_SCRIPT"
+    LOAD_RESULT=$(loadsave ${TYPE} "fmod" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
 }

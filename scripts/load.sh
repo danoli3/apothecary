@@ -3,16 +3,13 @@
 # usage 
 # ."$SCRIPT_DIR/save.sh"
 # load "ios" "freeimage" "arm64" "true" "v9.1.0" "v9.1.0"
-
+set +e
 
 function loadsave() {
-
   if [ -z "$2" ]; then
-    #echo "Load function not implemented - Param error"
-    return 1
+    echo "Load function not implemented - Param error"
+    echo 0
   fi
-
-  echo "load file: $SAVE_FILE 0:$0 1:$1 2:$2 3:$3 4:$4 5:$5 "
   local LOCAL_SAVE_FILE="$5"
   #SAVE_FILE="$SCRIPT_DIR/build_status.txt"
   # Get the input parameters
@@ -20,40 +17,64 @@ function loadsave() {
   local source_target="$2"
   local arch="$3"
   local version="$4"
-  #local tag="$5"
+  local pkldir="$5"
 
+  BINARY_SEC=${pkldir}
+  #OUTPUT_LOCATION=$(dirname "$BINARY_SEC")
+  FILENAME=$(basename "$BINARY_SEC/$2.pkl")
+  FILENAME_WITHOUT_EXT="${FILENAME%.*}"
+  OUTPUT_PKL_FILE="${BINARY_SEC:-.}/$FILENAME_WITHOUT_EXT.pkl"
 
-   # Check if the file exists
-   if [[ ! -f "$LOCAL_SAVE_FILE" ]]; then
-        touch $LOCAL_SAVE_FILE
-        return 1
-   fi
+  #echo " BINARY_SEC:[$BINARY_SEC] load file: [$OUTPUT_PKL_FILE] [0:$0 1:$1 2:$2 3:$3 4:$4]"
+  #echo " FILENAME: [$FILENAME] [FILENAME_WITHOUT_EXT:$FILENAME_WITHOUT_EXT OUTPUT_PKL_FILE:$OUTPUT_PKL_FILE]"
 
-  # Search for the entry in the file
-  local entry=$(grep "^$device_target|$source_target|$arch|$version|" "$LOCAL_SAVE_FILE")
+  # Check if the file exists
+  # if [[ ! -f "$LOCAL_SAVE_FILE" ]]; then
+  #     touch $LOCAL_SAVE_FILE
+  #     return 1
+  # fi
 
-  if [[ -z "$entry" ]]; then
-    # Entry doesn't exist in the file
-    return 1
+  if [[ ! -d "$BINARY_SEC" ]]; then
+    echo " Build confirmed for $1 [No cached $BINARY_SEC]"
+    echo 0
+    return 0
   fi
 
-  # Parse the entry
-  local built=$(echo "$entry" | cut -d "|" -f 5)
-  local datetime=$(echo "$entry" | cut -d "|" -f 6)
-
-  # Check if the entry needs to be rebuilt
-  local now=$(date -u +%s)
-  if [[ $(uname) == "Darwin" ]]; then
-    local saved=$(date -ju -f "%Y-%m-%d %H:%M:%S" "$datetime" +%s)
-  else
-    local saved=$(date -u -d "$datetime" +%s)
+   if [[ ! -f "$OUTPUT_PKL_FILE" ]]; then
+    echo " Build confirmed for $1 [No cached previous output PKL: $OUTPUT_PKL_FILE]"
+    echo 0
+    return 0
   fi
-  local diff=$(( (now - saved) / (60 * 60 * 24) ))
 
-  if [[ "$built" == "false" || "$diff" -ge 90 ]]; then
-    return 1
+  # Read and parse the .pkl file
+  local buildTime=$(grep 'buildTime =' "$OUTPUT_PKL_FILE" | cut -d '"' -f 2)
+  local fileVersion=$(grep 'version =' "$OUTPUT_PKL_FILE" | cut -d '"' -f 2)
+
+   # Check if the version matches
+  if [[ "$fileVersion" != "$version" ]]; then
+    echo " Build confirmed. Previous build has Version mismatch: $fileVersion != $version"
+    echo 0
+    return 0
   fi
+
+  # Check if the entry needs to be rebuilt based on buildTime
+  # local now=$(date -u +%s)
+  # if [[ $(uname) == "Darwin" ]]; then
+  #   local saved=$(date -jf "%Y-%m-%dT%H:%M:%SZ" "$buildTime" +%s)
+  # else
+  #   local saved=$(date -d "$buildTime" +%s)
+  # fi
+  # local diff=$(( (now - saved) / (60 * 60 * 24) ))
+
+  # if [[ "$buildTime" == "false" || "$diff" -ge 90 ]]; then
+  #   echo " Build confirmed. Previous Build time is older than 90 days (${diff}) - Rebuilding"
+  #   echo 0
+  #   return 0
+  # fi
 
   # Entry exists and doesn't need to be rebuilt
+  # echo " Build skipped. $2 past output is all up to date. $version built at : $saved"
+  echo 1
   return 0
+
 }

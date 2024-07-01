@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# this is the OpenFrameworks library apothecary,
+# this is the openFrameworks library apothecary,
 # it mixes formulas and potions to build and update the C/C++ lib dependencies
 #
 # formulas are simple scripts which implement the download, build, copy, & clean
@@ -10,8 +10,9 @@
 # Core OF lib formulas are located in the formulas dir and addon formulas should
 # be in addons/ofxMyAddon/scripts/formulas
 #
-# 2014 OpenFrameworks team
+# 2014 openFrameworks team
 # 2013 Dan Wilcox <danomatika@gmail.com>,
+# 2024 Dan Rosser <danoli3@gmail.com>,
 # supported by the CMU Studio for Creative Inquiry: http://studioforcreativeinquiry.org
 #
 # references:
@@ -46,7 +47,11 @@ BUILD_DEPENDENCIES=1
 
 # build settings
 HOST_OS= # compile os ("osx", "windows", "linux")
-TYPE= # library build type ("osx", "ios", "vs", etc)
+# library build type ("osx", "ios", "vs", etc)
+if [ -z "${TYPE+x}" ]; then
+    #echo "No TYPE argument provided."
+    TYPE=
+fi
 ARCH=64 # library build arch, 32 or 64 bit (not used for some build types)
 
 # full path to this script's dir
@@ -61,6 +66,9 @@ BUILD_DIR=
 # full path to the destination dir for compiled libs
 LIBS_DIR=""
 
+XC_DIR=""
+DEPEND_DIR=""
+
 # number of parallel tasks to run on make.
 # formulas should pass this as -j${PARALLEL_MAKE} to make
 PARALLEL_MAKE=1
@@ -70,8 +78,9 @@ SAVE_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/save.sh")"
 LOAD_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/load.sh")"
 SAVE_FILE="$(realpath "$APOTHECARY_DIR/../scripts")/status.txt"
 SECURE_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/secure.sh")"
+FORMAT_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/format.sh")"
 
-USE_SAVE=0
+USE_SAVE=1
 
 ### Xcode/ios specific settings
 
@@ -88,17 +97,19 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     # used when building for ios, the sdks you have installed are found in:
     # $XCODE_DEV_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator#.#.sdk
     IOS_LATEST_SDK="xcrun -sdk iphoneos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
-    IOS_SDK_VER=16.0
-    IOS_MIN_SDK_VER=13.0
-
-if ! which realpath >&/dev/null; then
-  if ! which brew >&/dev/null; then
-    msg="ERROR: This script requires brew. See https://brew.sh for installation instructions."
-    echo "$(tput setaf 1)$msg$(tput sgr0)" >&2
-    exit 1
-  fi
-  echo "Installing coreutils/realpath"
-  brew install coreutils >&/dev/null
+    IOS_SDK_VER=17.0
+    IOS_MIN_SDK_VER=15.0
+    TVOS_MIN_SDK_VER=13.0
+    XROS_MIN_SDK_VER=1.1
+    WATCHOS_MIN_SDK_VER=6.0
+    if ! which realpath >&/dev/null; then
+      if ! which brew >&/dev/null; then
+        msg="ERROR: This script requires brew. See https://brew.sh for installation instructions."
+        echo "$(tput setaf 1)$msg$(tput sgr0)" >&2
+        exit 1
+    fi
+    echo "Installing coreutils/realpath"
+    brew install coreutils >&/dev/null
 fi
 
 thisDir=$( dirname "`realpath "$0"`" )
@@ -149,24 +160,38 @@ CHECKOUT=YES
 
 # ansi console escape codes
 CON_DEFAULT="\033[0m"
+CON_WHITE="\033[37m"
+CON_LIGHT_GRAY="\033[37;1m"
 CON_BOLD="\033[1m"
 CON_RED="\033[31m"
 CON_YELLOW="\033[33m"
+CON_YELLOW_GREEN="\033[33m"
 CON_GREEN="\033[32m"
 
 # used to filter out bad build types
 VALID_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" )
 
 # verbose mode bool
-A_VERBOSE=0
+if [ -z "${A_VERBOSE+x}" ]; then
+    export A_VERBOSE=0
+fi
 
 # If formula already exists force download
-FORCE_DOWNLOAD=0
+if [ -z "${FORCE_DOWNLOAD+x}" ]; then
+    export FORCE_DOWNLOAD=0
+fi
+
+if [ -z "${LIBS_DIR_REAL+x}" ]; then
+    export LIBS_DIR_REAL=
+fi
 
 # prefer git instead of download tarballs
 # This remains _UNSET_ if git is not in use.
 # To use, set USE_GIT=1
-USE_GIT=
+
+if [ -z "${USE_GIT+x}" ]; then
+    export USE_GIT=
+fi
 
 # by default assume visual studio pro
 # -x changes to visual studio express
@@ -174,10 +199,24 @@ VS_BUILD_TOOL=devenv
 WIN10_INSTALLED_SDK_2019=10.0.190410.0
 WIN10_INSTALLED_SDK_2022=10.0.20348.0
 WIN11_INSTALLED_SDK_2022=10.0.22621.0
-VS_TYPE=Community #Professional #Enterprise 
-VS_COMPILER=MSVC #Compiler - MSVC by Default - Clang LLVM available now
-VS_HOST=amd64
+if [ -z "${VS_TYPE+x}" ]; then # Professional # Enterprise # Community
+    VS_TYPE=Community 
+fi
+if [ -z "${VS_COMPILER+x}" ]; then # MSVC / # Clang LLVM 
+    VS_COMPILER=MSVC 
+fi
+if [ -z "${VS_HOST+x}" ]; then
+    VS_HOST=amd64 
+fi
 TARGET_WIN_11=0
+
+if [ -z "${XCFRAMEWORK_ALL+x}" ]; then
+    export XCFRAMEWORK_ALL=false
+fi
+
+if [ -z "${LOADSAVE_RESULT+x}" ]; then
+    declare -a LOADSAVE_RESULT=0
+fi
 
 # nice, detailed help message
 HELP="usage: apothecary [options] <command> [<core|addons|libName|addonName>]
@@ -225,6 +264,8 @@ options:
   -p 	dont build dependencies
 
   -h	print this usage guide
+
+  -x xcframework all
 
 examples:
   # update all core libs and addon libs
@@ -282,20 +323,6 @@ trap "trapSignal SIGHUP" SIGHUP
 trap "trapSignal SIGINT" SIGINT
 trap "trapSignal SIGTERM" SIGTERM
 
-trapSignal() {
-	echo
-	echoError " Received signal $1"
-	exit 1
-}
-
-# trap any script errors and exit
-trap "trapError" ERR
-
-trapError() {
-	echo
-	echoError " ^ Received error ^"
-	exit 1
-}
 
 # console printing functions (with color)
 echoError()		{
@@ -305,7 +332,13 @@ echoWarning()	{
 	echo -e "$CON_BOLD$CON_YELLOW$1$CON_DEFAULT"
 }
 echoInfo()		{
-	echo -e "$CON_BOLD$1$CON_DEFAULT"
+	echo -e "$CON_BOLD$CON_WHITE$1$CON_DEFAULT"
+}
+echoStart()   {
+    echo -e "$CON_BOLD$CON_LIGHT_GRAY$1$CON_DEFAULT"
+}
+echoNotice()   {
+    echo -e "$CON_BOLD$CON_YELLOW_GREEN$1$CON_DEFAULT"
 }
 echoSuccess()	{
 	echo -e "$CON_BOLD$CON_GREEN$1$CON_DEFAULT"
@@ -316,11 +349,26 @@ echoVerbose() {
 	fi
 }
 
+trapSignal() {
+    echo
+    echoError " Received signal $1"
+    exit 1
+}
+
+# trap any script errors and exit
+trap "trapError $LINENO" ERR
+
+trapError() {
+    echo
+    echoError " ^ Received errexit on line $(caller)" >&2
+    exit 1
+}
+
 ################################################################################
 #### PARSE COMMANDLINE
 
 # from http://www.mkssoftware.com/docs/man1/getopts.1.asp
-while getopts t:a:b:d:s:j:m:c:hgvfpew opt ; do
+while getopts t:a:b:d:s:j:m:c:x:hgvfpew opt ; do
 	case "$opt" in
 		t) # set the library build type
 		   export TYPE="$OPTARG" ;;
@@ -339,7 +387,9 @@ while getopts t:a:b:d:s:j:m:c:hgvfpew opt ; do
 		h) # print help and exit
 		   echo "$HELP" ; exit 0 ;;
 		v) # verbose mode = true
-		   export A_VERBOSE=1 ;;
+		   export A_VERBOSE=1
+           VERBOSE_MAKEFILE=YES
+           ;;
 		e) # use visual enterprise
 		   export VS_TYPE=Enterprise ;;
         f) # force download
@@ -352,6 +402,8 @@ while getopts t:a:b:d:s:j:m:c:hgvfpew opt ; do
            export VS_COMPILER="$OPTARG" ;;
         m) # set the -m parameter for make
            export MULTITHREADED_TYPE="$OPTARG" ;;
+        x) # set the -x xcframeworks build
+           export XCFRAMEWORK_ALL=true;;
 		[?]) # print help and exit
 			echo "$HELP" ; exit 0 ;;
 	esac
@@ -389,11 +441,15 @@ function setup_vs_vars(){
         MSBUILD_PATH="${VS_INSTALL_PATH}\MSBuild\\${VS_VER}.0\Bin\MSBuild.exe"
         echo "-- Found MSBuild path: ${MSBUILD_PATH}"
 
-        VS_VER_DIR=$(ls "$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/" | tail -1)
-        if [ $ARCH == "arm64" ] || [ $ARCH == "ARM" ] || [ $ARCH == "arm64ec" ]; then
-            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
-        else 
-            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+        if [ $VS_COMPILER == "MSVC" ]; then 
+            VS_VER_DIR=$(ls "$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/" | tail -1)
+            if [ $ARCH == "arm64" ] || [ $ARCH == "ARM" ] || [ $ARCH == "arm64ec" ]; then
+                export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+            else 
+                export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+            fi
+        else
+            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/Llvm/$BUILD_PLATFORM/bin"
         fi
         echo "VS_BIN_PATH was not set - setting to $VS_BIN_PATH"
 
@@ -458,7 +514,7 @@ if [ "$TYPE" = "vs" ]; then
         echoVerbose "VS_VER was not set - setting to ${VS_VER}"
     fi
     VS_64_BIT_ENV='VC\vcvarsall'
-    if [ -z ${PLATFORM+x}]; then
+    if [ -z ${PLATFORM+x} ]; then
         if [ $ARCH == "32" ]; then
             PLATFORM=x86
             CROSS_TOOL="amd64_x86"
@@ -486,16 +542,19 @@ if [ "$TYPE" = "vs" ]; then
         MULTITHREADED_TYPE="MD"
     fi
     if [ $MULTITHREADED_TYPE == "MD" ]; then
-        MT_TYPE="/MD"
+        export MT_TYPE="/MD"
         echoVerbose "MULTITHREADED_TYPE MD"
     elif [ $MULTITHREADED_TYPE == "MT" ]; then
-        MT_TYPE="/MT"
+        export MT_TYPE="/MT"
         echoVerbose "MULTITHREADED_TYPE MT"
     fi
 
     if [ -z ${CALLING_CONVENTION_TYPE+x} ]; then
         CALLING_CONVENTION="Gz"
+    else
+        CALLING_CONVENTION="Gz"
     fi
+
     if [ $CALLING_CONVENTION == "Gz" ]; then
         CALLING_CONVENTION="/Gz" 
         echoVerbose "CALLING_CONVENTION ${MT_TYPE} __stdcall"
@@ -512,34 +571,20 @@ if [ "$TYPE" = "vs" ]; then
     
     if [ $VS_COMPILER == "LLVM" ]; then
         export VS_C_FLAGS="-Wno-error" # warnings will not be treated as errors
-        export EXCEPTION_FLAGS="-fexceptions"
+        export EXCEPTION_FLAGS=""
+        export FLAGS_RELEASE="-O3"
+        export FLAGS_DEBUG="-O0"
     else
         if [ $ARCH == "arm64ec" ]; then              
             export VS_C_FLAGS="/Gy /GL- /guard:cf"
         else
             export VS_C_FLAGS="/GL-"
         fi
-        export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} -O3"
-        export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION}"
+        export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} /O2"
+        export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION} /Od"
         export EXCEPTION_FLAGS="/EHsc"
     fi
 
-    if [ $VS_VER == "17" ]; then
-    	VS_YEAR=2022
-    	VS_VER=17
-    	VS_VER_GEN="$VS_VER $VS_YEAR"
-        if [ $ARCH == "arm64ec" ] || [ $TARGET_WIN_11 == 1 ]; then
-            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN11_INSTALLED_SDK_2022} -DCMAKE_SYSTEM_VERSION=${WIN11_INSTALLED_SDK_2022} "
-        else 
-            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2022} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2022} "
-        fi
-    else
-    	VS_YEAR=2019
-    	VS_VER=16
-    	VS_VER_GEN="$VS_VER $VS_YEAR"
-        export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2019} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2019} "
-	fi    
-	echoVerbose "PLATFORM set to ${PLATFORM} Visual Studio ${VS_VER_GEN} - ${CROSS_TOOL} - ${VS_HOST}"
     VS_BAT="vcvarsall.bat"
     if [ -z "${WSL_DISTRO_NAME+x}" ]; then
 		DRIVE=/c
@@ -575,6 +620,7 @@ if [ "$TYPE" = "vs" ]; then
         	VS_YEAR=$VS_YEAR_PATH
         elif [ "${VS_VER}" = "17" ]; then
           	VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/2022/$VS_TYPE"
+            export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/2022/"
           	VS_YEAR=2022
           	VC_VERSION=143
             VS_BAT="vcvars$ARCH.bat"
@@ -590,6 +636,9 @@ if [ "$TYPE" = "vs" ]; then
         BUILD_PLATFORM="arm64"
     elif [ $ARCH == "arm" ]; then
         BUILD_PLATFORM="arm"
+    else
+        echoError "Apothecary -a not a valid passed architecture:[${ARCH}]"
+        exit;
     fi 
     if [ $ARCH == 32 ] ; then
         PLATFORM="Win32"
@@ -610,12 +659,16 @@ if [ "$TYPE" = "vs" ]; then
     echoVerbose "VS_VARS_PATH: $VS_VARS_PATH"
     if [ -z ${VS_BIN_PATH+x} ]; then	            
 		VS_VER_DIR=$(ls "$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/" | tail -1)
-
-        if [ $ARCH == "arm64" ] || [ $ARCH == "ARM" ] || [ $ARCH == "arm64ec" ]; then
-            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
-        else 
-            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+        if [ $VS_COMPILER == "MSVC" ]; then 
+            if [ $ARCH == "arm64" ] || [ $ARCH == "ARM" ] || [ $ARCH == "arm64ec" ]; then
+                export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+            else 
+                export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/${VS_COMPILER}/$VS_VER_DIR/bin/$VS_HOSTPLATFORM/$BUILD_PLATFORM"
+            fi
+        else
+            export VS_BIN_PATH="$VS_BASE_PATH/VC/Tools/Llvm/$BUILD_PLATFORM/bin"
         fi
+        
         echoVerbose "VS_BIN_PATH was not set - setting to $VS_BIN_PATH"
 		export PATH=$VS_BIN_PATH:$PATH
         (
@@ -639,6 +692,27 @@ if [ "$TYPE" = "vs" ]; then
             export PATH="/c/Program Files/CMake/bin/:$PATH"
         fi
     fi
+    if [ $VS_VER == "17" ]; then
+        VS_YEAR=2022
+        VS_VER=17
+        VS_VER_GEN="$VS_VER $VS_YEAR"
+        if [ $ARCH == "arm64ec" ] || [ $TARGET_WIN_11 == 1 ]; then
+            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN11_INSTALLED_SDK_2022} -DCMAKE_SYSTEM_VERSION=${WIN11_INSTALLED_SDK_2022} "
+        else 
+            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2022} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2022} "
+        fi
+
+        if [ $VS_COMPILER == "LLVM" ]; then
+            export CMAKE_WIN_SDK="${CMAKE_WIN_SDK} -DCMAKE_CXX_COMPILER=${VS_BIN_PATH}/clang++ -DCMAKE_C_COMPILER=${VS_BIN_PATH}/clang -T ClangCL -DLLVM_ENABLE_RUNTIMES=libcxx -DLIBCXX_ENABLE_SHARED=NO -DLIBCXX_ENABLE_STATIC=YES"
+        fi
+    else
+        VS_YEAR=2019
+        VS_VER=16
+        VS_VER_GEN="$VS_VER $VS_YEAR"
+        export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2019} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2019} "
+    fi    
+    echoVerbose "PLATFORM set to ${PLATFORM} Visual Studio ${VS_VER_GEN} - ${CROSS_TOOL} - ${VS_HOST}"
+
     #echo "PATH: $PATH"
     #PATH="/c/Program Files/CMake/bin:/c/windows;/c/windows/system32:/c/windows/system32/Wbem:$VS_BIN_PATH:/c/Program Files/Git/cmd:/c/Windows/System32/WindowsPowerShell/v1.0:/mingw32/bin:/usr/local/bin:/usr/bin:/bin:/mingw32/bin:/usr/bin:/"
     #echo "NEW PATH: $PATH"
@@ -670,6 +744,7 @@ if [ "$TYPE" = "emscripten" ]; then
     export FLAG_RELEASE="-O3"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
+    PLATFORM=WASM
 fi
 
 if [ "$TYPE" = "ios" ]; then
@@ -700,10 +775,12 @@ if [ "$TYPE" = "watchos" ]; then
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "arm64_32" ] || [ $ARCH == "arm64" ]; then
         PLATFORM="WATCHOS"
-    elif [ $ARCH == "SIM_WATCH" ] ; then
+    elif [ $ARCH == "x86_64" ] ; then
         PLATFORM="SIMULATOR_WATCHOS"
     elif [ $ARCH == "SIM_arm64" ]; then
         PLATFORM="SIMULATORARM64_WATCHOS"
+    else
+        echoError "watchOS incorrect ARCH:[$ARCH]"
     fi 
 fi
 
@@ -752,6 +829,13 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
     elif [ $TYPE == "msys2" ]; then
         ABI="x86_64"
     fi 
+    PLATFORM=ABI
+fi
+
+# Check if PLATFORM is not set or is empty
+if [ -z "${PLATFORM+x}" ]; then
+  PLATFORM="Unknown Platform"
+  echoWarning " PLATFORM missing report'."
 fi
 
 
@@ -785,6 +869,40 @@ fi
 	export PATH="$VS_BIN_PATH:$PATH"
 
  fi
+
+get_directory_path() {
+    local type="$1"
+    local base_dir="$2"
+    local platform="$3"
+    local abi="$4"
+    local final_path=""
+
+    case "$type" in
+        vs)
+            final_path="${base_dir}/lib/${type}/${platform}/"
+            ;;
+        osx|ios|tvos|xros|catos|watchos|macos)
+            final_path="${base_dir}/lib/${type}/${platform}/"
+            ;;
+        emscripten)
+            final_path="${base_dir}/lib/${type}/"
+            ;;
+        linux64|linux|msys2)
+            final_path="${base_dir}/lib/${type}/"
+            ;;
+        android)
+            final_path="${base_dir}/lib/${type}/${abi}/"
+            ;;
+        *)
+            echo "Unsupported type: $type" >&2
+            return 1  # Return with error if type is unsupported
+            ;;
+    esac
+
+    echo "$final_path"  # This will be the function's return value
+}
+
+
 
 ################################################################################
 ### FUNCTIONS
@@ -850,6 +968,8 @@ function installAndroidToolchain() {
 				--stl=libc++
 		fi
 	fi
+
+    PLATFORM=$ARCH
 
 	cd $WD
 
@@ -976,7 +1096,6 @@ function doCommand() {
 	local shouldSource=$1
 	local cmd=$2
 	shift 2
-
 	# process given lib targets
 	while [ $# -gt 0 ] ; do
 
@@ -984,17 +1103,15 @@ function doCommand() {
 		if [ "$1" == "core" ] ; then
 			local formula
 			for formula in $( ls -1 $FORMULAS_DIR | grep -v $DEPENDS_SUBDIR) ; do
-				doCommand $shouldSource $cmd "${formula%.*}" # remove extension
+                doCommand $shouldSource $cmd "${formula%.*}"
 			done
-
 			echoInfo " ----- Apothecary Core Build Sucessfully completed for $TYPE -----"
-
 		# process all addons in the addons dir
 		elif [ "$1" == "addons" ] ; then
 			local addon
 			for addon in $(ls -1 $REL_ADDONS_DIR) ; do
 				if [ -d $REL_ADDONS_DIR/$addon ] ; then
-					doCommand $shouldSource $cmd $addon
+                    doCommand $shouldSource $cmd $addon
 				fi
 			done
 
@@ -1007,7 +1124,7 @@ function doCommand() {
 				# if [ -f "$LIBS_DIR/${depends}/$TYPE/$ABI/lib.a" ]; then
 				#      echo "Build Already exists at $LIBS_DIR/${depends}/$TYPE/ skipping"
 				# fi
-				doCommand $shouldSource $cmd "${depend%.*}" # remove extension
+                doCommand $shouldSource $cmd "${depend%.*}"
 			done
 
 		else # process given lib, addon, or dependency
@@ -1028,13 +1145,12 @@ function doCommand() {
 					if [ $IS_CUSTOM_LIBS_DIR == 0 ] ; then
 						LIBS_DIR=$ADDONS_DIR/$1/libs
 					fi
-
 					# process all formulas in scripts/formulas
 					local addonFormula
 					for addonFormula in $( ls -1 $FORMULA_DIR) ; do
 						# is the file in the directory a valid formula extension
 						if [ -e $FORMULA_DIR -a "${addonFormula##*.}" == "sh" ] ; then
-							doCommand $shouldSource $cmd $FORMULA_DIR/$addonFormula
+                            doCommand $shouldSource $cmd $FORMULA_DIR/$addonFormula
 						else
 							echoVerbose "Unknown formula extension '$addonFormula' with extension: ${addonFormula##*.}"
 						fi
@@ -1069,7 +1185,7 @@ function doCommand() {
 						echoInfo " Skipping \"$currentLib\": $cmd not needed for type \"$TYPE\""
 					else
 						# do command
-						$cmd $currentLib
+                        $cmd $currentLib
 					fi
 				else
 					# do command
@@ -1077,7 +1193,6 @@ function doCommand() {
 				fi
 			fi
 		fi
-
 		shift 1
 
 		# reset to all types & depends
@@ -1090,29 +1205,31 @@ function doCommand() {
 # update a given library
 function updateFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
-	echoInfo " ----- $1 -----"
-
-	# if [ -e $BUILD_DIR/$1 ] ; then
+	echoStart " ----- $1 -----"
+	# if  [ $FORCE_DOWNLOAD -eq 1 ] ; then
 	# 	cleanFormula $1
 	# fi
-	downloadFormula $1
-	prepareFormula $1
+    echoStart " Building \"$1\" ...."
 
-	if [ $USE_SAVE == 1 ]; then
-		if load $1; then
-		   echoInfo "Skipping - target ${1} already built and up to date"
-		else
-		    echoVerbose "Building ${1} as deployed library doesn't exist or does needs to be rebuilt as out of date."
-		    buildFormula $1
-		    copyFormula $1
-		    save $1
-		fi
-	else
-		buildFormula $1
-		copyFormula $1
-	fi
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " $1 - Checking if Precompiled binary :[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping updateFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue updateFormula for \"$1\" "
+            fi
+        fi
+    fi
 
+    downloadFormula $1
+    prepareFormula $1
+	buildFormula $1
+	copyFormula $1
 	echo
 	echoSuccess " Finished \"$1\""
 }
@@ -1120,27 +1237,40 @@ function updateFormula() {
 # download a given library into the build cache, arg is library name
 function downloadFormula(){
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
-	echoInfo " Downloading \"$1\""
-	echoVerbose " Formula dir: $FORMULA_DIR"
-	echoVerbose " Formula build types: ${FORMULA_TYPES[*]}"
-	echoVerbose " Build dir: $BUILD_DIR"
-	echoVerbose " Depends formula dir: $DEPENDS_FORMULA_DIR"
-	if [ ${#FORMULA_DEPENDS[@]} -gt 0 ] ; then
-		echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
-	fi
-	echo
-
+    echoInfo " Downloading \"$1\" "
+    echoVerbose " Formula dir: $FORMULA_DIR"
+    echoVerbose " Formula build types: ${FORMULA_TYPES[*]}"
+    echoVerbose " Build dir: $BUILD_DIR"
+    echoVerbose " Depends formula dir: $DEPENDS_FORMULA_DIR"
+    if [ ${#FORMULA_DEPENDS[@]} -gt 0 ] ; then
+        echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
+    fi
+    echo
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            LOAD_RESULT=$(load $1)
+            FINAL_RESULT=$(echo "$LOAD_RESULT" | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$FINAL_RESULT] - [$LOAD_RESULT]"
+            if [ $FINAL_RESULT -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping download"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue downloadFormula for \"$1\" "
+            fi
+        fi
+    fi
 	mkdir -p $BUILD_DIR
 	mkdir -p $BUILD_ROOT_DIR
 	cd $BUILD_DIR
 
 	if [ -e $1 ] ; then
         if [ $FORCE_DOWNLOAD -eq 1 ]; then
-			echo "removing already existing $1"
+			echoNotice " Removing past download -F $1"
             rm -rf ${PWD}/${1}*
         else
-            echo "... skipping, $1 src dir already exists in ${PWD}/${1}"
+            echoInfo " Already downloaded... "
         fi
     fi
 
@@ -1156,40 +1286,45 @@ function downloadFormula(){
 		    exit 1
 	    fi
     fi
-
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies download
 	fi
-
 	cd $APOTHECARY_DIR
 }
 
 # prepare a given library, arg is library name
 function prepareFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	# run prepare command in src dir
 	echo
 	echoInfo " Preparing \"$1\""
-	echoVerbose " Lib src dir: $BUILD_DIR/$1"
 	echo
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping prepare"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue prepareFormula for \"$1\" "
+            fi
+        fi
+    fi
 
 	if [ ! -e $BUILD_DIR/$1 ] ; then
 		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
 		echoError " Did you download the formula?"
 		exit 1
 	fi
-
 	cd $BUILD_DIR/$1
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies prepare $1
 	fi
-
 	prepare $1
-
 	cd $APOTHECARY_DIR
 }
 
@@ -1197,29 +1332,40 @@ function prepareFormula() {
 function buildFormula() {
 
 	# run build command in src dir
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echo
 	echoInfo " Building \"$1\""
-	echoVerbose " Lib src dir: $BUILD_DIR/$1"
-	echo
+	
 
-	if [ ! -e $BUILD_DIR/$1 ] ; then
-		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
-		echoError " Did you download the formula?"
-		exit 1
-	fi
-
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping buildFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue buildFormula for \"$1\" "
+            fi
+        fi
+    fi
+    echo 
+    if [ ! -e $BUILD_DIR/$1 ] ; then
+        echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
+        echoError " Did you download the formula?"
+        exit 1
+    fi
 	cd $BUILD_DIR/$1
-
 	# dependencies
 	if [ $FORMULA_DEPENDS_MANUAL == 0 ] ; then
 		apothecaryDependencies build
 		apothecaryDependencies copy
-        echoInfo "apothecaryDependency built "
+        echoSuccess " \"$1\" dependencies build success"
+        echo
         echoInfo " Now Building \"$1\""
 	fi
     echoInfo "--------------------"
 	build $1
-
 	cd $APOTHECARY_DIR
 }
 
@@ -1228,14 +1374,27 @@ function copyFormula() {
 
 	# dest arg path relative to src dir
 	echo
-    LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	echoInfo " Copying \"$1\""
 	echoVerbose " Lib src dir: $BUILD_DIR/$1"
 	echoInfo " Lib dest dir: $LIBS_DIR_REAL/$1"
 	echo
 
+    if [ ! -e $1 ] ; then
+        if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+            result=$(load $1 | tail -n 1)
+            echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
+            if [ $result -eq 1 ]; then
+                echoInfo " \"$1\" Precompiled binary validated. Skipping copyFormula"
+                return 0
+            else
+                echoInfo " Precompiled not found or outdated. Continue copyFormula for \"$1\" "
+            fi
+        fi
+    fi
+
 	if [ ! -e $BUILD_DIR/$1 ] ; then
-		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
+		echoWarning " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
 		echoError " Did you download the formula?"
 		exit 1
 	fi
@@ -1248,6 +1407,7 @@ function copyFormula() {
 # clean a given library, arg is library name
 function cleanFormula() {
 
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
 	# run build command in src dir
 	echo
 	echoInfo " Cleaning \"$1\""
@@ -1256,8 +1416,8 @@ function cleanFormula() {
 
 	if [ ! -e $BUILD_DIR/$1 ] ; then
 		echoError " Lib src dir missing for \"$1\": $BUILD_DIR/$1"
-		echoError " Did you download the formula?"
-		exit 1
+		echoError " Did you download the formula? Clean build folder however"
+		exit 0
 	fi
 
 	cd $BUILD_DIR/$1
@@ -1287,7 +1447,16 @@ function cleanFormula() {
 }
 
 function frameworkFormula() {
-    LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+
+    echoStart " frameworkFormula [\"$1\"] for:[${TYPE}]"
+
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    XLIBSLOCAL="$APOTHECARY_DIR/../xout"
+    if [[  ! -e "$XLIBSLOCAL" ]]; then
+        mkdir -p $XLIBSLOCAL
+    fi
+    export XLIBS_DIR_REAL=$(realpath $XLIBSLOCAL)
+        
     if [ ! -e "$LIBS_DIR/$1" ] ; then
         echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
     else
@@ -1296,13 +1465,44 @@ function frameworkFormula() {
         echoSuccess " Framework lib dest dir: \"$1\" \"$LIBS_DIR_REAL/$1/lib/$TYPE/\" "
         xcframework_flags=""
 
-        if [[ $1 == "fmod" ]] || [[ $1 == "glm" ]] || [[ $1 == "json" ]] || [[ $1 == "libusb" ]] || [[ $1 == "utf8" ]]; then
+        XDIR="${XLIBS_DIR_REAL}/"
+        X_LIBS="$XDIR/${1}/lib/${TYPE}/"
+        X_INCLUDE=$XDIR/${1}/include
+        X_LICENSE=$XDIR/${1}/license
+        
+        mkdir -p "${X_INCLUDE}"
+        mkdir -p "${X_LICENSE}"
+
+        if [[ $1 == "fmod" ]] || [[ $1 == "fmodex" ]] || [[ $1 == "glm" ]] || [[ $1 == "json" ]] || [[ $1 == "utf8" ]]; then
+             if ! command -v rsync &> /dev/null; then      
+                if [[  -e "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/" ]]; then
+                    mkdir -p "${X_LIBS}"
+                    cp -av "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/"* ${X_LIBS}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/include/" ]]; then
+                    cp -av "${LIBS_DIR_REAL}/${1}/include/"* ${X_INCLUDE}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/license/" ]]; then
+                    cp -av "${LIBS_DIR_REAL}/${1}/license/"* ${X_LICENSE}
+                fi
+            else
+                if [[  -e "${LIBS_DIR_REAL}/${1}/lib/${TYPE}" ]]; then
+                    mkdir -p "${X_LIBS}"
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/" ${X_LIBS}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/include/" ]]; then
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/include/" ${X_INCLUDE}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/license/" ]]; then
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/license/" ${X_LICENSE}
+                fi
+            fi
             exit 0;
         fi
-
+        mkdir -p "${X_LIBS}"
         if ((BASH_VERSINFO[0] < 4)); then
             echo "The current version of Bash does not support associative arrays."
-            echo "Please update to Bash 4.0 or newer. Current:${BASH_VERSINFO[0]}" 
+            echo "Please update to Bash 4.0 or newer. Current:${BASH_VERSINFO[0]}"
             echo "brew install bash"
             exit 1
         fi
@@ -1314,95 +1514,424 @@ function frameworkFormula() {
             ["SIMULATOR_TVOS"]="SIMULATORARM64_TVOS"
             ["TVOS"]="TVOS" # Note: If TVOS doesn't have a pair, it's listed for consistency
             ["WATCHOS"]="WATCHOS" # Same note as TVOS
-            ["SIMULATOR_VISIONOS"]="SIMULATOR64_VISIONOS"
+            ["SIMULATOR_WATCHOS"]="SIMULATOR_WATCHOS"
             ["OS64"]="OS64"
             ["WATCHOS"]="WATCHOS"
-            ["VISIONOS"]="SIMULATOR64_VISIONOS" # And again, for VISIONOS
-            ["SIMULATOR_VISIONOS"]="SIMULATOR_VISIONOS" 
+            ["VISIONOS"]="VISIONOS" # And again, for VISIONOS
+            ["SIMULATOR64_VISIONOS"]="SIMULATOR_VISIONOS"
         )
         # this gets a bit advanced bash so need Bash 4 - brew install bash if issues arrise... hectic problems 
+        PLATFORM_TYPES=("ios" "osx" "tvos" )
         declare -a merged_dirs=()
-        for ARCH in "${!ARCH_PAIRS[@]}"; do
-            PAIR="${ARCH_PAIRS[$ARCH]}"
-            DIR_PATH="$LIBS_DIR_REAL/$1/lib/$TYPE/$ARCH/"
-            echo "ARCH: $ARCH"
-            if [ -d "$DIR_PATH" ]; then
-                MERGED_DIR="$LIBS_DIR_REAL/$1/lib/$TYPE/${ARCH}_${PAIR}"
-                declare -a archive_paths=()
-                while IFS= read -r -d $'\0' file; do
-                    archive_paths+=("$file")
-                done < <(find "$LIBS_DIR_REAL/$1/lib/$TYPE/$ARCH/" -name "*.a" -print0)
-                for path in "${archive_paths[@]}"; do
-                    echo "Archive path: $path"
-                done
-                num_archive_paths=${#archive_paths[@]}
-                for ARCH_FILE in "${archive_paths[@]}"; do
-                    # Determine paired architecture directory
-                    PAIR_FILE="${ARCH_FILE/$ARCH/$PAIR}"
-                    path_found_in_array=false
-                    if [[ -f "$PAIR_FILE" && "$ARCH" != "$PAIR" ]]; then
-                        mkdir -p "$MERGED_DIR"
-                        # Determine the output filename in the merged directory
-                        PATH_MERGE=$LIBS_DIR_REAL/$1/lib/$TYPE/${ARCH}_${PAIR}/
-                        MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$TYPE/${ARCH}_${PAIR}/$(basename "$ARCH_FILE" .a).a"
-                        # Use lipo to merge the architectures into a single file - prevents linking errors
-                        xcrun lipo -create "$ARCH_FILE" "$PAIR_FILE" -output "$MERGED_PATH"
-                        # echo "Merged $ARCH_FILE and $PAIR_FILE into $MERGED_PATH"
-                        xcrun codesign --sign - $MERGED_PATH || true
-                        for dir in "${merged_dirs[@]}"; do
-                            if [[ "$dir" == "$PATH_MERGE" ]]; then
-                                path_found_in_array=true
-                                break 
+        VERSION=""
+        LIB_NAME=""
+        CURRENT_TYPE=$TYPE
+        BINARY_NAME=""
+        XCFRAMEWORK_PATH="${LIBS_DIR_REAL}/${1}/lib/${TYPE}/$1.xcframework"
+        declare -a merged_dirs=()
+        LIB_NAME=""
+        for CURRENT_TYPE in "${PLATFORM_TYPES[@]}"; do
+            if [ -d "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE" ]; then
+                echo "Processing platform type: $CURRENT_TYPE"
+                for ARCH in "${!ARCH_PAIRS[@]}"; do
+                    PAIR="${ARCH_PAIRS[$ARCH]}"
+                    DIR_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/$ARCH/"
+                    if [ -d "$DIR_PATH" ]; then
+                        echo "Processing ARCH: $ARCH"
+                        MERGED_DIR="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}"
+                        declare -a archive_paths=()
+                        while IFS= read -r -d $'\0' file; do
+                            archive_paths+=("$file")
+                        done < <(find "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/$ARCH/" -name "*.a" -print0)
+                        for path in "${archive_paths[@]}"; do
+                            echo "Archive path: $path"
+                        done
+                        PKL_PATH=$(find "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE" -type f -name "*.pkl" | head -n 1)
+                        if [[ -f "$PKL_PATH" ]]; then
+                            echo "Found PKL file at $PKL_PATH"
+                            VERSION=$(grep 'version =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            echo "VERSION $VERSION"
+                            # DEFINES=$(grep 'defines =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            # echo "DEFINES $DEFINES"
+                            LIB_NAME=$(grep 'name =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            BUILD_TIME=$(grep 'buildTime =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            if [[ -z "$VERSION" ]]; then
+                                echo "No version info found in PKL file. Using default."
+                                VERSION="default_version" # Provide a default version or handle error
+                            fi
+                            # if [[ -z "$DEFINES" ]]; then
+                            #     echo "No defines info found in PKL file. Continuing without defines."
+                            #     # Handle missing defines case or provide default
+                            # fi
+                        else
+                            echo "No PKL file found at $1 - $CURRENT_TYPE. Ensure .pkl files are present and correctly named."
+                            # Handle error or provide defaults for VERSION and DEFINES
+                        fi
+                        num_archive_paths=${#archive_paths[@]}
+                        for ARCH_FILE in "${archive_paths[@]}"; do
+                            echo "ARCH_FILE: $ARCH_FILE $1 - $CURRENT_TYPE"
+                            # Determine paired architecture directory
+                            PAIR_FILE="${ARCH_FILE/$ARCH/$PAIR}"
+                            path_found_in_array=false
+                            if [[ -f "$PAIR_FILE" && "$ARCH" != "$PAIR" ]]; then
+                                mkdir -p "$MERGED_DIR"
+                                echo "MERGED_DIR: $ARCH - Pair: $PAIR"
+                                # Determine the output filename in the merged directory
+                                PATH_MERGE=$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}/
+                                MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}/$(basename "$ARCH_FILE" .a).a"
+                                # Use lipo to merge the architectures into a single file - prevents linking errors
+                                xcrun lipo -create "$ARCH_FILE" "$PAIR_FILE" -output "$MERGED_PATH"
+                                echo "Merged $ARCH_FILE and $PAIR_FILE into $MERGED_PATH"
+                                xcrun codesign --sign - $MERGED_PATH || true
+                                for dir in "${merged_dirs[@]}"; do
+                                    if [[ "$dir" == "$PATH_MERGE" ]]; then
+                                        path_found_in_array=true
+                                        break
+                                    fi
+                                done
+                                if [[ $path_found_in_array == false ]]; then
+                                    merged_dirs+=("$PATH_MERGE")
+                                    echo "path_found_in_array == false adding $PATH_MERGE"
+                                else
+                                    echo "path_found_in_array == true"
+                                fi
+                            else
+                                PATH_MERGE=$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/${ARCH}/
+                                MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/${ARCH}/$(basename "$ARCH_FILE" .a).a"
+                                xcrun codesign --sign - $MERGED_PATH || true
+                                if [[ "$num_archive_paths" -gt 1 ]]; then
+                                    for dir in "${merged_dirs[@]}"; do
+                                        if [[ "$dir" == "$PATH_MERGE" ]]; then
+                                            path_found_in_array=true
+                                            break
+                                        fi
+                                    done
+                                    if [[ $path_found_in_array == false ]]; then
+                                        merged_dirs+=("$PATH_MERGE")
+                                    fi
+                                else
+                                    if [[ ! "$xcframework_flags" =~ "$MERGED_PATH" ]]; then
+                                        xcframework_flags+=" -library $MERGED_PATH"
+                                        xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+                                    fi
+                                fi
                             fi
                         done
-                        if [[ $path_found_in_array == false ]]; then
-                            merged_dirs+=("$PATH_MERGE")
-                        fi
-                    else
-                        MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$TYPE/${ARCH}/$(basename "$ARCH_FILE" .a).a"
-                        xcrun codesign --sign - $MERGED_PATH || true
-                        if [[ "$num_archive_paths" -gt 1 ]]; then
-                            for dir in "${merged_dirs[@]}"; do
-                                if [[ "$dir" == "$PATH_MERGE" ]]; then
-                                    path_found_in_array=true
-                                    break 
-                                fi
-                            done
-                            if [[ $path_found_in_array == false ]]; then
-                                merged_dirs+=("$PATH_MERGE")
-                            fi
-                        else
-                            if [[ ! "$xcframework_flags" =~ "$MERGED_PATH" ]]; then
-                                xcframework_flags+=" -library $MERGED_PATH"
-                            fi
-                        fi
                     fi
                 done
+            else
+                echoVerbose "Platform type directory does not exist: $LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE"
             fi
         done
 
         # Final merging pass to combine binaries of same / merged architectures into single binary to prevent linking issues
         for dir in "${merged_dirs[@]}"; do
             echo "Processing directory: $dir"
-            rm -f "${dir}/lib${1}_combined.a"
+            
+            # Find all .a files in the directory
             a_files=($(find "$dir" -name '*.a' -print0 | xargs -0))
+            echo "[$dir] - Found archives: ${#a_files[@]}"
+            
             num_files=${#a_files[@]}
             if [ "$num_files" -gt 1 ]; then
                 echo "Multiple archives found in $dir. Commencing the merge..."
-                libtool -static -o "${dir}/lib${1}_combined.a" "${a_files[@]}"
-                # echo "Merged into ${dir}/lib${1}_combined.a"
-                lipo -info "${dir}/lib${1}_combined.a"
-                xcrun codesign --sign - "${dir}/lib${1}_combined.a" || true
-                if [[ ! "$xcframework_flags" =~ "${dir}/lib${1}_combined.a" ]]; then
-                    xcframework_flags+=" -library ${dir}/lib${1}_combined.a"
+                libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+                echo "Merged into ${dir}/${1}.a"
+                for a_file in "${a_files[@]}"; do
+                    rm -f "$a_file"
+                done
+                lipo -info "${dir}/${1}.a"
+                xcrun codesign --sign - "${dir}/${1}.a" || true
+                if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
+                    xcframework_flags+=" -library ${dir}/${1}.a"
+                    xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
                 fi
-            else
-                # Directly use the single archive or skip if none
+            elif [ "$num_files" -gt 0 ]; then
+                # Directly use the single archive
+                echo "Directly use the single archive ${a_files[0]}"
                 xcframework_flags+=" -library ${a_files[0]}"
-             fi
+                xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+            else
+                echo "No archives found. Skip for [$dir]"
+            fi
         done
 
-        xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+        
+
+        echoSuccess " flags: [\"$1\" \"$xcframework_flags\"]"
+        HERE_DIR=$(cd $(dirname "./"); pwd -P)
+        cd "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/"
+        xcodebuild -create-xcframework $xcframework_flags -output $1.xcframework
+        echoSuccess " xcframework for $TYPE built successfully."
+        echo "========================"
+        
+        cd $HERE_DIR
+
+
+        
+
+        # Loop over each .a file found within the xcframework
+        find "$XCFRAMEWORK_PATH" -type f -name "*.a" | while read -r lib_a; do
+            echo "Securing $lib_a..."
+            lipo -info "$lib_a"
+            xcrun codesign --sign - "$lib_a" || true
+            . "$SECURE_SCRIPT"
+            secure "$lib_a" "$LIB_NAME" "$VERSION"
+        done
+
+        echoSuccess " xcframework for [$TYPE] transferring to [$XDIR]"
+        if ! command -v rsync &> /dev/null; then      
+            cp -av "${XCFRAMEWORK_PATH}/"* ${X_LIBS}
+            cp -av "${LIBS_DIR_REAL}/${1}/include/"* ${X_INCLUDE}
+            cp -av "${LIBS_DIR_REAL}/${1}/license/"* ${X_LICENSE}
+        else
+            rsync -av --delete "${XCFRAMEWORK_PATH}" ${X_LIBS}
+            rsync -av --delete "${LIBS_DIR_REAL}/${1}/include/" ${X_INCLUDE}
+            rsync -av --delete "${LIBS_DIR_REAL}/${1}/license/" ${X_LICENSE}
+        fi
+
+        echo " -- cleanup merged libraries ..." 
+        for dir in "${merged_dirs[@]}"; do
+            echo " removing directory: [$dir]"
+            rm -rfv "${dir}"
+        done 
+
+        rm -rfv "${XCFRAMEWORK_PATH}"
+
+
+        echoSuccess " xcframework for $TYPE built successfully."
+        # echo "========================"
+        # echo "=========DANGER ZONE DELETE ALL BINARIES EXCEPT XCFRAMEWORK ==============="
+        # dirs=$(find . -mindepth 1 -maxdepth 1 -type d)
+        # for dir in $dirs; do
+        #     if [[ ! "$dir" =~ .*.xcframework$ ]]; then
+        #         echo "Removing directory: $dir"
+        #         rm -rf "$dir"
+        #     fi
+        # done
+        echo "========================"
+        cd $HERE_DIR
+    fi
+}
+
+function xframeworkFormula() {
+
+    TYPE=macos
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+
+    XLIBSLOCAL="$APOTHECARY_DIR/../xout"
+    if [[  ! -e "$XLIBSLOCAL" ]]; then
+        mkdir -p $XLIBSLOCAL
+    fi
+    export XLIBS_DIR_REAL=$(realpath $XLIBSLOCAL)
+
+    PLATFORM_TYPES=("ios" "osx" "catos" "xros" "tvos" "watchos")
+    VERSION=""
+    DEFINES=""
+    mkdir -p ${LIBS_DIR_REAL}/${1}/lib/${TYPE}
+    
+    if [ ! -e "$LIBS_DIR/$1" ] ; then
+        echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
+    else
+        # rm -rf $LIBS_DIR_REAL/$1/lib/$TYPE/*.xcframework
+
+        echoSuccess " Framework lib dest dir: \"$1\" \"$LIBS_DIR_REAL/$1/lib/$TYPE/\" "
+        xcframework_flags=""
+
+        XDIR="${XLIBS_DIR_REAL}/"
+        X_LIBS="$XDIR/${1}/lib/${TYPE}/"
+        X_INCLUDE=$XDIR/${1}/include
+        X_LICENSE=$XDIR/${1}/license
+        
+        mkdir -p "${X_INCLUDE}"
+        mkdir -p "${X_LICENSE}"
+
+        if [[ $1 == "fmod" ]] || [[ $1 == "fmodex" ]] || [[ $1 == "glm" ]] || [[ $1 == "json" ]] || [[ $1 == "utf8" ]]; then
+            if ! command -v rsync &> /dev/null; then      
+                if [[  -e "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/" ]]; then
+                    mkdir -p "${X_LIBS}"
+                    cp -av "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/"* ${X_LIBS}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/include/" ]]; then
+                    cp -av "${LIBS_DIR_REAL}/${1}/include/"* ${X_INCLUDE}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/license/" ]]; then
+                    cp -av "${LIBS_DIR_REAL}/${1}/license/"* ${X_LICENSE}
+                fi
+            else
+                if [[  -e "${LIBS_DIR_REAL}/${1}/lib/${TYPE}" ]]; then
+                    mkdir -p "${X_LIBS}"
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/lib/${TYPE}/" ${X_LIBS}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/include/" ]]; then
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/include/" ${X_INCLUDE}
+                fi
+                if [[  -e "${LIBS_DIR_REAL}/${1}/license/" ]]; then
+                    rsync -av --delete "${LIBS_DIR_REAL}/${1}/license/" ${X_LICENSE}
+                fi
+            fi
+            exit 0;
+        fi
+        mkdir -p "${X_LIBS}"
+        if [[ $TYPE == "macos" ]]; then
+            echoSuccess "Building macOS xcframework"
+        fi
+
+        XCFRAMEWORK_PATH="${LIBS_DIR_REAL}/${1}/lib/${TYPE}/$1.xcframework"
+
+        rm -rfv "${XCFRAMEWORK_PATH}"
+
+        if ((BASH_VERSINFO[0] < 4)); then
+            echo "The current version of Bash does not support associative arrays."
+            echo "Please update to Bash 4.0 or newer. Current:${BASH_VERSINFO[0]}"
+            echo "brew install bash"
+            exit 1
+        fi
+
+        declare -A ARCH_PAIRS=(
+            ["MAC"]="MAC_ARM64"
+            ["MAC_CATALYST"]="MAC_CATALYST_ARM64"
+            ["SIMULATOR64"]="SIMULATORARM64"
+            ["SIMULATOR_TVOS"]="SIMULATORARM64_TVOS"
+            ["TVOS"]="TVOS" # Note: If TVOS doesn't have a pair, it's listed for consistency
+            ["WATCHOS"]="WATCHOS" # Same note as TVOS
+            ["SIMULATOR_WATCHOS"]="SIMULATOR_WATCHOS"
+            ["OS64"]="OS64"
+            ["WATCHOS"]="WATCHOS"
+            ["VISIONOS"]="VISIONOS" # And again, for VISIONOS
+            ["SIMULATOR64_VISIONOS"]="SIMULATOR_VISIONOS"
+        )
+        # this gets a bit advanced bash so need Bash 4 - brew install bash if issues arrise... hectic problems
+        declare -a merged_dirs=()
+        LIB_NAME=""
+        for CURRENT_TYPE in "${PLATFORM_TYPES[@]}"; do
+            if [ -d "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE" ]; then
+                echo "Processing platform type: $CURRENT_TYPE"
+                for ARCH in "${!ARCH_PAIRS[@]}"; do
+                    PAIR="${ARCH_PAIRS[$ARCH]}"
+                    DIR_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/$ARCH/"
+                    if [ -d "$DIR_PATH" ]; then
+                        echo "Processing ARCH: $ARCH"
+                        MERGED_DIR="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}"
+                        declare -a archive_paths=()
+                        while IFS= read -r -d $'\0' file; do
+                            archive_paths+=("$file")
+                        done < <(find "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/$ARCH/" -name "*.a" -print0)
+                        for path in "${archive_paths[@]}"; do
+                            echo "Archive path: $path"
+                        done
+                        PKL_PATH=$(find "$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE" -type f -name "*.pkl" | head -n 1)
+                        if [[ -f "$PKL_PATH" ]]; then
+                            echo "Found PKL file at $PKL_PATH"
+                            VERSION=$(grep 'version =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            echo "VERSION $VERSION"
+                            # DEFINES=$(grep 'defines =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            # echo "DEFINES $DEFINES"
+                            LIB_NAME=$(grep 'name =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            BUILD_TIME=$(grep 'buildTime =' "$PKL_PATH" | cut -d '"' -f 2 | xargs) # Use xargs to trim whitespace
+                            if [[ -z "$VERSION" ]]; then
+                                echo "No version info found in PKL file. Using default."
+                                VERSION="default_version" # Provide a default version or handle error
+                            fi
+                            # if [[ -z "$DEFINES" ]]; then
+                            #     echo "No defines info found in PKL file. Continuing without defines."
+                            #     # Handle missing defines case or provide default
+                            # fi
+                        else
+                            echo "No PKL file found at $1 - $CURRENT_TYPE. Ensure .pkl files are present and correctly named."
+                            # Handle error or provide defaults for VERSION and DEFINES
+                        fi
+                        num_archive_paths=${#archive_paths[@]}
+                        for ARCH_FILE in "${archive_paths[@]}"; do
+                            echo "ARCH_FILE: $ARCH_FILE $1 - $CURRENT_TYPE"
+                            # Determine paired architecture directory
+                            PAIR_FILE="${ARCH_FILE/$ARCH/$PAIR}"
+                            path_found_in_array=false
+                            if [[ -f "$PAIR_FILE" && "$ARCH" != "$PAIR" ]]; then
+                                mkdir -p "$MERGED_DIR"
+                                echo "MERGED_DIR: $ARCH - Pair: $PAIR"
+                                # Determine the output filename in the merged directory
+                                PATH_MERGE=$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}/
+                                mkdir -p "$PATH_MERGE"
+                                MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/MERGE_${ARCH}_${PAIR}/$(basename "$ARCH_FILE" .a).a"
+                                # Use lipo to merge the architectures into a single file - prevents linking errors
+                                xcrun lipo -create "$ARCH_FILE" "$PAIR_FILE" -output "$MERGED_PATH"
+                                echo "Merged $ARCH_FILE and $PAIR_FILE into [$MERGED_PATH]"
+                                xcrun codesign --sign - $MERGED_PATH || true
+                                for dir in "${merged_dirs[@]}"; do
+                                    if [[ "$dir" == "$PATH_MERGE" ]]; then
+                                        path_found_in_array=true
+                                        echo "dir${dir}==PATH_MERGE${PATH_MERGE} path_found_in_array == true  not adding for $PAIR_FILE"
+                                        break
+                                    fi
+                                done
+                                if [[ $path_found_in_array == false ]]; then
+                                    merged_dirs+=("$PATH_MERGE")
+                                    echo "path_found_in_array == false adding $PATH_MERGE"
+                                else
+                                    echo "path_found_in_array == true - not adding for $PAIR_FILE"
+                                fi
+                            else
+                                PATH_MERGE=$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/${ARCH}/
+                                MERGED_PATH="$LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE/${ARCH}/$(basename "$ARCH_FILE" .a).a"
+                                xcrun codesign --sign - $MERGED_PATH || true
+                                if [[ "$num_archive_paths" -gt 1 ]]; then
+                                    for dir in "${merged_dirs[@]}"; do
+                                        if [[ "$dir" == "$PATH_MERGE" ]]; then
+                                            path_found_in_array=true
+                                            break
+                                        fi
+                                    done
+                                    if [[ $path_found_in_array == false ]]; then
+                                        merged_dirs+=("$PATH_MERGE")
+                                    fi
+                                else
+                                    if [[ ! "$xcframework_flags" =~ "$MERGED_PATH" ]]; then
+                                        xcframework_flags+=" -library $MERGED_PATH"
+                                        xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+                                    fi
+                                fi
+                            fi
+                        done
+                    fi
+                done
+            else
+                echoVerbose "Platform type directory does not exist: $LIBS_DIR_REAL/$1/lib/$CURRENT_TYPE"
+            fi
+        done
+
+        # Final merging pass to combine binaries of same / merged architectures into single binary to prevent linking issues
+        echo "merged_dirs:"
+        for dir in "${merged_dirs[@]}"; do
+            echo "Processing directory: $dir"
+            
+            # Find all .a files in the directory
+            a_files=($(find "$dir" -name '*.a' -print0 | xargs -0))
+            echo "[$dir] - Found archives: ${#a_files[@]}"
+            
+            num_files=${#a_files[@]}
+            if [ "$num_files" -gt 1 ]; then
+                echo "Multiple archives found in $dir. Commencing the merge..."
+                libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+                echo "Merged into ${dir}/${1}.a"
+                for a_file in "${a_files[@]}"; do
+                    rm -f "$a_file"
+                done
+                lipo -info "${dir}/${1}.a"
+                xcrun codesign --sign - "${dir}/${1}.a" || true
+                if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
+                    xcframework_flags+=" -library ${dir}/${1}.a"
+                    xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+                fi
+            elif [ "$num_files" -gt 0 ]; then
+                # Directly use the single archive
+                echo "Directly use the single archive ${a_files[0]}"
+                xcframework_flags+=" -library ${a_files[0]}"
+                xcframework_flags+=" -headers $LIBS_DIR_REAL/$1/include"
+            else
+                echo "No archives found. Skip for [$dir]"
+            fi
+        done
 
         echoSuccess " flags: \"$1\" \"$xcframework_flags\" "
         HERE_DIR=$(cd $(dirname "./"); pwd -P)
@@ -1410,18 +1939,50 @@ function frameworkFormula() {
         xcodebuild -create-xcframework $xcframework_flags -output $1.xcframework
         echoSuccess " xcframework for $TYPE built successfully."
         echo "========================"
-        # echo "=========DANGER ZONE DELETE ALL BINARIES EXCEPT XCFRAMEWORK ==============="
-        dirs=$(find . -mindepth 1 -maxdepth 1 -type d)
-        for dir in $dirs; do
-            if [[ ! "$dir" =~ .*.xcframework$ ]]; then
-                echo "Removing directory: $dir"
-                rm -rf "$dir"
-            fi
-        done
-
-        echo "========================"
+        
         cd $HERE_DIR
 
+        # Loop over each .a file found within the xcframework
+        find "$XCFRAMEWORK_PATH" -type f -name "*.a" | while read -r lib_a; do
+            echo "Securing $lib_a..."
+            lipo -info "$lib_a"
+            xcrun codesign --sign - "$lib_a" || true
+            . "$SECURE_SCRIPT"
+            secure "$lib_a" "$LIB_NAME" "$VERSION"
+        done
+
+        echo " -- deploy to xcframework [$X_LIBS]..." 
+        if ! command -v rsync &> /dev/null; then      
+            cp -av "${XCFRAMEWORK_PATH}/"* ${X_LIBS}
+            cp -av "${LIBS_DIR_REAL}/${1}/include/"* ${X_INCLUDE}
+            cp -av "${LIBS_DIR_REAL}/${1}/license/"* ${X_LICENSE}
+        else
+            rsync -av --delete "${XCFRAMEWORK_PATH}" ${X_LIBS}
+            rsync -av --delete "${LIBS_DIR_REAL}/${1}/include/" ${X_INCLUDE}
+            rsync -av --delete "${LIBS_DIR_REAL}/${1}/license/" ${X_LICENSE}
+        fi
+
+        echo " -- cleanup merged libraries ..." 
+        for dir in "${merged_dirs[@]}"; do
+            echo " removing directory: [$dir]"
+            rm -rfv "${dir}"
+        done 
+
+        rm -rfv "${XCFRAMEWORK_PATH}"
+
+        # codesign --timestamp -s  $XCFRAMEWORK_PATH
+        # for PLATFORM in "${PLATFORM_TYPES[@]}"; do
+        #     PLATFORM_DIR="${LIBS_DIR_REAL}/${1}/lib/$PLATFORM"
+        #     echo "Cleaning up $PLATFORM platform type..."
+        #     if [ -d "$PLATFORM_DIR" ]; then
+        #         dirs_to_clean=$(find "${LIBS_DIR_REAL}/${1}/lib/$PLATFORM/" -mindepth 1 -maxdepth 1 -type d ! -name "*.xcframework")
+        #         for dir in $dirs_to_clean; do
+        #             echo "Removing directory: $dir"
+        #             rm -rf "$dir"
+        #         done
+        #         rm -rf "$PLATFORM_DIR"
+        #     fi
+        # done
     fi
 }
 
@@ -1618,13 +2179,9 @@ function framework() {
     echoWarning " Framework function not implemented"
 }
 
-function save() {
-	echoWarning " Save function not implemented"
-}
-
 function load() {
-	echoWarning " Load function not implemented"
-	return 1
+    echoWarning " load function not implemented"
+	echo "0"
 }
 
 # do a command on a given dependency in a separate apothecary run
@@ -1647,20 +2204,29 @@ function apothecaryDepend() {
         echoError " Cannot $1, no formula for dependency \"$depend\""
         exit 1
     fi
-
-    # Skip building if dependency is already up to date
-    if [ $USE_SAVE == 1 ] && load $depend ; then
-        echoInfo "Skipping - dependency $depend already built and up to date"
-        return
-    fi
-
+    echoStart " $depend $1 dependency"
+    export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+    # exit 1
+    # echo "${APOTHECARY_SCRIPT} -t$TYPE -a$ARCH -j$PARALLEL_MAKE load $2"
+    # result=$(${APOTHECARY_SCRIPT} -t$TYPE -a$ARCH -j$PARALLEL_MAKE load $2| tail -n 1)
+    # LOAD_RESULT=$?
+    # # Check the return value
+    # if [ $LOADSAVE_RESULT -eq 0 ]; then
+    #     echoError "apothecaryDepend $2 not updated will need to build. $LOADSAVE_RESULT."
+    # else
+    #     echoSuccess "apothecaryDepend $2 - skipping ! $LOADSAVE_RESULT."
+    #     return 0
+    # fi
+    #set -e
+    # Capture the returned path into a variable
+    DIRECTORY_PATH=$(get_directory_path "$TYPE" "$1" "$PLATFORM" "$ARCH")
+    #echo "Presumed directory path: $DIRECTORY_PATH"
     # Use git if the USE_GIT variable is set
     if [ $FORCE_DOWNLOAD -eq 1 ]; then
-        $APOTHECARY_SCRIPT -f -t $TYPE -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
+        $APOTHECARY_SCRIPT -f -t $TYPE -d$LIBS_DIR_REAL -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
     else
-        $APOTHECARY_SCRIPT -t $TYPE -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1 $depend
+        $APOTHECARY_SCRIPT -t $TYPE -d$LIBS_DIR_REAL -a $ARCH -j$PARALLEL_MAKE ${USE_GIT:+-g} $1  $depend
     fi
-
     # Return to the original directory
     cd $ROOT
 }
@@ -1678,7 +2244,6 @@ function apothecaryDependencies() {
             #change back to APOTHECARY_DIR to run new script
             cd $APOTHECARY_DIR
             apothecaryDepend $1 $depend
-
             #restore dir to where we are
             cd $CUR_DIR
 		done
@@ -1777,6 +2342,7 @@ echoVerbose "Build dir: $BUILD_DIR"
 # use default libs dir?
 if [ -z "${CUSTOM_LIBS_DIR+x}" ] ; then
 	export LIBS_DIR=$REL_LIBS_DIR
+    export REAL_LIBS_DIR=$REL_LIBS_DIR
     export IS_CUSTOM_LIBS_DIR=0
     echoVerbose "CUSTOM_LIBS_DIR is empty: $LIBS_DIR REL_LIBS_DIR:$REL_LIBS_DIR"
 else # manually set
@@ -1784,6 +2350,8 @@ else # manually set
 		/*) export LIBS_DIR=$CUSTOM_LIBS_DIR ;; # absolute path
 	 	*) export LIBS_DIR=$WD/$CUSTOM_LIBS_DIR ;; # relative path
 	esac
+    export REAL_LIBS_DIR=$REL_LIBS_DIR
+    export REAL_LIBS_DIR=$REL_LIBS_DIR
 	export IS_CUSTOM_LIBS_DIR=1
     echoVerbose "CUSTOM_LIBS_DIR is set: $LIBS_DIR custom:$CUSTOM_LIBS_DIR"
 fi
@@ -1798,8 +2366,13 @@ DEPENDS_FORMULA_DIR=$FORMULAS_DIR/$DEPENDS_SUBDIR
 BUILD_ROOT_DIR=$BUILD_DIR/$BUILDROOT_SUBDIR
 
 # set for android sdk info
-# set for android sdk info
 if [[ "$TYPE" == "android" ]] ; then
+
+    if [ -z "${NDK_ROOT+x}" ]; then
+        NDK_ROOT=NDK_ROOT=/Users/one/Library/Android/sdk/ndk/25.2.9519653
+        echoError " NDK_ROOT not defined! This is ussually /Users/{username}/Library/Android/sdk/ndk on macOS"
+    fi
+
 	if [[ -e ${APOTHECARY_DIR}/paths.make ]] ; then
 		source ${APOTHECARY_DIR}/paths.make
 		ANDROID_NDK_ROOT=${NDK_ROOT}
@@ -1829,11 +2402,27 @@ if [[ "$TYPE" == "android" ]] ; then
 		ABI=""
 		echoError "Targeting android, ARCH not set! Please use -a arm64"
 	fi
+    PLATFORM=ABI
 else 
 	ABI=""
 fi
 
-
+if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+    if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
+        export MIN_SDK_VER=${IOS_MIN_SDK_VER}
+    elif [[ "$TYPE" =~ ^(osx)$ ]]; then
+        export MIN_SDK_VER=${OSX_MIN_SDK_VER}
+    elif [[ "$TYPE" =~ ^(tvos)$ ]]; then
+        export MIN_SDK_VER=${TVOS_MIN_SDK_VER}
+    elif [[ "$TYPE" =~ ^(xros)$ ]]; then
+        export MIN_SDK_VER=${XROS_MIN_SDK_VER}
+    elif [[ "$TYPE" =~ ^(watchos)$ ]]; then
+        export MIN_SDK_VER=${WATCHOS_MIN_SDK_VER}
+    else
+        export MIN_SDK_VER=${IOS_MIN_SDK_VER}
+        echo "MIN_SDK not set for $TYPE"
+    fi
+fi
 
 CROSSCOMPILING=0
 if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
@@ -1859,6 +2448,7 @@ if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == 
     fi
 fi
 
+
 # handle commands
 echoVerbose "Running: $A_CMD $*"
 case "$A_CMD" in
@@ -1882,8 +2472,11 @@ case "$A_CMD" in
 		doCommand 1 cleanFormula $@ ;;
 
     framework)
-        doCommand 1 frameworkFormula $@ ;;
-
+        if [ "$XCFRAMEWORK_ALL" == "true" ]; then
+            doCommand 1 xframeworkFormula $@
+        else
+            doCommand 1 frameworkFormula $@
+        fi ;;
 	remove)
 		if [ ! -e $BUILD_DIR ] ; then
 			echoInfo " Nothing to remove"
@@ -1905,5 +2498,4 @@ case "$A_CMD" in
 		echoError " Unknown command \"$A_CMD\""
 		exit 1 ;;
 esac
-
 exit 0

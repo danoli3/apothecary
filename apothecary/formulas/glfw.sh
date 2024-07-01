@@ -12,15 +12,28 @@ FORMULA_TYPES=( "osx" "vs" )
 # VER=2018-cmake-fix
 # tools for git use
 # GIT_URL=https://github.com/ofTheo/glfw/
-GIT_URL=https://github.com/glfw/glfw/
+GIT_URL=https://github.com/glfw/glfw
 # VER=master
-VER=3.3.9
+VER=3.4
 GIT_BRANCH=$VER
 
 # download the source code and unpack it into LIB_NAME
 function download() {
-	 echo "Running: git clone --branch ${GIT_BRANCH} ${GIT_URL}"
-     git clone --branch ${GIT_BRANCH} ${GIT_URL} --depth 1
+	 # echo "Running: git clone --branch ${GIT_BRANCH} ${GIT_URL}"
+     # git clone --branch ${GIT_BRANCH} ${GIT_URL} --depth 1
+     . "$DOWNLOADER_SCRIPT"
+
+	if [ "$TYPE" == "vs" ] ; then
+		downloader "${GIT_URL}/archive/refs/tags/${VER}.zip"
+		unzip -q "${VER}.zip"
+		mv "glfw-${VER}" glfw
+		rm "${VER}.zip"
+	else 
+		downloader "${GIT_URL}/archive/refs/tags/${VER}.tar.gz"
+		tar -xf "${VER}.tar.gz"
+		mv "glfw-${VER}" glfw
+		rm "${VER}.tar.gz"
+	fi
 }
 
 # prepare the build environment, executed inside the lib src dir
@@ -99,6 +112,7 @@ function build() {
 				-DPLATFORM=$PLATFORM \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DENABLE_BITCODE=OFF \
+				-DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
 				-DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
 				-DCMAKE_C_FLAGS="-fPIC ${FLAG_RELEASE}" \
 				-DENABLE_ARC=OFF \
@@ -163,6 +177,8 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/ 
         cp -v "build_${TYPE}_${ARCH}/Release/lib/glfw3.lib" $1/lib/$TYPE/$PLATFORM/glfw3.lib   
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/glfw3.lib glfw3.pkl
 	elif [ "$TYPE" == "osx" ]; then
 		# Standard *nix style copy.
 		# copy headers
@@ -170,6 +186,8 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include 
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libglfw3.a" $1/lib/$TYPE/$PLATFORM/libglfw3.a
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/libglfw3.a glfw3.pkl
 	fi
 
 	# copy license file
@@ -197,16 +215,13 @@ function clean() {
 	fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "glfw" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "glfw" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "glfw3" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

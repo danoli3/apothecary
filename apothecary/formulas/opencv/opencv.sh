@@ -6,31 +6,26 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=( "osx" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "emscripten" )
+FORMULA_TYPES=( "osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" )
 
 # define the version
 
 VER=4.9.0
 
+FORMULA_DEPENDS=( "zlib" "libpng" )
 
 # tools for git use
-GIT_URL=https://github.com/opencv/opencv.git
+GIT_URL=https://github.com/opencv/opencv
 GIT_TAG=$VER
-
-# these paths don't really matter - they are set correctly further down
-local LIB_FOLDER="$BUILD_ROOT_DIR/opencv"
-local LIB_FOLDER32="$LIB_FOLDER-32"
-local LIB_FOLDER64="$LIB_FOLDER-64"
-local LIB_FOLDER_IOS="$LIB_FOLDER-IOS"
-local LIB_FOLDER_IOS_SIM="$LIB_FOLDER-IOSIM"
-
 
 # download the source code and unpack it into LIB_NAME
 function download() {
-  curl -L https://github.com/opencv/opencv/archive/refs/tags/$VER.zip --output opencv-$VER.zip
-  unzip -q opencv-$VER.zip
-  mv opencv-$VER $1
-  rm opencv*.zip
+
+  . "$DOWNLOADER_SCRIPT"
+  downloader $GIT_URL/archive/refs/tags/$VER.tar.gz
+  tar -xzf $VER.tar.gz
+  mv opencv-$VER opencv
+  rm $VER.tar.gz
 }
 
 # prepare the build environment, executed inside the lib src dir
@@ -42,6 +37,9 @@ function prepare() {
     rm -rf modules/objc_bindings_generator
     rm -rf modules/objc
   fi
+
+  rm -f ./modules/imgcodecs/src/ios_conversions.mm
+  cp $FORMULA_DIR/ios_conversions.mm ./modules/imgcodecs/src/ios_conversions.mm
 }
 
 # executed inside the lib src dir
@@ -53,6 +51,10 @@ function build() {
     ZLIB_ROOT="$LIBS_ROOT/zlib/"
     ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
     ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
+    LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
 
     mkdir -p "build_${TYPE}_${PLATFORM}"
     cd "build_${TYPE}_${PLATFORM}"
@@ -66,9 +68,10 @@ function build() {
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_LIBRARY=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_LIBRARY} "
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} "
       if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
         EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DWITH_CAROTENE=OFF"
       else 
@@ -81,6 +84,7 @@ function build() {
       -DPLATFORM=$PLATFORM \
       -DENABLE_BITCODE=OFF \
       -DENABLE_ARC=OFF \
+      -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
       -DENABLE_VISIBILITY=OFF \
       -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
       -DENABLE_FAST_MATH=OFF \
@@ -107,10 +111,11 @@ function build() {
       -DBUILD_opencv_stitching=ON \
       -DBUILD_opencv_calib3d=ON \
       -DBUILD_opencv_objdetect=ON \
+      -DWITH_PNG=ON \
+      -DBUILD_PNG=OFF \
       -DWITH_1394=OFF \
       -DWITH_CARBON=OFF \
       -DWITH_JPEG=OFF \
-      -DWITH_PNG=OFF \
       -DWITH_TIFF=OFF \
       -DWITH_FFMPEG=OFF \
       -DWITH_OPENCL=OFF \
@@ -152,7 +157,6 @@ function build() {
       -DWITH_1394=OFF \
       -DWITH_ADE=OFF \
       -DWITH_JPEG=OFF \
-      -DWITH_PNG=OFF \
       -DWITH_FFMPEG=OFF \
       -DWITH_GIGEAPI=OFF \
       -DWITH_CUDA=OFF \
@@ -200,9 +204,18 @@ function build() {
     echoInfo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN - "${PLATFORM}""
     echoInfo "--------------------"
     GENERATOR_NAME="Visual Studio ${VS_VER_GEN}" 
-    mkdir -p "build_${TYPE}_${ARCH}"
-    cd "build_${TYPE}_${ARCH}"
+    mkdir -p "build_${TYPE}_${PLATFORM}"
+    cd "build_${TYPE}_${PLATFORM}"
     rm -f CMakeCache.txt || true
+
+    ZLIB_ROOT="$LIBS_ROOT/zlib/"
+    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+
+    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
+    LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib"
+
     DEFS="
         -DCMAKE_C_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
@@ -213,7 +226,6 @@ function build() {
         -DCMAKE_INSTALL_INCLUDEDIR=include \
         -DCMAKE_INSTALL_LIBDIR="lib" \
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-        -DBUILD_PNG=OFF \
         -DWITH_OPENCLAMDBLAS=OFF \
         -DBUILD_TESTS=OFF \
         -DWITH_CUDA=OFF \
@@ -255,7 +267,8 @@ function build() {
         -DBUILD_OPENEXR=OFF \
         -DWITH_DSHOW=OFF \
         -DWITH_VFW=OFF \
-        -DWITH_PNG=OFF \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_PVAPI=OFF\
         -DBUILD_OBJC=OFF \
@@ -266,7 +279,6 @@ function build() {
         -DWITH_1394=OFF \
         -DWITH_ADE=OFF \
         -DWITH_JPEG=OFF \
-        -DWITH_PNG=OFF \
         -DWITH_FFMPEG=OFF \
         -DWITH_GIGEAPI=OFF \
         -DWITH_CUDA=OFF \
@@ -291,7 +303,8 @@ function build() {
         -DWITH_OPENCLCLAMDFFT=OFF \
         -DWITH_OPENCL_SVM=OFF \
         -DWITH_LAPACK=OFF \
-        -DBUILD_ZLIB=ON \
+        -DBUILD_ZLIB=OFF \
+        -DWITH_ZLIB=ON \
         -DWITH_WEBP=OFF \
         -DWITH_VTK=OFF \
         -DWITH_PVAPI=OFF \
@@ -312,6 +325,7 @@ function build() {
     cmake .. ${DEFS} \
         -A "${PLATFORM}" \
         -G "${GENERATOR_NAME}" \
+        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Debug \
         -DCMAKE_BUILD_TYPE="Debug" \
         -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
@@ -321,11 +335,18 @@ function build() {
         -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
         ${EXTRA_DEFS} \
         ${CMAKE_WIN_SDK} \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
         -DBUILD_WITH_STATIC_CRT=OFF 
      cmake --build . --target install --config Debug
      cmake .. ${DEFS} \
         -A "${PLATFORM}" \
         -G "${GENERATOR_NAME}" \
+        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Release \
         -DCMAKE_BUILD_TYPE="Release" \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -334,6 +355,12 @@ function build() {
         -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
         -D BUILD_SHARED_LIBS=ON \
         ${EXTRA_DEFS} \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
         -DBUILD_WITH_STATIC_CRT=OFF \
         ${CMAKE_WIN_SDK}
     cmake --build . --target install --config Release
@@ -384,9 +411,10 @@ function build() {
     else 
       EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
     fi
-
+    rm -f CMakeCache.txt || true
     cmake  \
       -DANDROID_TOOLCHAIN=clang++ \
+      -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake  \
       -DCMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
       -DCMAKE_CXX_FLAGS="" \
@@ -483,9 +511,11 @@ function build() {
 
     mkdir -p build_${TYPE}
     cd build_${TYPE}
-    
+    find ./ -name "*.o" -type f -delete
+    rm -f CMakeCache.txt || true
     emcmake cmake .. \
       -B build \
+      -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
       -DCMAKE_BUILD_TYPE="Release" \
       -DCMAKE_INSTALL_LIBDIR="lib" \
       -DCMAKE_C_STANDARD=17 \
@@ -493,6 +523,7 @@ function build() {
       -DCPU_BASELINE='' \
       -DCPU_DISPATCH='' \
       -DCV_TRACE=OFF \
+      -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_C_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DCMAKE_CXX_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DBUILD_SHARED_LIBS=OFF \
@@ -608,45 +639,69 @@ function copy() {
 
   # prepare headers directory if needed
   mkdir -p $1/include
-
   # prepare libs directory if needed
   mkdir -p $1/lib/$TYPE
+  mkdir -p $1/etc
+  . "$SECURE_SCRIPT"
+
+  # copy license file
+  if [ -d "$1/license" ]; then
+    rm -rf $1/license
+  fi
+  mkdir -p $1/license
 
   if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
     mkdir -p $1/lib/$TYPE/$PLATFORM
-
     cp -v "build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"*.a $1/lib/$TYPE/$PLATFORM/
     cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM
 
     cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/opencv4" $1/include/
 
+    cp -Rv "build_${TYPE}_${PLATFORM}/Release/share/opencv4/"* $1/etc
+    cp -Rv "build_${TYPE}_${PLATFORM}/Release/share/licenses/"* $1/license
+    cp -v LICENSE $1/license/
+
+    secure $1/lib/$TYPE/$PLATFORM/libopencv_core.a opencv.pkl
+
   elif [ "$TYPE" == "vs" ] ; then
      
-    mkdir -p $1/lib/$TYPE
-    mkdir -p $1/etc
-
-    cp -Rv "build_${TYPE}_${ARCH}/Release/include/opencv2" $1/include/
+    cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/opencv2" $1/include/
     mkdir -p $1/lib/$TYPE/$PLATFORM/
 
     mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
     mkdir -p $1/lib/$TYPE/$PLATFORM/Release
 
-    mkdir -p $1/bin//$PLATFORM/Debug
+    mkdir -p $1/bin/$PLATFORM/Debug
     mkdir -p $1/bin/$PLATFORM/Release
 
-    OUTPUT_FOLDER=${BUILD_PLATFORM}
+    # if [[ "$ARCH" =~ ^(64|x64)$ ]]; then
 
-    cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
-    cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+      OUTPUT_FOLDER=${BUILD_PLATFORM}
 
-    cp -v "build_${TYPE}_${ARCH}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Release
-    cp -v "build_${TYPE}_${ARCH}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Debug
+    if [ -d "build_${TYPE}_${PLATFORM}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/" ]; then
 
-    cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Release/"*.lib $1/lib/$TYPE/$PLATFORM/Release
-    cp -v "build_${TYPE}_${ARCH}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+      cp -v "build_${TYPE}_${PLATFORM}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+      cp -v "build_${TYPE}_${PLATFORM}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
 
-    cp -Rv "build_${TYPE}_${ARCH}/Release/etc/" $1/etc
+      cp -v "build_${TYPE}_${PLATFORM}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Release
+      cp -v "build_${TYPE}_${PLATFORM}/Debug/${OUTPUT_FOLDER}/vc${VS_VER}/bin/"*.dll $1/bin/$PLATFORM/Debug
+    else
+
+      cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+      cp -v "build_${TYPE}_${PLATFORM}/Debug/lib/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+
+      cp -v "build_${TYPE}_${PLATFORM}/Release/bin/"*.dll $1/bin/$PLATFORM/Release
+      cp -v "build_${TYPE}_${PLATFORM}/Debug/bin/"*.dll $1/bin/$PLATFORM/Debug
+
+    fi
+
+    cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Release/"*.lib $1/lib/$TYPE/$PLATFORM/Release
+    cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
+
+    cp -Rv "build_${TYPE}_${PLATFORM}/Release/etc/"* $1/etc
+
+    secure $1/lib/$TYPE/$PLATFORM/Release/opencv_core490.lib opencv.pkl
 
   elif [ "$TYPE" == "android" ]; then
     if [ $ABI = armeabi-v7a ] || [ $ABI = armeabi ]; then
@@ -667,6 +722,8 @@ function copy() {
     cp -r $BUILD_FOLDER/install/sdk/native/staticlibs/$ABI/*.a $1/lib/$TYPE/$ABI/
     cp -r $BUILD_FOLDER/install/sdk/native/3rdparty/libs/$ABI/*.a $1/lib/$TYPE/$ABI/
 
+    secure $1/lib/$TYPE/$PLATFORM/libopencv_core.a opencv.pkl
+
   elif [ "$TYPE" == "emscripten" ]; then
     mkdir -p $1/include/opencv2
     cp -Rv "build_${TYPE}/Release/include/" $1/include/
@@ -674,13 +731,8 @@ function copy() {
     cp -R modules/*/include/opencv2/* $1/include/opencv2/
     cp -v build_${TYPE}/Release/lib/*.a $1/lib/$TYPE/
     cp -v build_${TYPE}/Release/lib/opencv4/3rdparty/*.a $1/lib/$TYPE/
+    secure $1/lib/$TYPE/libopencv_core.a opencv.pkl
   fi
-
-  # copy license file
-  if [ -d "$1/license" ]; then
-    rm -rf $1/license
-  fi
-  mkdir -p $1/license
   cp -v LICENSE $1/license/
 
 }
@@ -702,16 +754,13 @@ function clean() {
   fi
 }
 
-function save() {
-    . "$SAVE_SCRIPT" 
-    savestatus ${TYPE} "opencv" ${ARCH} ${VER} true "${SAVE_FILE}"
-}
-
 function load() {
     . "$LOAD_SCRIPT"
-    if loadsave ${TYPE} "opencv" ${ARCH} ${VER} "${SAVE_FILE}"; then
-      return 0;
+    LOAD_RESULT=$(loadsave ${TYPE} "opencv" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
     else
-      return 1;
+        echo 0
     fi
 }

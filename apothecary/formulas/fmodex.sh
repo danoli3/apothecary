@@ -36,6 +36,7 @@ function download() {
 	. "$DOWNLOADER_SCRIPT"
     downloader "${URL}/${PKG}"
 	tar xjf $PKG
+	rm "${PKG}"
 }
 
 # prepare the build environment, executed inside the lib src dir
@@ -64,7 +65,7 @@ function build() {
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
-	cp -r ../fmodex $1/
+	cp -r ../fmodex/ $1/
 }
 
 # executed inside the lib src dir
