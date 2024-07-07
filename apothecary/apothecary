@@ -190,7 +190,7 @@ if [ -z "${C_STANDARD+x}" ]; then
 fi
 
 if [ -z "${CPP_STANDARD+x}" ]; then
-    export CPP_STANDARD=2b
+    export CPP_STANDARD=23
 fi
 
 # prefer git instead of download tarballs
