@@ -185,6 +185,14 @@ if [ -z "${LIBS_DIR_REAL+x}" ]; then
     export LIBS_DIR_REAL=
 fi
 
+if [ -z "${C_STANDARD+x}" ]; then
+    export C_STANDARD=17
+fi
+
+if [ -z "${CPP_STANDARD+x}" ]; then
+    export CPP_STANDARD=2b
+fi
+
 # prefer git instead of download tarballs
 # This remains _UNSET_ if git is not in use.
 # To use, set USE_GIT=1

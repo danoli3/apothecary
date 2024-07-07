@@ -49,8 +49,8 @@ function build() {
       # fi
 
       DEFS="
-          -DCMAKE_C_STANDARD=17 \
-          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_C_STANDARD=${C_STANDARD} \
+          -DCMAKE_C_STANDARD=${CPP_STANDARD} \
           -DCMAKE_CXX_STANDARD_REQUIRED=ON \
           -DCMAKE_CXX_EXTENSIONS=OFF \
           -DBUILD_SHARED_LIBS=OFF \
@@ -87,8 +87,8 @@ function build() {
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_C_STANDARD=17 \
-        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
         -DCMAKE_CXX_STANDARD_REQUIRED=ON \
         -DCMAKE_CXX_EXTENSIONS=OFF \
         -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \

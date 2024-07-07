@@ -68,8 +68,8 @@ function build() {
 	    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
 	    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 		
-		  DEFS="-DCMAKE_C_STANDARD=17 \
-		        -DCMAKE_CXX_STANDARD=17 \
+		  DEFS="-DCMAKE_C_STANDARD=${C_STANDARD} \
+		        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 		        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		        -DCMAKE_CXX_EXTENSIONS=OFF
 		        -DBUILD_SHARED_LIBS=OFF \
@@ -85,8 +85,8 @@ function build() {
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake
 		        "         
 		cmake  .. ${DEFS} \
-			-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC ${FLAG_RELEASE}" \
@@ -171,8 +171,8 @@ function build() {
             -DANDROID_ABI=$ABI \
 			-DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
-        	-DCMAKE_C_STANDARD=17 \
-        	-DCMAKE_CXX_STANDARD=17 \
+        	-DCMAKE_C_STANDARD=${C_STANDARD} \
+        	-DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DNO_BUILD_LIBRAWLITE=ON \
@@ -196,8 +196,8 @@ function build() {
 		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib"        
         
         DEFS="-DLIBRARY_SUFFIX=${ARCH} \
-	        -DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -252,8 +252,8 @@ function build() {
 		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.a"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-B build \
-	    	-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \

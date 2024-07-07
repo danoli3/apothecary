@@ -53,8 +53,8 @@ function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
 
 	export DEFS="
-		    -DCMAKE_C_STANDARD=17 \
-		    -DCMAKE_CXX_STANDARD=17 \
+		    -DCMAKE_C_STANDARD=${C_STANDARD} \
+		    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
 		    -DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
@@ -174,8 +174,8 @@ function build() {
 	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         -DCMAKE_SYSTEM_PROCESSOR=$ABI \
-				-DCMAKE_C_STANDARD=17 \
-				-DCMAKE_CXX_STANDARD=17 \
+				-DCMAKE_C_STANDARD=${C_STANDARD} \
+				-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
@@ -193,8 +193,8 @@ function build() {
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-	    	-DCMAKE_C_STANDARD=17 \
-				-DCMAKE_CXX_STANDARD=17 \
+	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
+				-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \

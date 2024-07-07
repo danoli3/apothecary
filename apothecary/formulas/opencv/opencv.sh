@@ -61,8 +61,8 @@ function build() {
     rm -f CMakeCache.txt || true
     DEFS="
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF
             -DBUILD_SHARED_LIBS=OFF \
@@ -217,8 +217,8 @@ function build() {
     LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib"
 
     DEFS="
-        -DCMAKE_C_STANDARD=17 \
-        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
         -DCMAKE_CXX_STANDARD_REQUIRED=ON \
         -DCMAKE_CXX_EXTENSIONS=OFF \
         -DBUILD_SHARED_LIBS=ON \
@@ -424,8 +424,8 @@ function build() {
       -DANDROID_ABI=$ABI \
       -DCMAKE_ANDROID_ARCH_ABI=$ABI \
       -DANDROID_STL=c++_shared \
-      -DCMAKE_C_STANDARD=17 \
-      -DCMAKE_CXX_STANDARD=17 \
+      -DCMAKE_C_STANDARD=${C_STANDARD} \
+      -DCMAKE_C_STANDARD=${CPP_STANDARD} \
       -DCMAKE_CXX_STANDARD_REQUIRED=ON \
       -DCMAKE_CXX_EXTENSIONS=OFF \
       -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
@@ -518,8 +518,8 @@ function build() {
       -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
       -DCMAKE_BUILD_TYPE="Release" \
       -DCMAKE_INSTALL_LIBDIR="lib" \
-      -DCMAKE_C_STANDARD=17 \
-      -DCMAKE_CXX_STANDARD=17 \
+      -DCMAKE_C_STANDARD=${C_STANDARD} \
+      -DCMAKE_C_STANDARD=${CPP_STANDARD} \
       -DCPU_BASELINE='' \
       -DCPU_DISPATCH='' \
       -DCV_TRACE=OFF \

@@ -50,8 +50,8 @@ function prepare() {
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
 	DEFS="
-		    -DCMAKE_C_STANDARD=17 \
-		    -DCMAKE_CXX_STANDARD=17 \
+		    -DCMAKE_C_STANDARD=${C_STANDARD} \
+		    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
             -DFT_DISABLE_ZLIB=FALSE \
@@ -107,9 +107,9 @@ function build() {
             -DBROTLIDEC_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARIES=${LIBBROTLI_LIBRARY};${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB} \
-            -DCMAKE_C_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
@@ -175,8 +175,8 @@ function build() {
             -D FT_REQUIRE_PNG=TRUE \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=lib \
@@ -294,8 +294,8 @@ function build() {
 	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
-			-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
@@ -359,8 +359,8 @@ function build() {
             -DANDROID_ABI=$ABI \
 			-DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
-        	-DCMAKE_C_STANDARD=17 \
-        	-DCMAKE_CXX_STANDARD=17 \
+        	-DCMAKE_C_STANDARD=${C_STANDARD} \
+        	-DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
         	-G 'Unix Makefiles' ..
@@ -387,8 +387,8 @@ function build() {
 	    	${DEFS} \
 	    	${BROTLI} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-    		-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+    		-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
@@ -397,8 +397,8 @@ function build() {
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \

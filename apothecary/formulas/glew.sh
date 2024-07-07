@@ -47,8 +47,8 @@ function build() {
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o 
 		cmake  ../build/cmake \
-			-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -84,8 +84,8 @@ function build() {
 		DEFS="-DLIBRARY_SUFFIX=${ARCH}"
 
 		cmake ../build/cmake ${DEFS} \
-		    -DCMAKE_C_STANDARD=17 \
-		    -DCMAKE_CXX_STANDARD=17 \
+		    -DCMAKE_C_STANDARD=${C_STANDARD} \
+		    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 		    -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \

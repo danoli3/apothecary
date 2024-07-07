@@ -52,8 +52,8 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
 	DEFS="
-	        -DCMAKE_C_STANDARD=17 \
-	        -DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DCMAKE_INSTALL_PREFIX=Release \
@@ -78,8 +78,8 @@ function build() {
             	-DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
 				-DBUILD_SHARED_LIBS=OFF \
 				-DCMAKE_BUILD_TYPE=Release \
-			    -DCMAKE_C_STANDARD=17 \
-			    -DCMAKE_CXX_STANDARD=17 \
+			    -DCMAKE_C_STANDARD=${C_STANDARD} \
+			    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			    -DCMAKE_CXX_EXTENSIONS=OFF \
 			    -DCMAKE_INSTALL_PREFIX=Release \
@@ -150,8 +150,8 @@ function build() {
             -DANDROID_ABI=$ABI \
 			-DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
-        	-DCMAKE_C_STANDARD=17 \
-        	-DCMAKE_CXX_STANDARD=17 \
+        	-DCMAKE_C_STANDARD=${C_STANDARD} \
+        	-DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
         	-G 'Unix Makefiles' ..
@@ -167,8 +167,8 @@ function build() {
 			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 			-DCMAKE_BUILD_TYPE="Release" \
 			-DCMAKE_INSTALL_LIBDIR="lib" \
-			-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCPU_BASELINE='' \
 			-DCPU_DISPATCH='' \
 			-DCV_TRACE=OFF \

@@ -87,8 +87,8 @@ function build() {
 	    cd "build_${TYPE}_${ARCH}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=17 \
-	        -DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF \
@@ -125,8 +125,8 @@ function build() {
 	    rm -f CMakeCache.txt *.lib *.o
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
 	    DEFS="
-	        -DCMAKE_C_STANDARD=17 \
-	        -DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF \
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -202,8 +202,8 @@ function build() {
             -DANDROID_NDK=$NDK_ROOT \
             -DANDROID_ABI=$ABI \
             -DANDROID_STL=c++_shared \
-            -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DLIBXML2_WITH_LZMA=OFF \
@@ -242,8 +242,8 @@ function build() {
 		    -DCMAKE_PREFIX_PATH="${ZLIB_ROOT} ${LIBXML2_ROOT}" \
 		    -DSKIP_EXAMPLE=1 \
 		    -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DDO_XML_INSTALL=ON \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=ON \
@@ -277,8 +277,8 @@ function build() {
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-B . \
 	    	-DCMAKE_BUILD_TYPE=Release \
-	    	-DCMAKE_C_STANDARD=17 \
-			-DCMAKE_CXX_STANDARD=17 \
+	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DDO_XML_INSTALL=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \

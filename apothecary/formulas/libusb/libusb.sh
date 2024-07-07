@@ -57,8 +57,8 @@ function build() {
         rm -f CMakeCache.txt *.lib *.o
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=17 \
-	        -DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=ON \
@@ -95,8 +95,8 @@ function build() {
 	    rm -f CMakeCache.txt *.a *.o
 	    DEFS="-DLIBRARY_SUFFIX=${PLATFORM} \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=17 \
-	        -DCMAKE_CXX_STANDARD=17 \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=ON \

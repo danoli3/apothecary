@@ -31,8 +31,8 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
-	export DEFS="  -DCMAKE_C_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD=17 \
+	export DEFS="  -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF
             -DBUILD_SHARED_LIBS=OFF \
@@ -119,8 +119,8 @@ function build() {
 				-DBUILD_SHARED_LIBS=OFF \
 				-DCMAKE_BUILD_TYPE=Release \
 				-DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
-			    -DCMAKE_C_STANDARD=17 \
-			    -DCMAKE_CXX_STANDARD=17 \
+			    -DCMAKE_C_STANDARD=${C_STANDARD} \
+			    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
 			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			    -DCMAKE_CXX_EXTENSIONS=OFF \
 			    -DCMAKE_INSTALL_PREFIX=Release \
