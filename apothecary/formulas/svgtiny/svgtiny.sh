@@ -88,7 +88,7 @@ function build() {
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF \
@@ -126,7 +126,7 @@ function build() {
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
 	    DEFS="
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF \
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -203,7 +203,7 @@ function build() {
             -DANDROID_ABI=$ABI \
             -DANDROID_STL=c++_shared \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DLIBXML2_WITH_LZMA=OFF \
@@ -243,7 +243,7 @@ function build() {
 		    -DSKIP_EXAMPLE=1 \
 		    -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DDO_XML_INSTALL=ON \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=ON \
@@ -278,7 +278,7 @@ function build() {
 	    	-B . \
 	    	-DCMAKE_BUILD_TYPE=Release \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DDO_XML_INSTALL=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \

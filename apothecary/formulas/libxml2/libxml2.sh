@@ -80,7 +80,7 @@ function prepare() {
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
     DEFS="  -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
@@ -196,7 +196,7 @@ function build() {
             -DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF
         cmake --build . --config Release
@@ -225,7 +225,7 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -262,7 +262,7 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -270,7 +270,7 @@ function build() {
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
@@ -291,7 +291,7 @@ function build() {
                 ${DEFS} \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_STANDARD=${C_STANDARD} \
-                -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+                -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -315,7 +315,7 @@ function build() {
             ${DEFS} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \

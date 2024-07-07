@@ -53,7 +53,7 @@ function prepare() {
 function build() {
 	DEFS="
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DCMAKE_INSTALL_PREFIX=Release \
@@ -79,7 +79,7 @@ function build() {
 				-DBUILD_SHARED_LIBS=OFF \
 				-DCMAKE_BUILD_TYPE=Release \
 			    -DCMAKE_C_STANDARD=${C_STANDARD} \
-			    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+			    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			    -DCMAKE_CXX_EXTENSIONS=OFF \
 			    -DCMAKE_INSTALL_PREFIX=Release \
@@ -151,7 +151,7 @@ function build() {
 			-DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
         	-DCMAKE_C_STANDARD=${C_STANDARD} \
-        	-DCMAKE_C_STANDARD=${CPP_STANDARD} \
+        	-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
         	-G 'Unix Makefiles' ..
@@ -168,7 +168,7 @@ function build() {
 			-DCMAKE_BUILD_TYPE="Release" \
 			-DCMAKE_INSTALL_LIBDIR="lib" \
 			-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCPU_BASELINE='' \
 			-DCPU_DISPATCH='' \
 			-DCV_TRACE=OFF \

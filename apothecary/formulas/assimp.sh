@@ -66,7 +66,7 @@ function build() {
 
         cmake .. ${DEFS} \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -109,7 +109,7 @@ function build() {
         rm -f CMakeCache.txt || true
         DEFS="
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=ON \
@@ -276,7 +276,7 @@ function build() {
             -DANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
             -DCMAKE_SYSROOT=$SYSROOT \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DANDROID_TOOLCHAIN=clang++ \
@@ -329,7 +329,7 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DASSIMP_BUILD_ZLIB=ON \
             -DASSIMP_BUILD_STATIC_LIB=1 \
