@@ -10,13 +10,17 @@ FORMULA_TYPES=( "osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" )
 
 # define the version
 
-VER=4.9.0
+VER=4.10.0
 
 FORMULA_DEPENDS=( "zlib" "libpng" )
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv
 GIT_TAG=$VER
+
+
+GIT_CONTRIB_URL=https://github.com/opencv/opencv_contrib
+VER=4.10.0
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -25,6 +29,12 @@ function download() {
   downloader $GIT_URL/archive/refs/tags/$VER.tar.gz
   tar -xzf $VER.tar.gz
   mv opencv-$VER opencv
+  rm $VER.tar.gz
+
+
+  downloader $GIT_CONTRIB_URL/archive/refs/tags/$VER.tar.gz
+  tar -xzf $VER.tar.gz
+  mv opencv_contrib-$VER opencv/opencv_contrib
   rm $VER.tar.gz
 }
 
@@ -95,6 +105,7 @@ function build() {
       -DCMAKE_BUILD_TYPE="Release" \
       -DBUILD_SHARED_LIBS=OFF \
       -DBUILD_DOCS=OFF \
+      -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
       -DBUILD_EXAMPLES=OFF \
       -DBUILD_FAT_JAVA_LIB=OFF \
       -DBUILD_JASPER=OFF \
@@ -328,6 +339,7 @@ function build() {
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Debug \
         -DCMAKE_BUILD_TYPE="Debug" \
+        -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
         -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
         -DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -349,6 +361,7 @@ function build() {
         -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
         -DCMAKE_INSTALL_PREFIX=Release \
         -DCMAKE_BUILD_TYPE="Release" \
+        -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
         -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
         -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -434,6 +447,7 @@ function build() {
       -DBUILD_ANDROID_EXAMPLES=OFF \
       -DBUILD_opencv_objdetect=ON \
       -DBUILD_opencv_video=OFF \
+      -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
       -DBUILD_opencv_videoio=OFF \
       -DBUILD_opencv_features2d=ON \
       -DBUILD_opencv_flann=OFF \
@@ -532,6 +546,7 @@ function build() {
       -DBUILD_FAT_JAVA_LIB=OFF \
       -DBUILD_JASPER=OFF \
       -DBUILD_PACKAGE=OFF \
+      -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
       -DBUILD_TESTS=OFF \
       -DBUILD_PERF_TESTS=OFF \
       -DWITH_QUIRC:BOOL=OFF \
