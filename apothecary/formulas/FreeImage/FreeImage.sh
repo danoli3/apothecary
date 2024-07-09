@@ -14,7 +14,7 @@ FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emsc
 FORMULA_DEPENDS=( "zlib" "libpng" )
 
  # 3.18.0
-VER=31920
+VER=31921
 GIT_URL=https://github.com/danoli3/FreeImage
 GIT_TAG=3.19.2
 
@@ -99,7 +99,7 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DBUILD_ZLIB=OFF \
-            -DBUILD_TESTS=ON \
+            -DBUILD_TESTS=OFF \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 	        -DCMAKE_INSTALL_INCLUDEDIR=include \
@@ -264,6 +264,7 @@ function build() {
 			-DBUILD_OPENEXR=OFF \
 			-DBUILD_WEBP=OFF \
 			-DBUILD_JXR=OFF \
+			-DBUILD_TESTS=OFF \
 			-DPNG_ROOT=${LIBPNG_ROOT} \
 			-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
