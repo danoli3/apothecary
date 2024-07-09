@@ -14,9 +14,9 @@ FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emsc
 FORMULA_DEPENDS=( "zlib" "libpng" )
 
  # 3.18.0
-VER=31918
+VER=31920
 GIT_URL=https://github.com/danoli3/FreeImage
-GIT_TAG=latest
+GIT_TAG=3.19.2
 
 # download the source code and unpack it into LIB_NAME
 function download() {
