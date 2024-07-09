@@ -316,7 +316,7 @@ function copy() {
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
 		cp Source/FreeImage.h $1/include
 		 . "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$PLATFORM/FreeImage.a FreeImage.pkl
