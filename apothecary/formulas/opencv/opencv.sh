@@ -566,6 +566,7 @@ function build() {
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_gapi=OFF \
       -DBUILD_opencv_ml=OFF \
+      -DBUILD_opencv_rgbd=OFF \
       -DBUILD_opencv_shape=OFF \
       -DBUILD_opencv_highgui=OFF \
       -DBUILD_opencv_superres=OFF \
