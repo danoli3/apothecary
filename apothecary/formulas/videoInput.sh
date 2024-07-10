@@ -84,8 +84,29 @@ function build() {
         cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
-		cd msys2
-		make
+		mkdir -p "build_${TYPE}_${ARCH}"
+        cd "build_${TYPE}_${ARCH}"
+        DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include"         
+        cmake .. ${DEFS} \
+            -G "MSYS Makefiles" \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_SYSTEM_NAME=MSYS \
+            -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
+        cmake --build . --config Release --target install
 	fi
 }
 
@@ -103,7 +124,9 @@ function copy() {
         cp -v "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Debug/videoInput.lib" $1/lib/$TYPE/$PLATFORM/videoInputD.lib  
 	else
 		mkdir -p $1/lib/$TYPE
-		cp -v compiledLib/msys2/libvideoinput.a $1/lib/$TYPE/
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -v "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Release/videoInput.a" $1/lib/$TYPE/$PLATFORM/videoInput.a
+
 	fi
 
 	echoWarning "TODO: License Copy"
@@ -113,10 +136,12 @@ function copy() {
 function clean() {
 
 	if [ "$TYPE" == "vs" ] ; then
-		cd videoInputSrcAndDemos/VS-videoInputcompileAsLib
-		vs-clean "videoInput.sln"
+        if [ -d "videoInputSrcAndDemos/build_${TYPE}_${ARCH}" ]; then
+            rm -r videoInputSrcAndDemos/build_${TYPE}_${ARCH}     
+        fi
 	elif [ "$TYPE" == "msys2" ] ; then
-		cd videoInputSrcAndDemos/msys2
-		make clean
+		if [ -d "videoInputSrcAndDemos/build_${TYPE}_${ARCH}" ]; then
+            rm -r videoInputSrcAndDemos/build_${TYPE}_${ARCH}     
+        fi
 	fi
 }
