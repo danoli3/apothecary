@@ -86,6 +86,5 @@ jobs:
           tag: ${{ env.RELEASE }}
           release: ${{ env.RELEASE }}
           prerelease: ${{ env.PRERELEASE }}
-          files: out/openFrameworksLibs_msys2_${{ matrix.flavor }}.zip
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.flavor }}.zip
 

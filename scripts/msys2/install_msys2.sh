@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# https://www.msys2.org
 # Update package database 
 pacman -Syuu --noconfirm
 pacman -S --noconfirm base-devel unzip dos2unix git
