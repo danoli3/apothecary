@@ -95,7 +95,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
-        cmake .. ${DEFS} \
+        cmake ../libs/videoInput ${DEFS} \
             -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
