@@ -24,8 +24,12 @@ if (HAVE_GETTIMEOFDAY)
     add_definitions(-DHAVE_GETTIMEOFDAY)
 endif ()
 
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+
 if (CMAKE_COMPILER_IS_GNUCXX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD} -Wall")
 endif (CMAKE_COMPILER_IS_GNUCXX)
 
 set(rtaudio_SOURCES RtAudio.cpp)

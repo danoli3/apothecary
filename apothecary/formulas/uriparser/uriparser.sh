@@ -172,8 +172,8 @@ function build() {
 	        -DCMAKE_INSTALL_INCLUDEDIR=include \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DBUILD_SHARED_LIBS=OFF \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
         cmake --build . --config Release 
 	    	cd ..
 	fi

@@ -99,7 +99,7 @@ function build() {
 		$CXX -Oz $CPPFLAGS $CXXFLAGS \
 			 -Wall \
 			 -fPIC \
-			 -std=c++17 \
+			 -std=c++${CPP_STANDARD} \
 			 -Iinclude \
 			 -c src/pugixml.cpp \
 			 -o src/pugixml.o $LDFLAGS -shared -v

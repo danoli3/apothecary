@@ -151,8 +151,8 @@ function build() {
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
 
-		export CFLAGS="$CFLAGS -DNDEBUG -ffast-math -DPNG_ARM_NEON_OPT=0 -DDISABLE_PERF_MEASUREMENT -std=c17"
-		export CXXFLAGS="$CFLAGS -DNDEBUG -ffast-math -DPNG_ARM_NEON_OPT=0 -DDISABLE_PERF_MEASUREMENT -std=c++17"
+		export CFLAGS="$CFLAGS -DNDEBUG -ffast-math -DPNG_ARM_NEON_OPT=0 -DDISABLE_PERF_MEASUREMENT -std=c${C_STANDARD}"
+		export CXXFLAGS="$CFLAGS -DNDEBUG -ffast-math -DPNG_ARM_NEON_OPT=0 -DDISABLE_PERF_MEASUREMENT -std=c++${CPP_STANDARD}"
 		export LDFLAGS="$LDFLAGS -shared"
 
 
@@ -207,8 +207,8 @@ function build() {
 	    	-DEMSCRIPTEN=ON \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DZLIB_ROOT=${ZLIB_ROOT} \
