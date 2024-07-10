@@ -12,7 +12,7 @@ URL=${GIT_URL}/archive/refs/tags/${VER}
 GIT_TAG=master
 SHA=
 
-FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux64" "msys2" "linuxaarch64" )
+FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux64" "linuxaarch64" )
 
 FORMULA_DEPENDS=(  ) 
 
@@ -153,7 +153,7 @@ function build() {
 	    cmake .. \
 	    	${DEFS} \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+        	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c17 -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
