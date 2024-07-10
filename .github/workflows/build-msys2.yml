@@ -11,6 +11,12 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  TARGET: "msys2"
+  NO_FORCE: 1
+  GA_CI_SECRET: ${{ secrets.CI_SECRET }}
+  USE_ARTIFACT: false
   
 jobs:
 
@@ -46,28 +52,40 @@ jobs:
             gperf:p
             libxml2:p
             python3:p
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=bleeding" >> $GITHUB_ENV
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          else
+            echo "RELEASE=bleeding" >> $GITHUB_ENV
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          fi
       - name: Clone repository
         uses: actions/checkout@v4
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: scripts/build.sh
-        env:
-          TARGET: "msys2"
-          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Package
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/package.sh
         env:
           BUNDLE: ${{ matrix.bundle }}
-          TARGET: "msys2"
-          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
+      - name: List output directory2
+        run: ls -lah out/
       - name: Update Release
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: johnwbyrd/update-release@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: nightly
-          release: nightly
-          prerelease: false
+          tag: ${{ env.RELEASE }}
+          release: ${{ env.RELEASE }}
+          prerelease: ${{ env.PRERELEASE }}
           files: out/openFrameworksLibs_msys2_${{ matrix.flavor }}.zip
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && github.ref == 'refs/heads/master'
 
