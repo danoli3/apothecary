@@ -260,7 +260,7 @@ function clean() {
             rm -r build_${TYPE}     
         fi
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
-		f [ -d "build_${TYPE}_${ARCH}" ]; then
+		if [ -d "build_${TYPE}_${ARCH}" ]; then
 			rm -r build_${TYPE}_${ARCH}     
 		fi
 	else
