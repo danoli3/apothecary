@@ -249,7 +249,11 @@ function build() {
 
 	    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
 		LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.a"
+		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.wasm"
+
+		ZLIB_ROOT="$LIBS_ROOT/zlib/"
+	    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+	    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-B build \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -265,14 +269,16 @@ function build() {
 			-DBUILD_JXR=OFF \
 			-DBUILD_TESTS=OFF \
 			-DPNG_ROOT=${LIBPNG_ROOT} \
-			-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+			-DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DBUILD_LIBPNG=OFF \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DBUILD_ZLIB=OFF \
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
-		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
-		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. 
+            -DCMAKE_INSTALL_INCLUDEDIR=include
 	    cmake --build build --target install --config Release
 	    cd ..
 	else
