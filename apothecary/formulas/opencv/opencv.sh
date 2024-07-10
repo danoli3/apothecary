@@ -122,6 +122,7 @@ function build() {
       -DBUILD_opencv_stitching=ON \
       -DBUILD_opencv_calib3d=ON \
       -DBUILD_opencv_objdetect=ON \
+      -DOPENCV_ENABLE_NONFREE=OFF \
       -DWITH_PNG=ON \
       -DBUILD_PNG=OFF \
       -DWITH_1394=OFF \
@@ -235,6 +236,7 @@ function build() {
         -DBUILD_SHARED_LIBS=ON \
         -DCMAKE_INSTALL_PREFIX=install \
         -DCMAKE_INSTALL_INCLUDEDIR=include \
+        -DOPENCV_ENABLE_NONFREE=OFF \
         -DCMAKE_INSTALL_LIBDIR="lib" \
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
         -DWITH_OPENCLAMDBLAS=OFF \
@@ -328,7 +330,7 @@ function build() {
         -DCV_DISABLE_OPTIMIZATION=OFF"
 
       if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF"
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DBUILD_opencv_rgbd=OFF "
       else 
         EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
       fi
@@ -435,6 +437,7 @@ function build() {
       -DCMAKE_SYSROOT=$SYSROOT \
       -DANDROID_NDK=$NDK_ROOT \
       -DANDROID_ABI=$ABI \
+      -DOPENCV_ENABLE_NONFREE=OFF \
       -DCMAKE_ANDROID_ARCH_ABI=$ABI \
       -DANDROID_STL=c++_shared \
       -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -537,6 +540,7 @@ function build() {
       -DCPU_BASELINE='' \
       -DCPU_DISPATCH='' \
       -DCV_TRACE=OFF \
+      -DOPENCV_ENABLE_NONFREE=OFF \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_C_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DCMAKE_CXX_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
