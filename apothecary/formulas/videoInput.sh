@@ -99,11 +99,11 @@ function build() {
             -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DCMAKE_SYSTEM_NAME=MSYS \
             -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
         cmake --build . --config Release --target install
