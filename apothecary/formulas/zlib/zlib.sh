@@ -11,7 +11,7 @@ GIT_URL=https://github.com/madler/zlib/releases/download/v$VER/zlib-$VER.tar.gz
 
 GIT_TAG=v$VER
 
-FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "msys2")
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -43,7 +43,7 @@ function build() {
 
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
-        rm -f CMakeCache.txt *.lib *.o *.wasm
+        rm -f CMakeCache.txt *.lib *.o *.a
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}"
         cmake .. \
             -G "${GENERATOR_NAME}" \
@@ -102,16 +102,19 @@ function build() {
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
-		export CFLAGS="$CFLAGS $EXTRA_LINK_FLAGS -DNDEBUG -std=c17"
-		export CXXFLAGS="$CFLAGS $EXTRA_LINK_FLAGS -DNDEBUG -std=c++17"
+		export CFLAGS="$CFLAGS $EXTRA_LINK_FLAGS -DNDEBUG -std=${CPP_STANDARD}"
+		export CXXFLAGS="$CFLAGS $EXTRA_LINK_FLAGS -DNDEBUG -std=${C_STANDARD}"
 
 		cmake .. ${DEFS} \
 				-DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -std=c++17" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -std=c17" \
+				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -std=${CPP_STANDARD} " \
+				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -std=${C_STANDARD} " \
 				-DCMAKE_C_COMPILER=${CC} \
 				-DCMAKE_INSTALL_PREFIX=Release \
+				-DCMAKE_C_STANDARD=${C_STANDARD} \
+	            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	     	 	-D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
 	     	 	-D CMAKE_C_COMPILER_RANLIB=${RANLIB} \
 	     	 	-D CMAKE_CXX_COMPILER_AR=${AR} \
@@ -133,7 +136,7 @@ function build() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_$TYPE
 	    cd build_$TYPE
-	    rm -f CMakeCache.txt *.a *.o *.wasm
+	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_INSTALL_LIBDIR="build_${TYPE}" \
 	    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -151,6 +154,36 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
 	  	cmake --build . --target install --config Release 
+	    cd ..
+    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+	    
+		echoVerbose "building $TYPE | $ARCH "
+        echoVerbose "--------------------"
+	    mkdir -p "build_${TYPE}_${ARCH}"
+	    cd "build_${TYPE}_${ARCH}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF"         
+	    cmake .. ${DEFS} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+		    -DZLIB_BUILD_EXAMPLES=OFF \
+		    -DSKIP_EXAMPLE=ON \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --config Release
 	    cd ..
 	fi
 }
@@ -188,7 +221,14 @@ function copy() {
 		cp -v "build_${TYPE}/zlib_wasm.wasm" $1/lib/$TYPE/zlib.wasm
 		. "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/zlib.wasm
-
+    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+		mkdir -p $1/include    
+	    mkdir -p $1/lib/$TYPE
+		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
+		mkdir -p $1/lib/$TYPE/$ARCH/
+        cp -v "build_${TYPE}_${ARCH}/Release/z.a" $1/lib/$TYPE/$PLATFORM/zlib.a > /dev/null 2>&1
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/zlib.a
 	else
 		make install
 	fi
@@ -219,6 +259,10 @@ function clean() {
     	if [ -d "build_${TYPE}" ]; then
             rm -r build_${TYPE}     
         fi
+    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+		f [ -d "build_${TYPE}_${ARCH}" ]; then
+			rm -r build_${TYPE}_${ARCH}     
+		fi
 	else
 		make uninstall
 		make clean
