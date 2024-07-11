@@ -6,7 +6,7 @@
 #
 # Visual Studio & Code Blocks projects are provided
 
-FORMULA_TYPES=( "vs" )
+FORMULA_TYPES=( "vs" "msys2" )
 
 # define the version
 VER=master
@@ -94,18 +94,18 @@ function build() {
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include"         
+            -DCMAKE_INSTALL_INCLUDEDIR=include"
+        
         cmake ../libs/videoInput ${DEFS} \
             -G "MSYS Makefiles" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DCMAKE_SYSTEM_NAME=MSYS \
             -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
+        
         cmake --build . --config Release --target install
 	fi
 }
@@ -139,7 +139,7 @@ function clean() {
         if [ -d "videoInputSrcAndDemos/build_${TYPE}_${ARCH}" ]; then
             rm -r videoInputSrcAndDemos/build_${TYPE}_${ARCH}     
         fi
-	elif [ "$TYPE" == "msys2" ] ; then
+	elif [ "$TYPE" == "msys2"  ] ; then
 		if [ -d "videoInputSrcAndDemos/build_${TYPE}_${ARCH}" ]; then
             rm -r videoInputSrcAndDemos/build_${TYPE}_${ARCH}     
         fi
