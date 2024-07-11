@@ -108,6 +108,16 @@ function build() {
         
         cmake --build . --config Release 
 	fi
+
+    # List all files in the build directory
+    echo "Listing all files in build directory:"
+    ls -a "videoInputSrcAndDemos/build_${TYPE}_${ARCH}"
+
+    # List all files in the Release directory if it exists
+    if [ -d "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Release" ]; then
+        echo "Listing all files in Release directory:"
+        ls -a "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Release"
+    fi
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
