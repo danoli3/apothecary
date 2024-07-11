@@ -138,7 +138,7 @@ function copy() {
 	else
 		mkdir -p $1/lib/$TYPE
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Release/videoInput.a" $1/lib/$TYPE/$PLATFORM/videoInput.a
+        cp -v "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/Release/libvideoInput.a" $1/lib/$TYPE/$PLATFORM/videoInput.a
 
 	fi
 
