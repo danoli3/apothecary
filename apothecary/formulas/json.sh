@@ -19,8 +19,20 @@ function download() {
 	. "$DOWNLOADER_SCRIPT"
     mkdir json
     cd json    
-    downloader "${GIT_URL}/releases/download/v$VER/json.hpp"
-	downloader "https://raw.githubusercontent.com/nlohmann/json/master/LICENSE.MIT"
+
+   if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then 
+    	downloader "${GIT_URL}/releases/download/v$VER/include.zip"
+	    # Extract the zip file
+	    unzip include.zip
+	    # Clean up the zip file after extraction
+	    rm include.zip
+    else 
+	    downloader "${GIT_URL}/releases/download/v$VER/json.tar.xz"
+	    # Extract the tar.xz file
+	    tar -xvf json.tar.xz --strip-components=1
+	    # Clean up the tar.xz file after extraction
+	    rm json.tar.xz
+	fi
 }
 
 # prepare the build environment, executed inside the lib src dir
@@ -31,16 +43,15 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
-    # PATHC should be fixed when moving to 3.0.0
-    sed -i -e "s/return \*lhs\.m_value.array < \*rhs\.m_value.array/return (*lhs.m_value.array) < *rhs.m_value.array/g" json.hpp
-    #nothing to do, header only lib
+    echo
+	# nothing to do
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
 	# headers
 	mkdir -p $1/include
-	cp -v json.hpp $1/include
+	cp -v single_include/nlohmann/json.hpp $1/include
 
 	. "$SECURE_SCRIPT"
 	secure $1/include/json.hpp json.pkl
