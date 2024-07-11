@@ -732,17 +732,35 @@ export VERBOSE_MAKEFILE=NO
 if [ "$TYPE" = "msys2" ]; then
     export FLAG_RELEASE="-O3"
     
-    if [ -n "$MINGW_PACKAGE_PREFIX" ]; then
+    if [ "${MINGW_PACKAGE_PREFIX+x}" ]; then
         ARCH=$MINGW_PACKAGE_PREFIX
     else
-        if [ "$MSYSTEM" == "MINGW64" ] || [ "$MSYSTEM" == "mingw64" ]; then
-            ARCH=mingw64
-        elif [ "$MSYSTEM" == "CLANGARM64" ] || [ "$MSYSTEM" == "clangarm64" ]; then
-            ARCH=clangarm64
-        elif [ "$MSYSTEM" == "UCRT64" ]; then
-            ARCH=ucrt64
-        elif [ "$MSYSTEM" == "CLANG64" ]; then
-            ARCH=clang64
+        if [ -z "$ARCH" ]; then
+            if [ "$MSYSTEM" == "MINGW64" ] || [ "$MSYSTEM" == "mingw64" ]; then
+                    ARCH=mingw64
+            elif [ "$MSYSTEM" == "CLANGARM64" ] || [ "$MSYSTEM" == "clangarm64" ]; then
+                ARCH=clangarm64
+            elif [ "$MSYSTEM" == "UCRT64" ]; then
+                ARCH=ucrt64
+            elif [ "$MSYSTEM" == "CLANG64" ]; then
+                ARCH=clang64
+            fi
+        else
+            case "$ARCH" in
+                mingw64|clangarm64|ucrt64|clang64)
+                    ;;
+                *)
+                    if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
+                    ARCH=mingw64
+                    elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
+                        ARCH=clangarm64
+                    elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
+                        ARCH=ucrt64
+                    elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
+                        ARCH=clang64
+                    fi
+                    ;;
+            esac
         fi
     fi
     PLATFORM=$ARCH
