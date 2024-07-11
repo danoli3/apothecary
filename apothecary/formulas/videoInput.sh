@@ -106,7 +106,7 @@ function build() {
             -DCMAKE_SYSTEM_NAME=MSYS \
             -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
         
-        cmake --build . --config Release --target install
+        cmake --build . --config Release 
 	fi
 }
 
