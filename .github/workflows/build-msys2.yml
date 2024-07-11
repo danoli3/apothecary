@@ -52,6 +52,7 @@ jobs:
             gperf:p
             libxml2:p
             python3:p
+            wget2:p
       - name: Determine Release
         id: vars
         shell: bash
