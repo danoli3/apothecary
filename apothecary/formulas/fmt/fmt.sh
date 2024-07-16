@@ -232,10 +232,10 @@ function copy() {
 		secure $1/lib/$TYPE/$ABI/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
-		mkdir -p $1/lib/$TYPE/
-		cp -v "build_${TYPE}/bin/fmt_wasm.wasm" $1/lib/$TYPE/libfmt.wasm
+		mkdir -p $1/lib/$TYPE/$PLATFORM
+		cp -v "build_${TYPE}/bin/fmt_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libfmt.wasm
 		cp -R "build_${TYPE}/Release/include/" $1/include
-		secure $1/lib/$TYPE/libfmt.wasm fmt.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libfmt.wasm fmt.pkl
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/bin/.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
@@ -263,7 +263,7 @@ function clean() {
 	  	fi
 	elif [ "$TYPE" == "emscripten" ] ; then
 		if [ -d "build_${TYPE}" ]; then
-			rm -r build_${TYPE}     
+			rm -r build_${TYPE}
 	  fi
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then

@@ -157,25 +157,25 @@ function build() {
         cd ..      
       
 	elif [ "$TYPE" == "emscripten" ]; then
-			mkdir -p "build_${TYPE}"
-			cd "build_${TYPE}"
-			rm -f CMakeCache.txt *.a *.o *.wasm
+		mkdir -p "build_${TYPE}_$PLATFORM"
+		cd "build_${TYPE}_$PLATFORM"
+		rm -f CMakeCache.txt *.a *.o *.wasm
         $EMSDK/upstream/emscripten/emcmake cmake .. \
-          ${DEFS} \
-          -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-          -DCMAKE_C_STANDARD=${C_STANDARD} \
-          -B . \
-					-DBUILD_SHARED_LIBS=OFF \
-					-DCMAKE_BUILD_TYPE=Release \
-	       	-DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-	        -DCMAKE_INSTALL_INCLUDEDIR=include \
-	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DBUILD_SHARED_LIBS=OFF \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
-        cmake --build . --config Release 
-	    	cd ..
+			${DEFS} \
+			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-B . \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
+		cmake --build . --config Release 
+		cd ..
 	fi
 }
 
@@ -190,19 +190,19 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -R "build_${TYPE}_${ARCH}/Release/include/" $1/
 		cp -Rv "build_${TYPE}_${ARCH}/UriConfig.h" $1/include/uriparser/
-    cp -f "build_${TYPE}_${ARCH}/Release/lib/uriparser.lib" $1/lib/$TYPE/$PLATFORM/uriparser.lib
-    secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
+		cp -f "build_${TYPE}_${ARCH}/Release/lib/uriparser.lib" $1/lib/$TYPE/$PLATFORM/uriparser.lib
+		secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		cp -Rv "build_${TYPE}_${PLATFORM}/UriConfig.h" $1/include/uriparser/
-    mkdir -p $1/lib/$TYPE/$PLATFORM/
-    cp -Rv build_${TYPE}_${PLATFORM}/liburiparser.a $1/lib/$TYPE/$PLATFORM/uriparser.a
-    secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -Rv build_${TYPE}_${PLATFORM}/liburiparser.a $1/lib/$TYPE/$PLATFORM/uriparser.a
+		secure $1/lib/$TYPE/$PLATFORM/uriparser.lib
 	elif [ "$TYPE" == "emscripten" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
-		mkdir -p $1/lib/$TYPE
-		cp -Rv "build_${TYPE}/uriparser_wasm.wasm" $1/lib/$TYPE/uriparser.wasm
-		secure $1/lib/$TYPE/uriparser.wasm
+		mkdir -p $1/lib/$TYPE/$PLATFORM
+		cp -Rv "build_${TYPE}_$PLATFORM/uriparser_wasm.wasm" $1/lib/$TYPE/$PLATFORM/uriparser.wasm
+		secure $1/lib/$TYPE/$PLATFORM/uriparser.wasm
     elif [ "$TYPE" == "android" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE/$ABI/
@@ -226,13 +226,9 @@ function clean() {
 		if [ -d "build_${TYPE}_${ABI}" ]; then
 		rm -r build_${TYPE}_${ABI}     
 		fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
 		  rm -r build_${TYPE}_${PLATFORM}     
-		fi
-	elif [ "$TYPE" == "emscripten" ]; then
-		if [ -d "build_${TYPE}" ]; then
-		  rm -r build_${TYPE}     
 		fi
 	else
 		make clean

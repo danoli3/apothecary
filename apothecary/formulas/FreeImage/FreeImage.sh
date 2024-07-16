@@ -249,11 +249,11 @@ function build() {
 
 	    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
 		LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.wasm"
+		LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.wasm"
 
 		ZLIB_ROOT="$LIBS_ROOT/zlib/"
 	    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-	    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
+	    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-B build \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -316,14 +316,13 @@ function copy() {
 	    rm -rf $1/include
 	fi
 	mkdir -p $1/include
-
+	. "$SECURE_SCRIPT"
 	# lib
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p $1/include
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
 		cp Source/FreeImage.h $1/include
-		 . "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$PLATFORM/FreeImage.a FreeImage.pkl
 	elif [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/include
@@ -332,24 +331,21 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${ARCH}/Release/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImage.lib  
         cp -v "build_${TYPE}_${ARCH}/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
-         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/FreeImage.lib FreeImage.pkl
 	elif [ "$TYPE" == "android" ] ; then
         cp Source/FreeImage.h $1/include
         rm -rf $1/lib/$TYPE/$ABI
         mkdir -p $1/lib/$TYPE/$ABI
 	    cp -v build_$ABI/libFreeImage.a $1/lib/$TYPE/$ABI/libFreeImage.a
-	    . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$ABI/libFreeImage.a FreeImage.pkl
     elif [ "$TYPE" == "emscripten" ]; then
         cp Source/FreeImage.h $1/include
-        if [ -d $1/lib/$TYPE/ ]; then
-            rm -r $1/lib/$TYPE/
+        if [ -d $1/lib/$TYPE/$PLATFORM/ ]; then
+            rm -r $1/lib/$TYPE/$PLATFORM/
         fi
-        mkdir -p $1/lib/$TYPE
-        cp -v build_${TYPE}/build/libFreeImage.a $1/lib/$TYPE/libfreeimage.a
-		. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/libfreeimage.a FreeImage.pkl
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -v build_${TYPE}/build/libFreeImage.a $1/lib/$TYPE/$PLATFORM/libfreeimage.a
+		secure $1/lib/$TYPE/$PLATFORM/libfreeimage.a FreeImage.pkl
 	fi
 
     # copy license files
@@ -370,8 +366,8 @@ function clean() {
             rm -r build_${ABI}     
         fi
 	elif [ "$TYPE" == "emscripten" ] ; then
-	    if [ -d "build_${TYPE}" ]; then
-            rm -r build_${TYPE}     
+		if [ -d $1/lib/$TYPE/$PLATFORM/ ]; then
+            rm -r $1/lib/$TYPE/$PLATFORM/
         fi
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then

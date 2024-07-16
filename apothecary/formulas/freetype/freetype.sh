@@ -372,11 +372,11 @@ function build() {
 
 		ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/libpng.wasm" 
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.wasm" 
         BROTLI="
 			-DFT_REQUIRE_BROTLI=FALSE \
 			-DFT_DISABLE_BROTLI=TRUE"
@@ -457,7 +457,8 @@ function copy() {
 	    . "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$ABI/libfreetype.a freetype.pkl
 	elif [ "$TYPE" == "emscripten" ] ; then
-		cp -v "build_${TYPE}/freetype_wasm.wasm" $1/lib/$TYPE/libfreetype.wasm
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -v "build_${TYPE}/freetype_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libfreetype.wasm
 		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/libfreetype.wasm freetype.pkl
 	fi

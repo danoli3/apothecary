@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 #
 # svgtiny
@@ -271,7 +270,7 @@ function build() {
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
         LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.wasm"
-	    cd build_$TYPE
+	    cd build_$TYPE_$PLATFORM
 	    rm -f CMakeCache.txt *.a *.o *.wasm
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -327,11 +326,11 @@ function copy() {
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$ABI/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "emscripten" ]; then
-		mkdir -p $1/lib/$TYPE/$
+		mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -Rv "include/" $1/ 
-        cp -f "build_${TYPE}/svgtiny_wasm.wasm" $1/lib/$TYPE/svgtiny.wasm        
+        cp -f "build_${TYPE}_$PLATFORM/svgtiny_wasm.wasm" $1/lib/$TYPE/$PLATFORM/svgtiny.wasm        
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/svgtiny.wasm svgtiny.pkl
+        secure $1/lib/$TYPE/$PLATFORM/svgtiny.wasm svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
 		mkdir -p $1/lib/$TYPE/$
 		cp -Rv "include/" $1/ 
@@ -358,13 +357,9 @@ function clean() {
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
-        fi
-    elif [ "$TYPE" == "emscripten" ] ; then
-    	if [ -d "build_${TYPE}" ]; then
-            rm -r build_${TYPE}
         fi
 	fi
 }

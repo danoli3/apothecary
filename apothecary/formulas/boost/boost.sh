@@ -332,9 +332,10 @@ function copy() {
         cp -v $OUTPUT_DIR_LIB/boost_filesystem.a $1/lib/$TYPE/
 		cp -v $OUTPUT_DIR_LIB/boost_system.a $1/lib/$TYPE/
 	elif [ "$TYPE" == "emscripten" ]; then
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		bcp filesystem install_dir
 		rsync -ar install_dir/boost/* $1/include/boost/
-		cp stage/lib/*.a $1/lib/$TYPE/
+		cp stage/lib/*.a $1/lib/$TYPE/$PLATFORM
 	elif [ "$TYPE" == "android" ]; then
 		bcp filesystem install_dir
 		rsync -ar install_dir/boost/* $1/include/boost/

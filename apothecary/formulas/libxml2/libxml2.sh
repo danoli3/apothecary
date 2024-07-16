@@ -250,7 +250,7 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
         mkdir -p build_$TYPE
-        cd build_$TYPE
+        cd build_$TYPE_$PLATFORM
         rm -f CMakeCache.txt *.a *.o *.wasm
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             ${DEFS} \
@@ -353,10 +353,11 @@ function copy() {
         secure $1/lib/$TYPE/$ABI/libxml2.a
         cp -Rv build_${TYPE}_${ABI}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [ "$TYPE" == "emscripten" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv include/libxml/* $1/include/libxml/
-        cp -v "build_${TYPE}/xml2_wasm.wasm" $1/lib/$TYPE/libxml2.wasm
-        secure $1/lib/$TYPE/libxml2.wasm
-        cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+        cp -v "build_${TYPE}_$PLATFORM/xml2_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libxml2.wasm
+        secure $1/lib/$TYPE/$PLATFORM/libxml2.wasm
+        cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
@@ -388,7 +389,7 @@ function clean() {
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
-    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi

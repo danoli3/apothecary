@@ -192,13 +192,13 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
-		mkdir -p build_$TYPE
-	    cd build_$TYPE
+		mkdir -p build_$TYPE_$PLATFORM
+	    cd build_$TYPE_$PLATFORM
 	    rm -f CMakeCache.txt *.a *.o *.wasm
 
 	    ZLIB_ROOT="$LIBS_ROOT/zlib/"
 		ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
+		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
@@ -247,10 +247,10 @@ function copy() {
 		secure $1/lib/$TYPE/$ABI/libpng.a
 		cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
-		mkdir -p $1/lib/$TYPE/
-		cp -v "build_${TYPE}/libpng_wasm.wasm" $1/lib/$TYPE/libpng.wasm
-		secure $1/lib/$TYPE/libpng.wasm
-		cp -R "build_${TYPE}/Release/include/" $1/include
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -v "build_${TYPE}_$PLATFORM/libpng_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libpng.wasm
+		secure $1/lib/$TYPE/$PLATFORM/libpng.wasm
+		cp -R "build_${TYPE}_$PLATFORM/Release/include/" $1/include
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
@@ -277,7 +277,7 @@ function clean() {
 		if [ -d "build_${TYPE}_${ABI}" ]; then
 			rm -r build_${TYPE}_${ABI}     
 		fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
 	        rm -r build_${TYPE}_${PLATFORM}     
 	  fi
