@@ -138,7 +138,7 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	-DCMAKE_INSTALL_LIBDIR="build_${TYPE}" \
+	    	-DCMAKE_INSTALL_LIBDIR="lib" \
 	    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	    	-D BUILD_SHARED_LIBS=OFF \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
@@ -148,12 +148,13 @@ function build() {
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	  	cmake --build . --target install --config Release 
+	  	cmake --build . --config Release --target install 
 	    cd ..
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
 	    
@@ -183,7 +184,8 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --config Release
+	    cmake --build . --config Release 
+	    ls -a
 	    cd ..
 	fi
 }
