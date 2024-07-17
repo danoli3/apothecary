@@ -380,13 +380,13 @@ function build() {
         BROTLI="
 			-DFT_REQUIRE_BROTLI=FALSE \
 			-DFT_DISABLE_BROTLI=TRUE"
-        mkdir -p build_$TYPE
-        cd build_$TYPE
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.wasm
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	${BROTLI} \
-	    	-G 'Unix Makefiles'
+	    	-G 'Unix Makefiles' \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -403,22 +403,23 @@ function build() {
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DFT_REQUIRE_ZLIB=ON \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DFT_DISABLE_PNG=TRUE \
-            -D FT_REQUIRE_PNG=FALSE 
-            # -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            # -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            # -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            # -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            # -DPNG_ROOT=${LIBPNG_ROOT}
+            -DFT_DISABLE_PNG=FALSE \
+            -D FT_REQUIRE_PNG=TRUE \
+            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_ROOT=${LIBPNG_ROOT}
 
-        $EMSDK/upstream/emscripten/emmake make
-        $EMSDK/upstream/emscripten/emmake make install
+        # $EMSDK/upstream/emscripten/emmake make
+        # $EMSDK/upstream/emscripten/emmake make install
 
-        # cmake --build . --config Release --target install 
+        cmake --build . --config Release --target install 
         cd ..
 	fi
 }
@@ -462,9 +463,9 @@ function copy() {
 		secure $1/lib/$TYPE/$ABI/libfreetype.a freetype.pkl
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}/freetype_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libfreetype.wasm
+		cp -v "build_${TYPE}_${PLATFORM}/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.wasm
 		. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/libfreetype.wasm freetype.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libfreetype.wasm freetype.pkl
 	fi
 
 	# copy license files

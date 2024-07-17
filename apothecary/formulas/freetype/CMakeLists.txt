@@ -495,58 +495,6 @@ target_include_directories(
       ${CMAKE_CURRENT_BINARY_DIR}/include/freetype/config
 )
 
-if (EMSCRIPTEN)
-    add_executable(freetype_wasm ${PUBLIC_HEADERS} ${PUBLIC_CONFIG_HEADERS} ${PRIVATE_HEADERS} ${BASE_SRCS})
-    #set_target_properties(freetype_wasm PROPERTIES VERSION ${LIBRARY_VERSION} SOVERSION ${LIBRARY_SOVERSION})
-    target_compile_definitions(freetype_wasm PRIVATE FT2_BUILD_LIBRARY)
-    target_include_directories(freetype_wasm 
-      PUBLIC
-        $<INSTALL_INTERFACE:include/freetype2>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      PRIVATE 
-        ${CMAKE_CURRENT_BINARY_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_BINARY_DIR}/include/freetype/config
-    )
-  if (ZLIB_FOUND)
-    target_link_libraries(freetype_wasm PRIVATE ${ZLIB_LIBRARIES})
-    target_include_directories(freetype_wasm PRIVATE ${ZLIB_INCLUDE_DIRS})
-  endif ()
-  if (BZIP2_FOUND)
-    target_link_libraries(freetype_wasm PRIVATE ${BZIP2_LIBRARIES})
-    target_include_directories(freetype_wasm PRIVATE ${BZIP2_INCLUDE_DIR}) # not BZIP2_INCLUDE_DIRS
-  endif ()
-  if (PNG_FOUND)
-    target_link_libraries(freetype_wasm PRIVATE ${PNG_LIBRARIES})
-    target_compile_definitions(freetype_wasm PRIVATE ${PNG_DEFINITIONS})
-    target_include_directories(freetype_wasm PRIVATE ${PNG_INCLUDE_DIRS})
-  endif ()
-  if (HarfBuzz_FOUND)
-    target_link_libraries(freetype_wasm PRIVATE ${HarfBuzz_LIBRARY})
-    target_include_directories(freetype_wasm PRIVATE ${HarfBuzz_INCLUDE_DIRS})
-  endif ()
-  if (BROTLIDEC_FOUND)
-    target_link_libraries(freetype_wasm PRIVATE ${BROTLIDEC_LIBRARIES})
-    target_compile_definitions(freetype_wasm PRIVATE ${BROTLIDEC_DEFINITIONS})
-    target_include_directories(freetype_wasm PRIVATE ${BROTLIDEC_INCLUDE_DIRS})
-  endif ()
-    set_target_properties(freetype_wasm PROPERTIES COMPILE_FLAGS " -fPIC -s SIDE_MODULE=1 ")
-    set_target_properties(freetype_wasm PROPERTIES LINK_FLAGS    "-fPIC -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry")
-    set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
-endif()
-
-if (BUILD_FRAMEWORK)
-  set_property(SOURCE ${PUBLIC_CONFIG_HEADERS}
-    PROPERTY MACOSX_PACKAGE_LOCATION Headers/config
-  )
-  set_target_properties(freetype PROPERTIES
-    FRAMEWORK TRUE
-    MACOSX_FRAMEWORK_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/builds/mac/freetype-Info.plist
-    PUBLIC_HEADER "${PUBLIC_HEADERS}"
-    XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-  )
-endif ()
 
 # 'freetype-interface' is an interface library, to be accessed with
 # `EXPORT_NAME Freetype::Freetype`.  This is the target name provided by

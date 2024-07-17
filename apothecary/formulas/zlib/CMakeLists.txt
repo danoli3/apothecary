@@ -170,23 +170,6 @@ if(NOT SKIP_INSTALL_FILES AND NOT SKIP_INSTALL_ALL)
     install(FILES ${ZLIB_PC} DESTINATION "${INSTALL_PKGCONFIG_DIR}")
 endif()
 
-if(EMSCRIPTEN)
-    set(ZLIB_WASM_SOURCES
-        ${ZLIB_SRCS} ${ZLIB_DLL_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS}
-
-    )
-    add_executable(zlib_wasm
-        ${ZLIB_WASM_SOURCES}
-    )
-    target_include_directories(zlib_wasm PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-    )
-    target_link_libraries(zlib_wasm ${ZLIB_LIBRARIES} ${M_LIBRARY})
-    set_target_properties(zlib_wasm PROPERTIES COMPILE_FLAGS "-Os -fPIC -s SIDE_MODULE=1 ")
-    set_target_properties(zlib_wasm PROPERTIES LINK_FLAGS    "-Os -fPIC -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry")
-    set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
-
-endif()
 
 # Example binaries (conditionally built)
 if(NOT SKIP_EXAMPLE)
