@@ -134,6 +134,7 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
+		echo "using inbuilt"
 		# -DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
 		# -DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
 		# -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
