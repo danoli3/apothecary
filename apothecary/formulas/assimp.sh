@@ -338,13 +338,14 @@ function build() {
             -DASSIMP_BUILD_STL_IMPORTER=0 \
             -DASSIMP_BUILD_BLEND_IMPORTER=0 \
             -DASSIMP_BUILD_3MF_IMPORTER=0 \
+            -DASSIMP_BUILD_ZLIB=OFF \
             -DASSIMP_ENABLE_BOOST_WORKAROUND=1 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DZLIB_HOME=${ZLIB_ROOT} \
+            -DASSIMP_BUILD_ZLIB=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARIES=${ZLIB_LIBRARY} 
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
         $EMSDK/upstream/emscripten/emmake make
         $EMSDK/upstream/emscripten/emmake make install
         # cmake --build . --config Release
