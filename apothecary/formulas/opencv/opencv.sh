@@ -535,11 +535,11 @@ function build() {
     
     # fix a bug with newer emscripten not recognizing index and string error because python files opened in binary
 
-    mkdir -p build_${TYPE}
-    cd build_${TYPE}
+    mkdir -p build_${TYPE}_${PLATFORM}
+    cd build_${TYPE}_${PLATFORM}
     find ./ -name "*.o" -type f -delete
     rm -f CMakeCache.txt || true
-
+    rm -f CMakeCache.txt *.a *.o *.wasm
 
 
     emcmake cmake .. \
@@ -662,11 +662,11 @@ function build() {
       -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
       -DCMAKE_INSTALL_INCLUDEDIR=include \
       -DZLIB_ROOT=${ZLIB_ROOT} \
-        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-        -DPNG_ROOT=${LIBPNG_ROOT} \
-        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-        -DPNG_LIBRARY=${LIBPNG_LIBRARY} 
+      -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+      -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+      -DPNG_ROOT=${LIBPNG_ROOT} \
+      -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+      -DPNG_LIBRARY=${LIBPNG_LIBRARY} 
 
     # cmake --build build --target install --config Release
     $EMSDK/upstream/emscripten/emmake make
@@ -790,7 +790,7 @@ function clean() {
     if [ -d "build_${TYPE}_${ABI}" ]; then
     rm -r build_${TYPE}_${ABI}     
     fi
-  elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+  elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
     if [ -d "build_${TYPE}_${PLATFORM}" ]; then
       rm -r build_${TYPE}_${PLATFORM}     
     fi
