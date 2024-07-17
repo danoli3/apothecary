@@ -134,8 +134,8 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
-		mkdir -p build_$TYPE
-	    cd build_$TYPE
+		mkdir -p build_$TYPE_$PLATFORM
+	    cd build_$TYPE_$PLATFORM
 	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_INSTALL_LIBDIR="lib" \
