@@ -402,10 +402,9 @@ function build() {
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+			-DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
+			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
+		    -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
             -DFT_DISABLE_PNG=TRUE \
             -D FT_REQUIRE_PNG=FALSE 
             # -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \

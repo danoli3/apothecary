@@ -273,9 +273,9 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
+            -DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
+            -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
         cmake --build . --config Release 

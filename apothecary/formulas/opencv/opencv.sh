@@ -630,7 +630,10 @@ function build() {
       -DWITH_OPENCL_SVM=OFF \
       -DWITH_LAPACK=OFF \
       -DWITH_ITT=OFF \
-      -DBUILD_ZLIB=ON \
+      -DBUILD_ZLIB=OFF \
+      -DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
+			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
+			-DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
       -DWITH_WEBP=OFF \
       -DWITH_VTK=OFF \
       -DWITH_PVAPI=OFF \

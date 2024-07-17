@@ -192,8 +192,8 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
-		mkdir -p build_$TYPE_$PLATFORM
-	    cd build_$TYPE_$PLATFORM
+		mkdir -p build_${TYPE}_${PLATFORM}
+	    cd build_${TYPE}_${PLATFORM}
 	    rm -f CMakeCache.txt *.a *.o *.wasm
 
 	    ZLIB_ROOT="$LIBS_ROOT/zlib/"
@@ -211,15 +211,17 @@ function build() {
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
-			-DZLIB_ROOT=${ZLIB_ROOT} \
-			-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+			-DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
+			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
+		    -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-	    cmake --build . --target install --config Release
+		emmake make
+		emmake make install
+	    # cmake --build . --target install --config Release
 	    cd ..
 		
 	fi
@@ -248,9 +250,9 @@ function copy() {
 		cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_$PLATFORM/libpng_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libpng.wasm
+		cp -v "build_${TYPE}_${PLATFORM}/libpng_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libpng.wasm
 		secure $1/lib/$TYPE/$PLATFORM/libpng.wasm
-		cp -R "build_${TYPE}_$PLATFORM/Release/include/" $1/include
+		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
