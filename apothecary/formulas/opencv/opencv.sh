@@ -666,11 +666,12 @@ function build() {
       -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
       -DPNG_ROOT=${LIBPNG_ROOT} \
       -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-      -DPNG_LIBRARY=${LIBPNG_LIBRARY} 
+      -DPNG_LIBRARY=${LIBPNG_LIBRARY}
+      # -G 'Unix Makefiles'
 
-    # cmake --build build --target install --config Release
-    $EMSDK/upstream/emscripten/emmake make
-    $EMSDK/upstream/emscripten/emmake make install
+    cmake --build build --target install --config Release
+    # $EMSDK/upstream/emscripten/emmake make
+    # $EMSDK/upstream/emscripten/emmake make install
   fi
 
 }
