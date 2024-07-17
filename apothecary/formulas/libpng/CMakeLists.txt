@@ -1028,16 +1028,6 @@ if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
   endif()
 endif()
 
-if(EMSCRIPTEN)
-    add_executable(libpng_wasm ${pngfix_sources})
-    target_include_directories(libpng_wasm PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${ZLIB_INCLUDE_DIRS})
-    target_link_libraries(libpng_wasm ${ZLIB_LIBRARIES} ${M_LIBRARY})
-    set_target_properties(libpng_wasm PROPERTIES COMPILE_FLAGS " -fPIC -s SIDE_MODULE=1 ")
-    set_target_properties(libpng_wasm PROPERTIES LINK_FLAGS    "-fPIC -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry")
-    set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
-    list(APPEND PNG_BIN_TARGETS libpng_wasm)
-endif()
-
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL)
   install(FILES ${libpng_public_hdrs}
           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
