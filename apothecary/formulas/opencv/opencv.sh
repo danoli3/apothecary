@@ -522,6 +522,15 @@ function build() {
         fi
     fi
 
+    ZLIB_ROOT="$LIBS_ROOT/zlib/"
+    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+
+    LIBPNG_ROOT="$LIBS_ROOT/libpng/"
+    LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.wasm"
+
+
     # cd ${BUILD_DIR}/${1}
     
     # fix a bug with newer emscripten not recognizing index and string error because python files opened in binary
@@ -530,6 +539,9 @@ function build() {
     cd build_${TYPE}
     find ./ -name "*.o" -type f -delete
     rm -f CMakeCache.txt || true
+
+
+
     emcmake cmake .. \
       -B build \
       -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -542,8 +554,8 @@ function build() {
       -DCV_TRACE=OFF \
       -DOPENCV_ENABLE_NONFREE=OFF \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-      -DCMAKE_C_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
-      -DCMAKE_CXX_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
+      -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
+      -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC  -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DBUILD_SHARED_LIBS=OFF \
       -DBUILD_DOCS=OFF \
       -DBUILD_EXAMPLES=OFF \
@@ -630,10 +642,7 @@ function build() {
       -DWITH_OPENCL_SVM=OFF \
       -DWITH_LAPACK=OFF \
       -DWITH_ITT=OFF \
-      -DBUILD_ZLIB=OFF \
-      -DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
-			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
-			-DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
+      -DBUILD_ZLIB=ON \
       -DWITH_WEBP=OFF \
       -DWITH_VTK=OFF \
       -DWITH_PVAPI=OFF \
@@ -644,14 +653,24 @@ function build() {
       -DWITH_OPENCLAMDFFT=OFF \
       -DWASM=ON \
       -DBUILD_TESTS=OFF \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DCV_ENABLE_INTRINSICS=OFF \
       -DBUILD_WASM_INTRIN_TESTS=OFF \
       -DBUILD_PERF_TESTS=OFF \
       -DBUILD_SHARED_LIBS=OFF \
       -DCMAKE_INSTALL_PREFIX=Release \
       -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-      -DCMAKE_INSTALL_INCLUDEDIR=include
-    cmake --build build --target install --config Release
+      -DCMAKE_INSTALL_INCLUDEDIR=include \
+      -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY} 
+
+    # cmake --build build --target install --config Release
+    $EMSDK/upstream/emscripten/emmake make
+    $EMSDK/upstream/emscripten/emmake make install
   fi
 
 }

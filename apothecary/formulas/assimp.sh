@@ -307,7 +307,7 @@ function build() {
     
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.wasm"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
         # warning, assimp on github uses the ASSIMP_ prefix for CMake options ...
         # these may need to be updated for a new release
         local buildOpts="
@@ -315,34 +315,39 @@ function build() {
             -DASSIMP_BUILD_TESTS=0
             -DASSIMP_BUILD_SAMPLES=0
             -DASSIMP_BUILD_3MF_IMPORTER=0"
-        mkdir -p build_$TYPE
-        cd build_$TYPE
+        mkdir -p build_${TYPE}_${PLATFORM}
+        cd build_${TYPE}_${PLATFORM}
         find ./ -name "*.o" -type f -delete
+        rm -f CMakeCache.txt *.a *.o *.wasm *.js
         rm -f CMakeCache.txt || true
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             -B . \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             $buildOpts \
-            -DCMAKE_C_FLAGS="-O3 -DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR}" \
-            -DCMAKE_CXX_FLAGS="-O3 -DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_C_FLAGS="-DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR} -fPIC ${FLAG_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR} -fPIC ${FLAG_RELEASE}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DASSIMP_BUILD_ZLIB=ON \
+            -DASSIMP_BUILD_ZLIB=OFF \
             -DASSIMP_BUILD_STATIC_LIB=1 \
             -DASSIMP_BUILD_STL_IMPORTER=0 \
             -DASSIMP_BUILD_BLEND_IMPORTER=0 \
             -DASSIMP_BUILD_3MF_IMPORTER=0 \
             -DASSIMP_ENABLE_BOOST_WORKAROUND=1 \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_HOME=${ZLIB_ROOT} \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARIES=${ZLIB_LIBRARY} 
-
-        cmake --build . --config Release
+        $EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make install
+        # cmake --build . --config Release
         cd ..
 
     fi
@@ -381,9 +386,10 @@ function copy() {
         cp -Rv build_${TYPE}_${ABI}/lib/libassimp.a $1/lib/$TYPE/$ABI/libassimp.a
         secure $1/lib/$TYPE/$PLATFORM/libassimp.a assimp.pkl
     elif [ "$TYPE" == "emscripten" ]; then
-        cp -Rv build_emscripten/include/* $1/include
-        cp -v "build_${TYPE}/lib/libassimp.a" $1/lib/$TYPE/libassimp.a
-        secure $1/lib/$TYPE/libassimp.a assimp.pkl
+        mkdir -p $1/lib/${TYPE}/${PLATFORM}
+        cp -Rv build_${TYPE}_${PLATFORM}/include/* $1/include
+        cp -v "build_${TYPE}_${PLATFORM}/lib/libassimp.a" $1/lib/$TYPE/${PLATFORM}/libassimp.a
+        secure $1/lib/$TYPE/${PLATFORM}/libassimp.a assimp.pkl
     fi
 
     # copy license files

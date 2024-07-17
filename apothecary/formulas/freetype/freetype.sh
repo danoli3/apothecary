@@ -390,8 +390,8 @@ function build() {
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c++${CPP_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
             -B . \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -402,9 +402,10 @@ function build() {
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-			-DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
-			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
-		    -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DFT_DISABLE_PNG=TRUE \
             -D FT_REQUIRE_PNG=FALSE 
             # -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
@@ -413,7 +414,10 @@ function build() {
             # -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             # -DPNG_ROOT=${LIBPNG_ROOT}
 
-        cmake --build . --config Release --target install 
+        $EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make install
+
+        # cmake --build . --config Release --target install 
         cd ..
 	fi
 }

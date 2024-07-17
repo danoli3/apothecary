@@ -160,8 +160,8 @@ function build() {
 
 	elif [ "$TYPE" == "emscripten" ] ; then
     	cp -v $FORMULA_DIR/CMakeLists.txt .
-    	mkdir -p build_$TYPE_$PLATFORM
-    	cd build_$TYPE_$PLATFORM
+    	mkdir -p build_${TYPE}_${PLATFORM}
+    	cd build_${TYPE}_${PLATFORM}
     	rm -f CMakeCache.txt *.a *.o 
     	emcmake cmake .. \
 			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -226,8 +226,8 @@ function copy() {
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v $TYPE_$PLATFORM/libtess2.a $1/lib/$TYPE/$PLATFORM/libtess2.a
-		secure $1/lib/$TYPE/tess2.lib tess2
+		cp -v build_${TYPE}_${PLATFORM}/libtess2.a $1/lib/$TYPE/$PLATFORM/libtess2.a
+		secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
 	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
 		cp -v build/libtess2.a $1/lib/$TYPE/libtess2.a
 		secure $1/lib/$TYPE/libtess2.a tess2

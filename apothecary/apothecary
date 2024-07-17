@@ -767,7 +767,7 @@ if [ "$TYPE" = "msys2" ]; then
 fi
 
 if [ "$TYPE" = "emscripten" ]; then
-    export FLAG_RELEASE="-O3"
+    export FLAG_RELEASE="-O3 -DMEMORY64"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
     PLATFORM=WASM

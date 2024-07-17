@@ -40,13 +40,34 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_INSTALL_LIBDIR=lib"        
     if [ "$TYPE" == "emscripten" ]; then
-        rm -f libpugixml.a
-		# Compile the program
-		emcc -O2 \
-			 -Wall \
-			 -Iinclude \
-			 -c src/pugixml.cpp \
-			 -o libpugixml.a
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}" 
+		rm -f CMakeCache.txt *.a *.o *.wasm *.js
+		cmake .. ${DEFS} \
+				-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+		    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+		    	-DPLATFORM=$PLATFORM \
+				-DENABLE_BITCODE=OFF \
+				-DENABLE_ARC=OFF \
+				-DENABLE_VISIBILITY=OFF \
+				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+				-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+				-DBUILD_SHARED_LIBS=OFF \
+				-DCMAKE_BUILD_TYPE=Release \
+			    -DCMAKE_C_STANDARD=${C_STANDARD} \
+			    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+			    -DCMAKE_CPP_FLAGS="-DUSE_PTHREADS=1 -fPIC ${FLAG_RELEASE}" \
+				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1  -fPIC ${FLAG_RELEASE}" \
+			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			    -DCMAKE_CXX_EXTENSIONS=OFF \
+			    -DCMAKE_INSTALL_PREFIX=Release \
+				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+				-DCMAKE_INSTALL_INCLUDEDIR=include \
+				-DCMAKE_INSTALL_LIBDIR=lib 
+		$EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make install
+		# cmake --build . --config Release --target install
+		cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		echo "building glfw $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echo "--------------------"
@@ -160,8 +181,8 @@ function copy() {
 		cp -Rv libpugixml.a $1/lib/$TYPE/$ABI/libpugixml.a
         secure $1/lib/$TYPE/$ABI/libpugixml.a pugixml.pkl
 	elif [ "$TYPE" == "emscripten" ] ; then
-	    mkdir -p $1/lib/$TYPE
-		cp -Rv libpugixml.a $1/lib/$TYPE/libpugixml.a 
+	    mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/libpugixml.a" $1/lib/$TYPE/$PLATFORM/libpugixml.a 
         secure $1/lib/$TYPE/libpugixml.a
 	fi
 	# copy license file
@@ -180,7 +201,7 @@ function clean() {
 		    # Delete the folder and its contents
 		    rm -r build_${TYPE}_${ARCH}	    
 		fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
 		rm -f *.a
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             # Delete the folder and its contents
