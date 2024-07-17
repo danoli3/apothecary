@@ -11,7 +11,7 @@ GIT_URL=https://github.com/madler/zlib/releases/download/v$VER/zlib-$VER.tar.gz
 
 GIT_TAG=v$VER
 
-FORMULA_TYPES=( "vs" "osx"  "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" )
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -134,10 +134,56 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
-		echo "using inbuilt"
-		# -DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
-		# -DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
-		# -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
+		mkdir -p build_${TYPE}_${PLATFORM}
+	    cd build_${TYPE}_${PLATFORM}
+	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
+	    $EMSDK/upstream/emscripten/emcmake cmake .. \
+	    	-DCMAKE_INSTALL_LIBDIR="lib" \
+	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+	    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+	    	-D BUILD_SHARED_LIBS=OFF \
+		    -DZLIB_BUILD_EXAMPLES=OFF \
+		    -DSKIP_EXAMPLE=ON \
+		    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DCMAKE_CPP_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -fPIC ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -fPIC ${FLAG_RELEASE}" \
+			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+			-DCMAKE_CXX_EXTENSIONS=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+        $EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make install
+	  	# $EMSDK/upstream/emscripten/emcmake cmake --build . --config Release --target install 
+	    cd ..
+	    # mkdir -p build_$TYPE
+	    # cd build_$TYPE
+	    # rm -f CMakeCache.txt *.a *.o *.wasm *.js
+	    # $EMSDK/upstream/emscripten/emcmake cmake .. \
+	    # 	-DCMAKE_INSTALL_LIBDIR="lib" \
+	    # 	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+	    # 	-D BUILD_SHARED_LIBS=OFF \
+	    # 	-G "Unix Makefiles" \
+		#     -DZLIB_BUILD_EXAMPLES=OFF \
+		#     -DSKIP_EXAMPLE=ON \
+	    # 	-DCMAKE_C_STANDARD=${C_STANDARD} \
+		# 	-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+		# 	-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+		# 	-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
+		# 	-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
+		# 	-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+		# 	-DCMAKE_CXX_EXTENSIONS=OFF \
+		# 	-DBUILD_SHARED_LIBS=OFF \
+		# 	-DCMAKE_INSTALL_PREFIX=Release \
+        #     -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+        #     -DCMAKE_INSTALL_INCLUDEDIR=include 
+	  	# make
+	    # cd ..
+	    # emcc -O3 -s WASM=1
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
 	    
 		echoVerbose "building $TYPE | $ARCH "
@@ -194,7 +240,7 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		cp -Rv "build_${TYPE}_$PLATFORM/Release/include/"* $1/include/
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -v "build_${TYPE}_${PLATFORM}/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.wasm
+		cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.wasm
         secure $1/lib/$TYPE/$PLATFORM/zlib.wasm
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1

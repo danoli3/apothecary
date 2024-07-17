@@ -205,22 +205,24 @@ function build() {
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 	    	-DEMSCRIPTEN=ON \
+	    	-DCMAKE_VERBOSE_MAKEFILE=ON\
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
+			-DCMAKE_CPP_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -std=c${C_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-			-DZLIB_ROOT=$EMSDK/upstream/emscripten/system/lib \
-			-DZLIB_LIBRARY=$EMSDK/upstream/emscripten/system/lib/libz.a \
-		    -DZLIB_INCLUDE_DIR=$EMSDK/upstream/emscripten/system/include \
+			-DZLIB_ROOT=${ZLIB_ROOT} \
+			-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-		emmake make
-		emmake make install
+		$EMSDK/upstream/emscripten/emmake make
+		$EMSDK/upstream/emscripten/emmake make install
 	    # cmake --build . --target install --config Release
 	    cd ..
 		
