@@ -418,10 +418,13 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT}
 
-        # $EMSDK/upstream/emscripten/emmake make
-        # $EMSDK/upstream/emscripten/emmake make install
+        cat CMakeCache.txt
+        cat Makefile
 
-        cmake --build . --config Release --target install
+        $EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make install
+
+        # cmake --build . --config Release --target install
         cd ..
 	fi
 }
