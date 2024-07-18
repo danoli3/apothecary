@@ -412,7 +412,9 @@ function build() {
             -D FT_REQUIRE_PNG=TRUE \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_LIBRARIES=${LIBPNG_LIBRARY} \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_INCLUDE_DIRS=${LIBPNG_INCLUDE_DIR} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT}
