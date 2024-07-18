@@ -407,8 +407,9 @@ function build() {
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DFT_DISABLE_PNG=FALSE \
-            -D FT_REQUIRE_PNG=FALSE \
+            -DFT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
+            -DPNG_FOUND=ON \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_LIBRARIES=${LIBPNG_LIBRARY} \
