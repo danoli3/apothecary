@@ -391,7 +391,6 @@ function build() {
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c++${CPP_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
             -B . \
             -DCMAKE_BUILD_TYPE=Release \
@@ -409,7 +408,7 @@ function build() {
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DFT_DISABLE_PNG=FALSE \
-            -D FT_REQUIRE_PNG=TRUE \
+            -D FT_REQUIRE_PNG=FALSE \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_LIBRARIES=${LIBPNG_LIBRARY} \
