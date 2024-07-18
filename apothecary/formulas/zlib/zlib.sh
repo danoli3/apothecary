@@ -215,7 +215,7 @@ function copy() {
 		cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
         secure $1/lib/$TYPE/$ABI/zlib.a
 	elif [ "$TYPE" == "emscripten" ] ; then
-		cp -Rv "build_${TYPE}_$PLATFORM/Release/include/"* $1/include/
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
 		mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.wasm
         secure $1/lib/$TYPE/$PLATFORM/zlib.wasm

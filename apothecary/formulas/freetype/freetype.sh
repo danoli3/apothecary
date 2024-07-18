@@ -383,6 +383,7 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.wasm
+        export PATH="${PATH}:${LIBPNG_INCLUDE_DIR}"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	${BROTLI} \
@@ -419,13 +420,13 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT}
 
-        cat CMakeCache.txt
-        cat Makefile
+        # cat CMakeCache.txt
+        # cat Makefile
 
-        $EMSDK/upstream/emscripten/emmake make
-        $EMSDK/upstream/emscripten/emmake make install
+        # $EMSDK/upstream/emscripten/emmake make
+        # $EMSDK/upstream/emscripten/emmake make install
 
-        # cmake --build . --config Release --target install
+        cmake --build . --config Release --target install
         cd ..
 	fi
 }

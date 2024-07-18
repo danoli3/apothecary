@@ -183,7 +183,7 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 	    mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/libpugixml.a" $1/lib/$TYPE/$PLATFORM/libpugixml.a 
-        secure $1/lib/$TYPE/libpugixml.a
+        secure $1/lib/$TYPE/$PLATFORM/libpugixml.a
 	fi
 	# copy license file
 	if [ -d "$1/license" ]; then
