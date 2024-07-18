@@ -205,7 +205,7 @@ function build() {
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 	    	-DEMSCRIPTEN=ON \
-	    	-DCMAKE_VERBOSE_MAKEFILE=ON\
+	    	-DCMAKE_VERBOSE_MAKEFILE=ON \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \

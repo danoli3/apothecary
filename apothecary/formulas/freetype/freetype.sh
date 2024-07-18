@@ -374,9 +374,9 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 
-        LIBPNG_ROOT="$LIBS_ROOT/libpng/"
-        LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.wasm" 
+        LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
+        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng.wasm" 
         BROTLI="
 			-DFT_REQUIRE_BROTLI=FALSE \
 			-DFT_DISABLE_BROTLI=TRUE"
@@ -387,13 +387,11 @@ function build() {
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	${BROTLI} \
-	    	-G 'Unix Makefiles' \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
-            -B . \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -409,7 +407,8 @@ function build() {
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DFT_DISABLE_PNG=OFF \
-            -D FT_REQUIRE_PNG=ON \
+            -D FT_REQUIRE_PNG=OFF \
+            -B . \
             -DPNG_FOUND=ON \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
@@ -418,7 +417,8 @@ function build() {
             -DPNG_INCLUDE_DIRS=${LIBPNG_INCLUDE_DIR} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_ROOT=${LIBPNG_ROOT}
+            -DPNG_ROOT=${LIBPNG_ROOT} 
+            	    	# -G 'Unix Makefiles' \           
 
         # cat CMakeCache.txt
         # cat Makefile
