@@ -412,6 +412,7 @@ function build() {
             -D FT_REQUIRE_PNG=TRUE \
             -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DPNG_ROOT=${LIBPNG_ROOT}
@@ -419,7 +420,7 @@ function build() {
         # $EMSDK/upstream/emscripten/emmake make
         # $EMSDK/upstream/emscripten/emmake make install
 
-        cmake --build . --config Release --target install 
+        cmake --build . --config Release --target install
         cd ..
 	fi
 }
