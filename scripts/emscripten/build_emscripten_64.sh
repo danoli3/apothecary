@@ -19,7 +19,7 @@ fi
 
 export TARGET=emscripten
 export PLATFORM=emscripten
-export ARCH=32
+export ARCH=64
 export NO_FORCE=ON
 
 echo "Target: $TARGET"

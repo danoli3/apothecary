@@ -767,10 +767,16 @@ if [ "$TYPE" = "msys2" ]; then
 fi
 
 if [ "$TYPE" = "emscripten" ]; then
-    export FLAG_RELEASE="-O3 -DMEMORY64"
+    if [ $ARCH == "64" ] ; then
+        PLATFORM="WASM64"
+        PLATFORM_FLAG="-DMEMORY64"
+    else
+        PLATFORM="WASM"
+        PLATFORM_FLAG=""
+    fi
+    export FLAG_RELEASE="-O3 -DUSE_PTHREADS=1 -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
-    PLATFORM=WASM
 fi
 
 if [ "$TYPE" = "ios" ]; then

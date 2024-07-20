@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# Copyright (C) 2013-2023 by
+# Copyright (C) 2013-2024 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written originally by John Cary <cary@txcorp.com>
@@ -110,7 +110,7 @@
 
 # To minimize the number of cmake_policy() workarounds,
 # CMake >= 3 is requested.
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0...3.5)
 
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
   # Allow symbol visibility settings also on static libraries. CMake < 3.3
@@ -265,6 +265,8 @@ if (NOT FT_DISABLE_PNG)
   else ()
     find_package(PNG)
   endif ()
+  # FreePNG calls FindZLIB so unset ZLIB_FOUND to respect FT_DISABLE_ZLIB
+  unset(ZLIB_FOUND)
 endif ()
 
 if (NOT FT_DISABLE_ZLIB)
@@ -297,7 +299,7 @@ if (NOT FT_DISABLE_BROTLI)
 endif ()
 
 # Create the configuration file
-if (UNIX)
+if (UNIX AND NOT WIN32)
   check_include_file("unistd.h" HAVE_UNISTD_H)
   check_include_file("fcntl.h" HAVE_FCNTL_H)
 
@@ -423,10 +425,10 @@ set(BASE_SRCS
   src/winfonts/winfnt.c
 )
 
-if (UNIX)
-  list(APPEND BASE_SRCS "builds/unix/ftsystem.c")
-elseif (WIN32)
+if (WIN32)
   list(APPEND BASE_SRCS "builds/windows/ftsystem.c")
+elseif (UNIX)
+  list(APPEND BASE_SRCS "builds/unix/ftsystem.c")
 else ()
   list(APPEND BASE_SRCS "src/base/ftsystem.c")
 endif ()
@@ -496,6 +498,18 @@ target_include_directories(
 )
 
 
+if (BUILD_FRAMEWORK)
+  set_property(SOURCE ${PUBLIC_CONFIG_HEADERS}
+    PROPERTY MACOSX_PACKAGE_LOCATION Headers/config
+  )
+  set_target_properties(freetype PROPERTIES
+    FRAMEWORK TRUE
+    MACOSX_FRAMEWORK_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/builds/mac/freetype-Info.plist
+    PUBLIC_HEADER "${PUBLIC_HEADERS}"
+    XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
+  )
+endif ()
+
 # 'freetype-interface' is an interface library, to be accessed with
 # `EXPORT_NAME Freetype::Freetype`.  This is the target name provided by
 # CMake's `FindFreetype.cmake`, so we provide it for compatibility.
@@ -523,7 +537,7 @@ if (BZIP2_FOUND)
     list(APPEND PKGCONFIG_LIBS_PRIVATE "-lbz2")
   endif ()
 endif ()
-if (PNG_FOUND OR PNG_INCLUDE_DIRS)
+if (PNG_FOUND)
   target_link_libraries(freetype PRIVATE ${PNG_LIBRARIES})
   target_compile_definitions(freetype PRIVATE ${PNG_DEFINITIONS})
   target_include_directories(freetype PRIVATE ${PNG_INCLUDE_DIRS})

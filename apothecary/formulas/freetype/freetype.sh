@@ -54,14 +54,6 @@ function build() {
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DFT_DISABLE_ZLIB=FALSE \
-            -DFT_DISABLE_BZIP2=TRUE \
-            -DFT_REQUIRE_BZIP2=FALSE \
-            -DFT_DISABLE_HARFBUZZ=TRUE \
-            -D FT_REQUIRE_ZLIB=TRUE \
-			-D FT_REQUIRE_BZIP2=FALSE \
-			-D FT_REQUIRE_PNG=TRUE \
-			-D FT_REQUIRE_HARFBUZZ=FALSE \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -378,8 +370,8 @@ function build() {
         LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng.wasm" 
         BROTLI="
-			-DFT_REQUIRE_BROTLI=FALSE \
-			-DFT_DISABLE_BROTLI=TRUE"
+			-DFT_REQUIRE_BROTLI=OFF \
+			-DFT_DISABLE_BROTLI=ON"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.wasm
@@ -387,11 +379,24 @@ function build() {
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	${BROTLI} \
+	    	-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DFT_REQUIRE_ZLIB=ON \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_LIBRARIES=${LIBPNG_LIBRARY} \
+            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_ROOT=${LIBPNG_ROOT} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fPIC -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fvisibility=hidden -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -400,25 +405,10 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DFT_REQUIRE_ZLIB=ON \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DFT_DISABLE_PNG=OFF \
             -D FT_REQUIRE_PNG=OFF \
             -B . \
-            -DPNG_FOUND=ON \
-            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_LIBRARIES=${LIBPNG_LIBRARY} \
-            -DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_INCLUDE_DIRS=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-            -DPNG_ROOT=${LIBPNG_ROOT} 
-            	    	# -G 'Unix Makefiles' \           
+            -G 'Unix Makefiles' 
 
         # cat CMakeCache.txt
         # cat Makefile
