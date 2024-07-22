@@ -257,16 +257,18 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/${TYPE}/${PLATFORM}/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.wasm
-		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
-		cp -R "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/$TYPE/$PLATFORM
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng.pc" $1/lib/${TYPE}/${PLATFORM}/libpng.pc
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
 		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 
-		PKG_FILE="$1/lib/$TYPE/$PLATFORM/pkgconfig/libpng16.pc"
+		PKG_FILE="$1/lib/$TYPE/$PLATFORM/libpng16.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
 		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
 		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
 		sed -i.bak "s|^includedir=.*|includedir=${1}/include/libpng16|" "$PKG_FILE"
-		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM/pkgconfig"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 		pkg-config --modversion libpng
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
