@@ -366,8 +366,8 @@ function build() {
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 
         LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
-        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include/libpng16"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a"
+        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.wasm"
 	    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
 		
 		pkg-config --modversion libpng

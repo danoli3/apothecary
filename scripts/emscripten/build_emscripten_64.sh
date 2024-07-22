@@ -29,3 +29,9 @@ echo "Apothecary path: $APOTHECARY_PATH"
 
 ${ROOT}./scripts/build.sh
 
+echo "   Build Successful. Now Packaging ..."
+${ROOT}./scripts/package.sh
+
+echo "   Completed"
+
+

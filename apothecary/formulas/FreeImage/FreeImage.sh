@@ -254,6 +254,9 @@ function build() {
 		ZLIB_ROOT="$LIBS_ROOT/zlib/"
 	    ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
 	    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+
+	    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
+		
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-B build \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \

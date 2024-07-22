@@ -202,6 +202,8 @@ function build() {
 
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$ZLIB_ROOT/lib/$TYPE/$PLATFORM"
 
+		# $EMSDK/upstream/emscripten/cache/sysroot/lib
+
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -226,7 +228,29 @@ function build() {
 			-DPNG_BUILD_ZLIB=OFF
 		$EMSDK/upstream/emscripten/emmake make
 		$EMSDK/upstream/emscripten/emmake make install
-	    # cmake --build . --target install --config Release
+
+		$EMSDK/upstream/emscripten/emcmake cmake .. \
+	    	${DEFS} \
+	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
+	    	-DEMSCRIPTEN=ON \
+	    	-DCMAKE_VERBOSE_MAKEFILE=ON \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
+			-DCMAKE_CXX_EXTENSIONS=OFF \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+			-DZLIB_ROOT=${ZLIB_ROOT} \
+			-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+			-DENABLE_VISIBILITY=OFF \
+			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DBUILD_SHARED_LIBS=ON \
+			-DPNG_EXECUTABLES=OFF \
+			-DPNG_BUILD_ZLIB=OFF
+	    cmake --build . --target install --config Release
 
 	    cd ..
 		
@@ -258,7 +282,7 @@ function copy() {
 		mkdir -p $1/lib/${TYPE}/${PLATFORM}/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
-		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
+		# cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng.pc" $1/lib/${TYPE}/${PLATFORM}/libpng.pc
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
 		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
