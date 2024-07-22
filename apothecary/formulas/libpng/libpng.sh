@@ -194,11 +194,11 @@ function build() {
 
 		mkdir -p build_${TYPE}_${PLATFORM}
 	    cd build_${TYPE}_${PLATFORM}
-	    rm -f CMakeCache.txt *.a *.o *.wasm
+	    rm -f CMakeCache.txt *.a *.o *.a
 
 	    ZLIB_ROOT="$LIBS_ROOT/zlib/"
 		ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$ZLIB_ROOT/lib/$TYPE/$PLATFORM"
 
@@ -280,12 +280,12 @@ function copy() {
 		cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/${TYPE}/${PLATFORM}/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.wasm
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 		# cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng.pc" $1/lib/${TYPE}/${PLATFORM}/libpng.pc
 		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
-		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
+		secure $1/lib/$TYPE/$PLATFORM/libpng16.a
 
 		PKG_FILE="$1/lib/$TYPE/$PLATFORM/libpng16.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"

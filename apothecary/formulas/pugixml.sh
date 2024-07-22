@@ -42,7 +42,7 @@ function build() {
     if [ "$TYPE" == "emscripten" ]; then
         mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}" 
-		rm -f CMakeCache.txt *.a *.o *.wasm *.js
+		rm -f CMakeCache.txt *.a *.o *.a *.js
 		cmake .. ${DEFS} \
 				-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 		    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \

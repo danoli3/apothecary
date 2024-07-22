@@ -189,7 +189,7 @@ function build() {
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p build_$TYPE
 	    cd build_$TYPE
-	    rm -f CMakeCache.txt *.a *.o *.wasm
+	    rm -f CMakeCache.txt *.a *.o *.a
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -233,9 +233,9 @@ function copy() {
 		cp -R "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -v "build_${TYPE}/bin/fmt_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libfmt.wasm
+		cp -v "build_${TYPE}/bin/fmt_wasm.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		cp -R "build_${TYPE}/Release/include/" $1/include
-		secure $1/lib/$TYPE/$PLATFORM/libfmt.wasm fmt.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/bin/.a" $1/lib/$TYPE/$PLATFORM/libfmt.a

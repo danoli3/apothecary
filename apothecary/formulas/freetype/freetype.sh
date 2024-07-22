@@ -363,11 +363,11 @@ function build() {
 
 		ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
         LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
         LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.wasm"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a"
 	    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
 		
 		pkg-config --modversion libpng
@@ -377,7 +377,7 @@ function build() {
 			-DFT_DISABLE_BROTLI=ON"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
-        rm -f CMakeCache.txt *.a *.o *.wasm
+        rm -f CMakeCache.txt *.a *.o *.a
         export PATH="${PATH}:${LIBPNG_INCLUDE_DIR}"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
@@ -467,9 +467,9 @@ function copy() {
 		secure $1/lib/$TYPE/$ABI/libfreetype.a freetype.pkl
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.wasm
+		cp -v "build_${TYPE}_${PLATFORM}/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.a
 		. "$SECURE_SCRIPT"
-		secure $1/lib/$TYPE/$PLATFORM/libfreetype.wasm freetype.pkl
+		secure $1/lib/$TYPE/$PLATFORM/libfreetype.a freetype.pkl
 
 		cp -v "build_${TYPE}_$PLATFORM/freetype2.pc" $1/lib/$TYPE/$PLATFORM/freetype2.pc
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype2.pc"

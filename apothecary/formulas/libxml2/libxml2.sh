@@ -248,10 +248,10 @@ function build() {
         export CXXFLAGS="-pthread"
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
         mkdir -p build_${TYPE}_${PLATFORM}
         cd build_${TYPE}_${PLATFORM}
-        rm -f CMakeCache.txt *.a *.o *.wasm
+        rm -f CMakeCache.txt *.a *.o *.a
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             ${DEFS} \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -355,8 +355,8 @@ function copy() {
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv include/libxml/* $1/include/libxml/
-        cp -v "build_${TYPE}_$PLATFORM/xml2_wasm.wasm" $1/lib/$TYPE/$PLATFORM/libxml2.wasm
-        secure $1/lib/$TYPE/$PLATFORM/libxml2.wasm
+        cp -v "build_${TYPE}_$PLATFORM/xml2_wasm.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
+        secure $1/lib/$TYPE/$PLATFORM/libxml2.a
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/

@@ -72,7 +72,7 @@ if(EMSCRIPTEN)
     target_link_libraries(svgtiny_wasm ${LIBXML2_LIBRARY} m)
     set_target_properties(svgtiny_wasm PROPERTIES COMPILE_FLAGS " -fPIC -s SIDE_MODULE=1 ")
     set_target_properties(svgtiny_wasm PROPERTIES LINK_FLAGS    "-fPIC -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry")
-    set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
+    set(CMAKE_EXECUTABLE_SUFFIX ".a")
 endif()
 
 if(DO_XML_INSTALL)

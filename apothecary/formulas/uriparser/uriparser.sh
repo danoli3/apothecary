@@ -159,7 +159,7 @@ function build() {
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p "build_${TYPE}_$PLATFORM"
 		cd "build_${TYPE}_$PLATFORM"
-		rm -f CMakeCache.txt *.a *.o *.wasm
+		rm -f CMakeCache.txt *.a *.o *.a
         $EMSDK/upstream/emscripten/emcmake cmake .. \
 			${DEFS} \
 			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -201,8 +201,8 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -Rv "build_${TYPE}_$PLATFORM/uriparser_wasm.wasm" $1/lib/$TYPE/$PLATFORM/uriparser.wasm
-		secure $1/lib/$TYPE/$PLATFORM/uriparser.wasm
+		cp -Rv "build_${TYPE}_$PLATFORM/uriparser_wasm.a" $1/lib/$TYPE/$PLATFORM/uriparser.a
+		secure $1/lib/$TYPE/$PLATFORM/uriparser.a
     elif [ "$TYPE" == "android" ]; then
 		cp -R include/uriparser/* $1/include/uriparser/
 		mkdir -p $1/lib/$TYPE/$ABI/

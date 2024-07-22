@@ -524,11 +524,11 @@ function build() {
 
     ZLIB_ROOT="$LIBS_ROOT/zlib/"
     ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+    ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
     LIBPNG_ROOT="$LIBS_ROOT/libpng/"
     LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.wasm"
+    LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
 
 
     # cd ${BUILD_DIR}/${1}
@@ -539,7 +539,7 @@ function build() {
     cd build_${TYPE}_${PLATFORM}
     find ./ -name "*.o" -type f -delete
     rm -f CMakeCache.txt || true
-    rm -f CMakeCache.txt *.a *.o *.wasm
+    rm -f CMakeCache.txt *.a *.o *.a
 
 
     emcmake cmake .. \

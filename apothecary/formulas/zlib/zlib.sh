@@ -136,7 +136,7 @@ function build() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_${TYPE}_${PLATFORM}
 	    cd build_${TYPE}_${PLATFORM}
-	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
+	    rm -f CMakeCache.txt *.a *.o *.a *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_INSTALL_LIBDIR="lib" \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -217,8 +217,8 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.wasm
-        secure $1/lib/$TYPE/$PLATFORM/zlib.wasm
+		cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a
+        secure $1/lib/$TYPE/$PLATFORM/zlib.a
         cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"

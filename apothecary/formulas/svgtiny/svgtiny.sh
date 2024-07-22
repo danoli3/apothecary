@@ -269,9 +269,9 @@ function build() {
         mkdir -p build_${TYPE}_${PLATFORM}
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
         LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
-        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.wasm"
+        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
 	    cd build_${TYPE}_${PLATFORM}
-	    rm -f CMakeCache.txt *.a *.o *.wasm *.js
+	    rm -f CMakeCache.txt *.a *.o *.a *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-B . \
@@ -330,9 +330,9 @@ function copy() {
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -Rv "include/" $1/ 
-        cp -f "build_${TYPE}_$PLATFORM/svgtiny_wasm.wasm" $1/lib/$TYPE/$PLATFORM/svgtiny.wasm        
+        cp -f "build_${TYPE}_$PLATFORM/svgtiny_wasm.a" $1/lib/$TYPE/$PLATFORM/svgtiny.a        
         . "$SECURE_SCRIPT"
-        secure $1/lib/$TYPE/$PLATFORM/svgtiny.wasm svgtiny.pkl
+        secure $1/lib/$TYPE/$PLATFORM/svgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
 		mkdir -p $1/lib/$TYPE/$
 		cp -Rv "include/" $1/ 

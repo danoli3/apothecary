@@ -307,7 +307,7 @@ function build() {
     
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
         # warning, assimp on github uses the ASSIMP_ prefix for CMake options ...
         # these may need to be updated for a new release
         local buildOpts="
@@ -318,7 +318,7 @@ function build() {
         mkdir -p build_${TYPE}_${PLATFORM}
         cd build_${TYPE}_${PLATFORM}
         find ./ -name "*.o" -type f -delete
-        rm -f CMakeCache.txt *.a *.o *.wasm *.js
+        rm -f CMakeCache.txt *.a *.o *.a *.js
         rm -f CMakeCache.txt || true
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             -B . \

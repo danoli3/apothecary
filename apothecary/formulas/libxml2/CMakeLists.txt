@@ -775,7 +775,7 @@ if (EMSCRIPTEN)
     set_target_properties(xml2_wasm PROPERTIES COMPILE_FLAGS " -fPIC -s SIDE_MODULE=1 ")
     set_target_properties(xml2_wasm PROPERTIES LINK_FLAGS    "-fPIC -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry")
     set_target_properties(xml2_wasm PROPERTIES PUBLIC_HEADER "${API_HEADERS}")
-    set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
+    set(CMAKE_EXECUTABLE_SUFFIX ".a")
 endif()
 
 if(WIN32)
