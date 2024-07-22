@@ -219,6 +219,14 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.wasm
         secure $1/lib/$TYPE/$PLATFORM/zlib.wasm
+        cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
+		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
+
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
 		mkdir -p $1/lib/$TYPE/$ARCH/

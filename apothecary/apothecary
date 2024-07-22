@@ -193,6 +193,8 @@ if [ -z "${CPP_STANDARD+x}" ]; then
     export CPP_STANDARD=23
 fi
 
+PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
+
 # prefer git instead of download tarballs
 # This remains _UNSET_ if git is not in use.
 # To use, set USE_GIT=1

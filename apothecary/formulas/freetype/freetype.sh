@@ -368,7 +368,12 @@ function build() {
         LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
         LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include/libpng16"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a" 
-        # PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
+  
+ 
+	    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM/pkgconfig:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
+		
+		pkg-config --modversion libpng
+
         BROTLI="
 			-DFT_REQUIRE_BROTLI=OFF \
 			-DFT_DISABLE_BROTLI=ON"
@@ -466,6 +471,14 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.wasm
 		. "$SECURE_SCRIPT"
 		secure $1/lib/$TYPE/$PLATFORM/libfreetype.wasm freetype.pkl
+
+		cp -v "build_${TYPE}_$PLATFORM/freetype2.pc" $1/lib/$TYPE/$PLATFORM/freetype2.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype2.pc"
+		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 	fi
 
 	# copy license files

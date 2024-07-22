@@ -75,8 +75,7 @@ function build() {
 		    -DPNG_STATIC=ON \
 		    -DBUILD_SHARED_LIBS=OFF \
 		    -DPNG_HARDWARE_OPTIMIZATIONS=ON \
-			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-			-DCMAKE_INSTALL_INCLUDEDIR=include"
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include"
 	
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -192,6 +191,7 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
+
 		mkdir -p build_${TYPE}_${PLATFORM}
 	    cd build_${TYPE}_${PLATFORM}
 	    rm -f CMakeCache.txt *.a *.o *.wasm
@@ -199,6 +199,8 @@ function build() {
 	    ZLIB_ROOT="$LIBS_ROOT/zlib/"
 		ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
 		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
+
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$ZLIB_ROOT/lib/$TYPE/$PLATFORM"
 
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
@@ -208,14 +210,15 @@ function build() {
 	    	-DCMAKE_VERBOSE_MAKEFILE=ON \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DMEMORY64 -std=c${C_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -fPIC ${FLAG_RELEASE} -s USE_ZLIB=1" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
-			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 			-DZLIB_ROOT=${ZLIB_ROOT} \
 			-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
 			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+			-DCMAKE_INSTALL_PREFIX=Release \
+			-DENABLE_VISIBILITY=OFF \
 			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DBUILD_SHARED_LIBS=ON \
@@ -224,6 +227,7 @@ function build() {
 		$EMSDK/upstream/emscripten/emmake make
 		$EMSDK/upstream/emscripten/emmake make install
 	    # cmake --build . --target install --config Release
+
 	    cd ..
 		
 	fi
@@ -256,6 +260,14 @@ function copy() {
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 		cp -R "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/$TYPE/$PLATFORM/
 		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
+
+		PKG_FILE="$1/lib/$TYPE/$PLATFORM/pkgconfig/libpng16.pc"
+		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+		sed -i.bak "s|^includedir=.*|includedir=${1}/include/libpng16|" "$PKG_FILE"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM/pkgconfig"
+		pkg-config --modversion libpng
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
