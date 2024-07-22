@@ -104,4 +104,4 @@ jobs:
           tag: ${{ env.release }}
           release: ${{ env.release }}
           prerelease: ${{ env.prerelease }}
-          files: out/openFrameworksLibs_${{ env.release }}_emscripten.tar.bz2
+          files: out/openFrameworksLibs_${{ env.release }}_emscripten_64.tar.bz2
