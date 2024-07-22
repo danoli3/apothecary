@@ -258,7 +258,7 @@ function copy() {
 		mkdir -p $1/lib/${TYPE}/${PLATFORM}/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
-		cp -R "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/$TYPE/$PLATFORM/
+		cp -R "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/$TYPE/$PLATFORM
 		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 
 		PKG_FILE="$1/lib/$TYPE/$PLATFORM/pkgconfig/libpng16.pc"
