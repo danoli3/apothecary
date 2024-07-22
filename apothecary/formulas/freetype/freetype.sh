@@ -367,8 +367,9 @@ function build() {
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.wasm"
 
         LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
-        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng.wasm" 
+        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include/libpng16"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.wasm" 
+        # PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
         BROTLI="
 			-DFT_REQUIRE_BROTLI=OFF \
 			-DFT_DISABLE_BROTLI=ON"

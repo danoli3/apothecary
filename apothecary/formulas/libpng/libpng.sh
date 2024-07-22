@@ -251,10 +251,11 @@ function copy() {
 		secure $1/lib/$TYPE/$ABI/libpng.a
 		cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
-		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng.wasm
-		secure $1/lib/$TYPE/$PLATFORM/libpng.wasm
+		mkdir -p $1/lib/${TYPE}/${PLATFORM}/
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
+		cp -R "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/$TYPE/$PLATFORM/
+		secure $1/lib/$TYPE/$PLATFORM/libpng16.wasm
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
