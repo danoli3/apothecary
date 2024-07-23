@@ -193,6 +193,10 @@ if [ -z "${CPP_STANDARD+x}" ]; then
     export CPP_STANDARD=23
 fi
 
+if [ -z "${PTHREADS_ENABLED+x}" ]; then
+    export PTHREADS_ENABLED=0
+fi
+
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
 
 # prefer git instead of download tarballs
@@ -777,7 +781,14 @@ if [ "$TYPE" = "emscripten" ]; then
         PLATFORM="WASM"
         PLATFORM_FLAG=""
     fi
-    export FLAG_RELEASE="-O3 -DUSE_PTHREADS=1 -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration"
+
+    if [ "$PTHREADS_ENABLED" == "1" ] ; then
+        PTHREADS_FLAG="-DUSE_PTHREADS=1 -pthread"
+    else
+        PTHREADS_FLAG=""
+    fi
+
+    export FLAG_RELEASE="-DNDEBUG -O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi

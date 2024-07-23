@@ -168,15 +168,15 @@ function build() {
 			-DCMAKE_BUILD_TYPE="Release" \
 			-DCMAKE_INSTALL_LIBDIR="lib" \
 			-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+		    -DCMAKE_CXX_EXTENSIONS=OFF \
 			-DCPU_BASELINE='' \
 			-DCPU_DISPATCH='' \
 			-DCV_TRACE=OFF \
-			-DCMAKE_C_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
-			-DCMAKE_CXX_FLAGS="-pthread -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
-    		-DCMAKE_CXX_FLAGS="-DNDEBUG -pthread" \
-    		-DCMAKE_C_FLAGS="-DNDEBUG -pthread"
-    	emmake make -j${PARALLEL_MAKE}
+			-DCMAKE_C_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}"
+    	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
 	    mkdir -p build
 	    cd build

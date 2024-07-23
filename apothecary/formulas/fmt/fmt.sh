@@ -192,20 +192,20 @@ function build() {
 	    rm -f CMakeCache.txt *.a *.o *.a
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFS} \
-	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
-				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_CXX_EXTENSIONS=OFF \
-				-DBUILD_SHARED_LIBS=OFF \
-		    -DCMAKE_INSTALL_PREFIX=Release \
-        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-        -DCMAKE_INSTALL_INCLUDEDIR=include \
-        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
-		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
-		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. 
+			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+			-DCMAKE_C_STANDARD=${C_STANDARD} \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_EXTENSIONS=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_INSTALL_PREFIX=Release \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include \
+			-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
+			-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
+			-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. 
 	    cmake --build . --target install --config Release
 	    cd ..
 	fi

@@ -303,15 +303,20 @@ elif [ "$TARGET" == "vs" ]; then
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
     echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
 elif [ "$TARGET" == "emscripten" ]; then
-		if [ "$ARCH" == "64" ]; then
-				POSTFIX="_memory64"
-		else
-				POSTFIX=""
-		fi
-    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}.tar.bz2
-    run "cd ${OUTPUT_FOLDER}; tar cjf $TARBALL $LIBS"
-    echo "tar cjf $TARBALL $LIBS"
-    echo " a $TARBALL $LIBS"
+	if [ "$ARCH" == "64" ]; then
+			POSTFIX="_memory64"
+	else
+			POSTFIX=""
+	fi
+	if [ "$PTHREADS_ENABLED" == "1" ]; then
+			PTHREADS_POSTFIX="_pthreads"
+	else
+			PTHREADS_POSTFIX=""
+	fi
+	TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}${PTHREADS_POSTFIX}.tar.bz2
+	run "cd ${OUTPUT_FOLDER}; tar cjf $TARBALL $LIBS"
+	echo "tar cjf $TARBALL $LIBS"
+	echo " a $TARBALL $LIBS"
 elif [ "$TARGET" == "android" ]; then
     TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.zip
     echo "tar cjf $TARBALL $LIBS"

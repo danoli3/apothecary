@@ -530,11 +530,8 @@ function build() {
     LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
     LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
 
-
-    # cd ${BUILD_DIR}/${1}
+    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
     
-    # fix a bug with newer emscripten not recognizing index and string error because python files opened in binary
-
     mkdir -p build_${TYPE}_${PLATFORM}
     cd build_${TYPE}_${PLATFORM}
     find ./ -name "*.o" -type f -delete
@@ -542,7 +539,7 @@ function build() {
     rm -f CMakeCache.txt *.a *.o *.a
 
 
-    emcmake cmake .. \
+    $EMSDK/upstream/emscripten/emcmake cmake .. \
       -B build \
       -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
       -DCMAKE_BUILD_TYPE="Release" \
@@ -554,8 +551,8 @@ function build() {
       -DCV_TRACE=OFF \
       -DOPENCV_ENABLE_NONFREE=OFF \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-      -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
-      -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC  -I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
+      -DCMAKE_C_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
+      -DCMAKE_CXX_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ -msimd128 ${FLAG_RELEASE}" \
       -DBUILD_SHARED_LIBS=OFF \
       -DBUILD_DOCS=OFF \
       -DBUILD_EXAMPLES=OFF \

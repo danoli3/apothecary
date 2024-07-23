@@ -244,8 +244,6 @@ function build() {
         . "$DOWNLOADER_SCRIPT"
         downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD"
         downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD"
-        export CFLAGS="-pthread"
-        export CXXFLAGS="-pthread"
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
@@ -267,15 +265,13 @@ function build() {
             -DLIBXML2_WITH_ZLIB=OFF \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti -fPIC ${FLAG_RELEASE}"
+            -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}"
         # cmake --build . --config Release 
         $EMSDK/upstream/emscripten/emmake make
         $EMSDK/upstream/emscripten/emmake make install

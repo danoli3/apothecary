@@ -131,27 +131,27 @@ function build() {
     cd "build_${TYPE}_${PLATFORM}"
     rm -f CMakeCache.txt *.a *.o
 		cmake .. \
-						${DEFS} \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -D_GNU_SOURCE" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -D_GNU_SOURCE" \
-            -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
-      			-DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
-         		-DPLATFORM=$PLATFORM \
-            -DENABLE_BITCODE=OFF \
-            -DENABLE_ARC=OFF \
-            -DHAVE_REALLOCARRAY=OFF \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
-            -DENABLE_VISIBILITY=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
+			${DEFS} \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -D_GNU_SOURCE" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -D_GNU_SOURCE" \
+			-DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+			-DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+			-DCMAKE_BUILD_TYPE=Release \
+			-DCMAKE_INSTALL_PREFIX=Release \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include \
+			-DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
+			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
+			-DPLATFORM=$PLATFORM \
+			-DENABLE_BITCODE=OFF \
+			-DENABLE_ARC=OFF \
+			-DHAVE_REALLOCARRAY=OFF \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+			-DENABLE_VISIBILITY=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include \
+			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
         cmake --build . --config Release
         rm -f CMakeCache.txt
         cd ..      
@@ -171,8 +171,8 @@ function build() {
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
 			-DENABLE_VISIBILITY=OFF \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}"
+			-DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD}  ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}"
 		# cmake --build . --config Release 
 		$EMSDK/upstream/emscripten/emmake make
 		cd ..

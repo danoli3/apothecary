@@ -399,7 +399,7 @@ function build() {
     		-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fvisibility=hidden -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
+			-DCMAKE_C_FLAGS=" -fPIC -std=c${C_STANDARD} -fvisibility=hidden -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \

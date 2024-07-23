@@ -324,8 +324,8 @@ function build() {
             -B . \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             $buildOpts \
-            -DCMAKE_C_FLAGS="-DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR} -fPIC ${FLAG_RELEASE}" \
-            -DCMAKE_CXX_FLAGS="-DNDEBUG -DUSE_PTHREADS=1 -I${ZLIB_INCLUDE_DIR} -fPIC ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \

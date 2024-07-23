@@ -270,8 +270,10 @@ function build() {
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
         LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
+
 	    cd build_${TYPE}_${PLATFORM}
-	    rm -f CMakeCache.txt *.a *.o *.a *.js
+	    rm -f CMakeCache.txt *.a *.o *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-B . \
@@ -280,10 +282,8 @@ function build() {
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DDO_XML_INSTALL=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -fPIC -frtti ${FLAG_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -fPIC -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
