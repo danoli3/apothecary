@@ -313,6 +313,7 @@ elif [ "$TARGET" == "emscripten" ]; then
 	else
 			PTHREADS_POSTFIX=""
 	fi
+    rm -f *.pc
 	TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}${PTHREADS_POSTFIX}.tar.bz2
 	run "cd ${OUTPUT_FOLDER}; tar cjf $TARBALL $LIBS"
 	echo "tar cjf $TARBALL $LIBS"

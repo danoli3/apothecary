@@ -781,13 +781,11 @@ if [ "$TYPE" = "emscripten" ]; then
         PLATFORM="WASM"
         PLATFORM_FLAG=""
     fi
-
     if [ "$PTHREADS_ENABLED" == "1" ] ; then
         PTHREADS_FLAG="-DUSE_PTHREADS=1 -pthread"
     else
         PTHREADS_FLAG=""
     fi
-
     export FLAG_RELEASE="-DNDEBUG -O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"

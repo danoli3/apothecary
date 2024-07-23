@@ -351,9 +351,17 @@ function copy() {
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv include/libxml/* $1/include/libxml/
-        cp -v "build_${TYPE}_$PLATFORM/xml2_wasm.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
+        cp -v "build_${TYPE}_$PLATFORM/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
         secure $1/lib/$TYPE/$PLATFORM/libxml2.a
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+        cp -v "build_${TYPE}_${PLATFORM}/libxml-2.0.pc" $1/lib/$TYPE/$PLATFORM/libxml-2.0.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/libxml-2.0.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
+
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a

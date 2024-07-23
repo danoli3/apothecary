@@ -136,7 +136,7 @@ function build() {
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_${TYPE}_${PLATFORM}
 	    cd build_${TYPE}_${PLATFORM}
-	    rm -f CMakeCache.txt *.a *.o *.a *.js
+	    rm -f CMakeCache.txt *.a *.o  *.js
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_INSTALL_LIBDIR="lib" \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
