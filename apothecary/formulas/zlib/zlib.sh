@@ -220,7 +220,7 @@ function copy() {
         cp -v "build_${TYPE}_${ARCH}/Release/z.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib > /dev/null 2>&1
         secure $1/lib/$TYPE/$PLATFORM/zlib.lib
 
-        cp -vR "build_${TYPE}_${PLATFORM}/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
+        cp -vR "build_${TYPE}_${ARCH}/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
        
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
