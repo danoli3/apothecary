@@ -9,8 +9,21 @@ else
     export FORCE=""
 fi
 
+if [ -z "${PTHREADS_ENABLED+x}" ]; then
+    export PTHREADS_ENABLED=0
+fi
 
+# Print the value to verify it's set
+echo "PTHREADS_ENABLED is set to: $PTHREADS_ENABLED"
 
+# Your existing build logic here
+
+# Example of using the variable
+if [ "$PTHREADS_ENABLED" -eq 1 ]; then
+    echo "PThreads is enabled"
+else
+    echo "PThreads is not enabled"
+fi
 
 # trap any script errors and exit
 # trap "trapError" ERR
