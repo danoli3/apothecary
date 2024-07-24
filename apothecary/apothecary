@@ -790,7 +790,7 @@ if [ "$TYPE" = "emscripten" ]; then
     else
         PTHREADS_FLAG=""
     fi
-    export FLAG_RELEASE="-DNDEBUG -O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti"
+    export FLAG_RELEASE="-DWASM=ON -DNDEBUG -O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi

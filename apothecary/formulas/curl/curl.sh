@@ -85,11 +85,13 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
-
+        rm -f CMakeCache.txt *.a *.o *.lib
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OF_LIBS_OPENSSL}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
 
         DEFS="-DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
@@ -225,6 +227,8 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OPENSSL_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
+        
         PATH="${PATH};${OPENSSL_PATH}/lib/${TYPE}/${PLATFORM};${ZLIB_LIBRARY}/lib/${TYPE}/${PLATFORM}"
 
         rm -f ${OPENSSL_PATH}/lib/libssl.a || true
@@ -240,6 +244,7 @@ function build() {
         echo "--------------------"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.a *.o *.lib
         cmake  .. \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -318,38 +323,27 @@ function build() {
 function copy() {
 	# prepare headers directory if needed
 	mkdir -p $1/include/curl
-
 	# prepare libs directory if needed
 	mkdir -p $1/lib/$TYPE
-
-	# Standard *nix style copy.
-	# copy headers
-
-    mkdir -p $1/include    
-    mkdir -p $1/lib/$TYPE
+    mkdir -p $1/include
+    . "$SECURE_SCRIPT"
 
 	if [ "$TYPE" == "vs" ] ; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include 
-        cp -v "build_${TYPE}_${ARCH}/Release/lib/libcurl.lib" $1/lib/$TYPE/$PLATFORM/libcurl.lib  
-        . "$SECURE_SCRIPT"
+        cp -v "build_${TYPE}_${ARCH}/Release/lib/libcurl.lib" $1/lib/$TYPE/$PLATFORM/libcurl.lib
         secure $1/lib/$TYPE/$PLATFORM/libcurl.lib curl.pkl
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a" $1/lib/$TYPE/$PLATFORM/curl.a
-        . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/curl.a curl.pkl
 	elif [ "$TYPE" == "android" ] ; then
-        #mkdir -p $1/lib/$TYPE/$ABI
         mkdir -p $1/lib/$TYPE/$ABI
         cp -Rv build/$TYPE/$ABI/include/* $1/include/curl/
-		# copy lib
         cp -Rv build/$TYPE/$ABI/lib/libcurl.a $1/lib/$TYPE/$ABI/libcurl.a
-        . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$ABI/libcurl.a curl.pkl
 	fi
-
 	# copy license file
     if [ -d "$1/license" ]; then
         rm -rf $1/license
@@ -360,13 +354,13 @@ function copy() {
 
 # executed inside the lib src dir
 function clean() {
-	if [ "$TYPE" == "vs" ] ; then
-		rm -f *.lib
+	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+        if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+            rm -r build_${TYPE}_${PLATFORM}
+        fi
+    elif [ "$TYPE" == "vs" ] ; then
         if [ -d "build_${TYPE}_${ARCH}" ]; then
-            # Delete the folder and its contents
-            rm -r build_${TYPE}_${ARCH}     
-        else
-            echo "Folder does not exist."
+            rm -r build_${TYPE}_${ARCH}
         fi
 	else
 		make clean

@@ -158,7 +158,13 @@ function build() {
         if [ "$PLATFORM" == "ARM64EC" ] ; then
             BROTLI="
 			-DFT_REQUIRE_BROTLI=FALSE \
-			-DFT_DISABLE_BROTLI=TRUE"
+			-DFT_DISABLE_BROTLI=TRUE \
+			-DENABLE_SSE=OFF \
+			-DENABLE_SSE2=OFF \
+			-DENABLE_SSE3=OFF \
+			-DENABLE_SSE41=OFF \
+			-DENABLE_SSE42=OFF \
+			-DENABLE_SSSE3=OFF"
       	fi
         EXTRA_DEFS="
             ${BROTLI} \
@@ -368,6 +374,7 @@ function build() {
         LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
         LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a"
+        
 	    export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
 		
 		pkg-config --modversion libpng
