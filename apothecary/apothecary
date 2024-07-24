@@ -193,9 +193,6 @@ if [ -z "${CPP_STANDARD+x}" ]; then
     export CPP_STANDARD=23
 fi
 
-if [ -z "${PTHREADS_ENABLED+x}" ]; then
-    export PTHREADS_ENABLED=0
-fi
 
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
 
@@ -274,6 +271,8 @@ options:
   -f    force download even if build folder already exists
 
   -e    use visual studio enterprise instead of community 
+
+  -y    use pthreads
 
   -p 	dont build dependencies
 
@@ -382,7 +381,7 @@ trapError() {
 #### PARSE COMMANDLINE
 
 # from http://www.mkssoftware.com/docs/man1/getopts.1.asp
-while getopts t:a:b:d:s:j:m:c:x:hgvfpew opt ; do
+while getopts t:a:b:d:s:j:y:m:c:x:hgvfpew opt ; do
 	case "$opt" in
 		t) # set the library build type
 		   export TYPE="$OPTARG" ;;
@@ -408,6 +407,8 @@ while getopts t:a:b:d:s:j:m:c:x:hgvfpew opt ; do
 		   export VS_TYPE=Enterprise ;;
         f) # force download
            export FORCE_DOWNLOAD=1 ;;
+        y) # use pthreads
+           export PTHREADS_ENABLED=1 ;;
 		p) # Dont build dependencies
            export BUILD_DEPENDENCIES=0 ;;
         w) # win11
@@ -780,6 +781,9 @@ if [ "$TYPE" = "emscripten" ]; then
     else
         PLATFORM="WASM"
         PLATFORM_FLAG=""
+    fi
+    if [ -z "${PTHREADS_ENABLED+x}" ]; then
+        export PTHREADS_ENABLED=0
     fi
     if [ "$PTHREADS_ENABLED" == "1" ] ; then
         PTHREADS_FLAG="-DUSE_PTHREADS=1 -pthread"

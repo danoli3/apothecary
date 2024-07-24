@@ -20,9 +20,9 @@ echo "PTHREADS_ENABLED is set to: $PTHREADS_ENABLED"
 
 # Example of using the variable
 if [ "$PTHREADS_ENABLED" -eq 1 ]; then
-    echo "PThreads is enabled"
+    echo "pThreads is enabled"
 else
-    echo "PThreads is not enabled"
+    echo "pThreads is not enabled"
 fi
 
 # trap any script errors and exit
@@ -239,7 +239,11 @@ function build(){
 	if [ "$GITHUB_ACTIONS" = true ] && [ "$TARGET" == "vs" ]; then
 		ARGS="-e $ARGS"
 	fi
-    
+
+    if [ "$PTHREADS_ENABLED" -eq 1 ]; then
+        ARGS="$ARGS -y "
+    fi
+
     if [ "$ARCH" != "" ] ; then
         ARGS="$ARGS -a$ARCH"
     fi
