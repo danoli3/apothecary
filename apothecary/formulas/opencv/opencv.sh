@@ -289,7 +289,7 @@ function build() {
         -DWITH_PVAPI=OFF\
         -DBUILD_OBJC=OFF \
         -DWITH_TIFF=OFF \
-        -DWITH_OPENEXR=ON \
+        -DWITH_OPENEXR=OFF \
         -DWITH_OPENGL=OFF \
         -DWITH_OPENVX=OFF \
         -DWITH_1394=OFF \
