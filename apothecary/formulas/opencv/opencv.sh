@@ -216,7 +216,7 @@ function build() {
     cd ..
 
   elif [ "$TYPE" == "vs" ] ; then
-    echoInfo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN - "${PLATFORM}""
+    echoInfo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
     echoInfo "--------------------"
     GENERATOR_NAME="Visual Studio ${VS_VER_GEN}" 
     mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -333,7 +333,7 @@ function build() {
         -DCV_DISABLE_OPTIMIZATION=OFF"
 
       if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DBUILD_opencv_rgbd=OFF "
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DBUILD_opencv_rgbd=OFF"
       else 
         EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
       fi
@@ -359,7 +359,8 @@ function build() {
         -DPNG_ROOT=${LIBPNG_ROOT} \
         -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
         -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
-        -DBUILD_WITH_STATIC_CRT=OFF 
+        -DBUILD_WITH_STATIC_CRT=OFF
+
      cmake --build . --target install --config Debug
      cmake .. ${DEFS} \
         -A "${PLATFORM}" \
