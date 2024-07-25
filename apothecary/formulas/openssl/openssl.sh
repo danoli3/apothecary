@@ -385,9 +385,9 @@ function copy() {
 		secure $1/lib/$TYPE/$PLATFORM/libssl.lib openssl.pkl
 		secure $1/lib/$TYPE/$PLATFORM/libcrypto.a crypto.pkl
 
-		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/openssl.pc" $1/lib/$TYPE/$PLATFORM/openssl.pc
-		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libcrypto.pc" $1/lib/$TYPE/$PLATFORM/libcrypto.pc
-		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libssl.pc" $1/lib/$TYPE/$PLATFORM/libssl.pc
+		cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/openssl.pc" $1/lib/$TYPE/$PLATFORM/openssl.pc
+		cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/libcrypto.pc" $1/lib/$TYPE/$PLATFORM/libcrypto.pc
+		cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/libssl.pc" $1/lib/$TYPE/$PLATFORM/libssl.pc
 		
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/openssl.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
