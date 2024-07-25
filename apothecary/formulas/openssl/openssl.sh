@@ -346,7 +346,10 @@ function copy() {
 		secure $1/lib/$TYPE/$PLATFORM/libssl.a openssl.pkl
 		secure $1/lib/$TYPE/$PLATFORM/libcrypto.a crypto.pkl
 
-		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/" $1/lib/$TYPE/$PLATFORM/
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/openssl.pc" $1/lib/$TYPE/$PLATFORM/openssl.pc
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libcrypto.pc" $1/lib/$TYPE/$PLATFORM/libcrypto.pc
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libssl.pc" $1/lib/$TYPE/$PLATFORM/libssl.pc
+
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/openssl.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
 		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
@@ -382,7 +385,10 @@ function copy() {
 		secure $1/lib/$TYPE/$PLATFORM/libssl.lib openssl.pkl
 		secure $1/lib/$TYPE/$PLATFORM/libcrypto.a crypto.pkl
 
-		cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/" $1/lib/$TYPE/$PLATFORM/
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/openssl.pc" $1/lib/$TYPE/$PLATFORM/openssl.pc
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libcrypto.pc" $1/lib/$TYPE/$PLATFORM/libcrypto.pc
+		cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libssl.pc" $1/lib/$TYPE/$PLATFORM/libssl.pc
+		
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/openssl.pc"
 		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
 		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
@@ -401,7 +407,7 @@ function copy() {
 		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
 		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 		
-		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${1}/lib/$TYPE/$PLATFORM"
 
 	elif [ "$TYPE" == "android" ] ; then
 		if [ -d $1/lib/$TYPE/$ABI ]; then
