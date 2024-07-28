@@ -65,9 +65,9 @@ function build() {
           -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
           -DCMAKE_INSTALL_LIBDIR="lib" \
           -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-          -DBUILD_TESTING=OFF \
+          -DBROTLI_DISABLE_TESTS=ON \
           -DBROTLI_BUILD_TOOLS=OFF \
-          -DBROTLI_BUNDLED_MODE=ON \
+          -DBROTLI_BUNDLED_MODE=OFF \
           -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
           -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
           -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -101,12 +101,11 @@ function build() {
         -DCMAKE_INSTALL_BINARY_DIR=lib \
         -DCMAKE_INSTALL_FULL_LIBDIR=lib \
         -DCMAKE_INSTALL_LIBDIR="lib" \
-        -DBROTLI_BUNDLED_MODE=OFF \
         -DPLATFORM=$PLATFORM \
         -DENABLE_BITCODE=OFF \
-        -DBUILD_TESTING=OFF \
+        -DBROTLI_DISABLE_TESTS=ON \
         -DBROTLI_BUILD_TOOLS=OFF \
-        -DBROTLI_BUNDLED_MODE=ON \
+        -DBROTLI_BUNDLED_MODE=OFF \
         -DENABLE_ARC=OFF \
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DENABLE_VISIBILITY=OFF
@@ -154,9 +153,9 @@ function copy() {
     cp -v "build_${TYPE}_${PLATFORM}/Release/"*.lib $1/lib/$TYPE/$PLATFORM/
     secure $1/lib/$TYPE/$PLATFORM/brotlidec.lib brotli.pkl
 
-    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlicommon.pc" $1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc
-    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlidec.pc" $1/lib/$TYPE/$PLATFORM/libbrotlidec.pc
-    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlienc.pc" $1/lib/$TYPE/$PLATFORM/libbrotlienc.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libbrotlicommon.pc" $1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libbrotlidec.pc" $1/lib/$TYPE/$PLATFORM/libbrotlidec.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libbrotlienc.pc" $1/lib/$TYPE/$PLATFORM/libbrotlienc.pc
     
     PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc"
     sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
