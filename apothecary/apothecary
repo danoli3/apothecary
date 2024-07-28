@@ -52,7 +52,10 @@ if [ -z "${TYPE+x}" ]; then
     #echo "No TYPE argument provided."
     TYPE=
 fi
-ARCH=64 # library build arch, 32 or 64 bit (not used for some build types)
+
+if [ -z "${ARCH+x}" ]; then
+    ARCH=64
+fi
 
 # full path to this script's dir
 APOTHECARY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -519,12 +522,21 @@ function with_vs_env(){
 
 # used when building for vs - set to 16 if not set explicitly
 if [ "$TYPE" = "vs" ]; then
+    if [ $ARCH == "ARM64" ]; then
+        ARCH="arm64";
+    fi
+    if [ $ARCH == "ARM64EC" ] || [ $ARCH == "arm64EC" ]; then
+        ARCH="arm64ec";
+    fi
+    if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
+        ARCH="64";
+    fi
+    fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
             VS_VER=17
         else
             VS_VER=17
-            #16 for 2019 
         fi 
         echoVerbose "VS_VER was not set - setting to ${VS_VER}"
     fi
@@ -776,7 +788,7 @@ fi
 
 if [ "$TYPE" = "emscripten" ]; then
     CPP_STANDARD=17
-    if [ $ARCH == "64" ] ; then
+    if [ "$ARCH" == "64" ] ; then
         PLATFORM="WASM64"
         PLATFORM_FLAG="-DMEMORY64"
     else
@@ -2457,6 +2469,12 @@ else
 fi
 
 if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+    if [ $ARCH == "ARM64" ]; then
+        ARCH="arm64";
+    fi
+    if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
+        ARCH="64";
+    fi
     if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
         export MIN_SDK_VER=${IOS_MIN_SDK_VER}
     elif [[ "$TYPE" =~ ^(osx)$ ]]; then
