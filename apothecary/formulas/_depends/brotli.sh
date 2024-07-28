@@ -126,11 +126,55 @@ function copy() {
     cp -v -r c/include/* $1/include
     cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/$PLATFORM/
     secure $1/lib/$TYPE/$PLATFORM/libbrotlidec.a brotli.pkl
+
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlicommon.pc" $1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlidec.pc" $1/lib/$TYPE/$PLATFORM/libbrotlidec.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlienc.pc" $1/lib/$TYPE/$PLATFORM/libbrotlienc.pc
+    
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlidec.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlienc.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 	elif [ "$TYPE" == "vs" ] ; then
 		cp -v -r c/include/* $1/include
     mkdir -p $1/lib/$TYPE/$PLATFORM/
     cp -v "build_${TYPE}_${PLATFORM}/Release/"*.lib $1/lib/$TYPE/$PLATFORM/
     secure $1/lib/$TYPE/$PLATFORM/brotlidec.lib brotli.pkl
+
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlicommon.pc" $1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlidec.pc" $1/lib/$TYPE/$PLATFORM/libbrotlidec.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/Release/libbrotlienc.pc" $1/lib/$TYPE/$PLATFORM/libbrotlienc.pc
+    
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlicommon.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlidec.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/$PLATFORM/libbrotlienc.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 	fi
 
   if [ -d "$1/license" ]; then

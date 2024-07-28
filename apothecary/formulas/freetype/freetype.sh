@@ -12,6 +12,7 @@ FORMULA_DEPENDS=( "zlib" "libpng" "brotli" )
 
 # define the version
 VER=2.13.2
+BUILD=1
 FVER=213
 
 GIT_VER=VER-2-13-2
@@ -49,7 +50,7 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
-	DEFS="
+	DEFS="	
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -78,16 +79,19 @@ function build() {
         LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
 
 		BROTLI="
-			-DFT_REQUIRE_BROTLI=TRUE \
-			-DFT_DISABLE_BROTLI=FALSE"
-        # if [ "$PLATFORM" == "arm64" ] ; then
-            # NO_LINK_BROTLI=FALSE
-        # fi
+			-DFT_REQUIRE_BROTLI=ON \
+			-DFT_DISABLE_BROTLI=OFF"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
 		EXTRA_DEFS="
 			${BROTLI} \
-			-DFT_DISABLE_PNG=FALSE \
-            -DFT_REQUIRE_PNG=TRUE \
+			-D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
+            -DFT_CONFIG_OPTION_SUBPIXEL_RENDERING=ON \
 			-DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
@@ -109,17 +113,16 @@ function build() {
 
 			cmake .. ${DEFS} \
 				${EXTRA_DEFS} \
-				-DFT_DISABLE_BZIP2=TRUE \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DCMAKE_INCLUDE_PATH="$LIBBROTLI_INCLUDE_DIR;$LIBPNG_INCLUDE_DIR;$ZLIB_INCLUDE_DIR" \
-				-DCMAKE_LIBRARY_PATH="$LIBBROTLI_DEC_LIB;${LIBPNG_LIBRARY};${ZLIB_LIBRARY}" \
+				-DCMAKE_LIBRARY_PATH="$LIBBROTLI_DEC_LIB:${LIBPNG_LIBRARY}:${ZLIB_LIBRARY}" \
+				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fPIC -std=c${C_STANDARD} -fvisibility=hidden -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR} -I${LIBBROTLI_INCLUDE_DIR}" \
+				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fPIC -fvisibility=hidden -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${ZLIB_INCLUDE_DIR} -I${LIBPNG_INCLUDE_DIR} -I${LIBBROTLI_INCLUDE_DIR}" \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
 				-DCMAKE_BUILD_TYPE=Release \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
 				-DENABLE_BITCODE=OFF \
-				-DENABLE_ARC=OFF \
+				-DENABLE_ARC=ON \
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
@@ -156,22 +159,28 @@ function build() {
 		LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
 		LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
 
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH};${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM;${ZLIB_ROOT}/lib/$TYPE/$PLATFORM;${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
+		
 		BROTLI="
-			-DFT_REQUIRE_BROTLI=TRUE \
-			-DFT_DISABLE_BROTLI=FALSE"
+			-DFT_REQUIRE_BROTLI=ON \
+			-DFT_DISABLE_BROTLI=OFF"
 
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.lib *.o
         if [ "$PLATFORM" == "ARM64EC" ] ; then
             BROTLI="
-			-DFT_REQUIRE_BROTLI=FALSE \
-			-DFT_DISABLE_BROTLI=TRUE"
+			-DFT_REQUIRE_BROTLI=OFF \
+			-DFT_DISABLE_BROTLI=ON"
       	fi
         EXTRA_DEFS="
             ${BROTLI} \
-            -DFT_DISABLE_PNG=FALSE \
-            -D FT_REQUIRE_PNG=TRUE \
+            -D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -182,6 +191,7 @@ function build() {
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=bin \
 		    -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=lib \
+		    -DFT_CONFIG_OPTION_SUBPIXEL_RENDERING=ON \
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=bin"
 		 env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
@@ -264,9 +274,13 @@ function build() {
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DFT_DISABLE_PNG=FALSE \
-            -DFT_REQUIRE_PNG=TRUE \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
@@ -282,8 +296,12 @@ function build() {
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFS} \
-	    	-DFT_DISABLE_PNG=FALSE \
-            -D FT_REQUIRE_PNG=TRUE \
+	    	-D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
 	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
@@ -308,7 +326,6 @@ function build() {
 		cd "./build_$ABI"
 		CFLAGS=""
         export CMAKE_CFLAGS="$CFLAGS"
-        #export CFLAGS=""
         export CPPFLAGS=""
         export CMAKE_LDFLAGS="$LDFLAGS"
        	export LDFLAGS=""
@@ -321,7 +338,6 @@ function build() {
         EXTRA_DEFS="
             -DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} 
             "
-
         cmake -D CMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
         	-D CMAKE_OSX_SYSROOT:PATH=${SYSROOT} \
       		-D CMAKE_C_COMPILER=${CC} \
@@ -336,8 +352,6 @@ function build() {
      	 	-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_INSTALL_PREFIX=Release \
-            -DFT_DISABLE_PNG=FALSE \
-            -D FT_REQUIRE_PNG=TRUE \
         	-D ANDROID_ABI=${ABI} \
         	-D CMAKE_CXX_STANDARD_LIBRARIES=${LIBS} \
         	-D CMAKE_C_STANDARD_LIBRARIES=${LIBS} \
@@ -345,8 +359,12 @@ function build() {
         	-D ANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
         	-D ANDROID_TOOLCHAIN=clang \
         	-D CMAKE_BUILD_TYPE=Release \
-        	-D FT_REQUIRE_HARFBUZZ=FALSE \
-        	-D FT_REQUIRE_BROTLI=FALSE \
+            -D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
         	-DCMAKE_SYSROOT=$SYSROOT \
             -DANDROID_NDK=$NDK_ROOT \
             -DANDROID_ABI=$ABI \
@@ -386,7 +404,6 @@ function build() {
 	    	${DEFS} \
 	    	${BROTLI} \
 	    	-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DFT_REQUIRE_ZLIB=ON \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
@@ -411,12 +428,15 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_INSTALL_PREFIX=Release \
-        	-DFT_DISABLE_BZIP2=TRUE \
+            -D FT_REQUIRE_ZLIB=ON \
+        	-D FT_DISABLE_BZIP2=ON \
+        	-D FT_REQUIRE_HARFBUZZ=OFF \
+        	-D FT_DISABLE_HARFBUZZ=ON \
+        	-D FT_DISABLE_PNG=OFF \
+            -D FT_REQUIRE_PNG=ON \
 			-DCMAKE_INCLUDE_PATH="${LIBPNG_INCLUDE_DIR}:${ZLIB_INCLUDE_DIR}" \
 			-DCMAKE_LIBRARY_PATH="${LIBPNG_LIBRARY}:${ZLIB_LIBRARY}" \
             -DBUILD_SHARED_LIBS=OFF \
-            -DFT_DISABLE_PNG=OFF \
-            -DFT_REQUIRE_PNG=ON \
             -B . \
             -G 'Unix Makefiles' 
 
