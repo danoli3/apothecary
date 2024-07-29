@@ -531,9 +531,9 @@ if [ "$TYPE" = "vs" ]; then
     fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
-            VS_VER=17
+            export VS_VER=17
         else
-            VS_VER=17
+            export VS_VER=17
         fi 
         echoVerbose "VS_VER was not set - setting to ${VS_VER}"
     fi
@@ -541,23 +541,23 @@ if [ "$TYPE" = "vs" ]; then
     if [ -z ${PLATFORM+x} ]; then
         if [ $ARCH == 32 ]; then
             export PLATFORM=x86
-            CROSS_TOOL="amd64_x86"
-        elif [ $ARCH == 64 ]; then
+            export CROSS_TOOL="amd64_x86"
+        elif [ $ARCH == 64 ] || [ $ARCH == "x86_64" ]; then
             export PLATFORM=x64
-            CROSS_TOOL="amd64"
+            export CROSS_TOOL="amd64"
         elif [ $ARCH == "arm64" ]; then
             export PLATFORM=x64
-            CROSS_TOOL="all"
+            export CROSS_TOOL="all"
         elif [ $ARCH == "arm64ec" ]; then
             export PLATFORM=x64
-            CROSS_TOOL="all"
+            export CROSS_TOOL="all"
         elif [ $ARCH == "arm" ]; then
             export PLATFORM=x64
-            CROSS_TOOL="all"
+            export CROSS_TOOL="all"
         else
         	echo "ARCH not set $ARCH"
         	export PLATFORM=x64
-            CROSS_TOOL="all"
+            export CROSS_TOOL="all"
         fi        
     fi
     
