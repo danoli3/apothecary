@@ -521,13 +521,13 @@ function with_vs_env(){
 # used when building for vs - set to 16 if not set explicitly
 if [ "$TYPE" = "vs" ]; then
     if [ $ARCH == "ARM64" ]; then
-        ARCH="arm64"
+        export ARCH="arm64"
     fi
     if [ $ARCH == "ARM64EC" ] || [ $ARCH == "arm64EC" ]; then
-        ARCH="arm64ec"
+        export ARCH="arm64ec"
     fi
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
-        ARCH="64"
+        export ARCH=64
     fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
@@ -539,24 +539,24 @@ if [ "$TYPE" = "vs" ]; then
     fi
     VS_64_BIT_ENV='VC\vcvarsall'
     if [ -z ${PLATFORM+x} ]; then
-        if [ $ARCH == "32" ]; then
-            PLATFORM=x86
+        if [ $ARCH == 32 ]; then
+            export PLATFORM=x86
             CROSS_TOOL="amd64_x86"
-        elif [ $ARCH == "64" ]; then
-            PLATFORM=x64
+        elif [ $ARCH == 64 ]; then
+            export PLATFORM=x64
             CROSS_TOOL="amd64"
         elif [ $ARCH == "arm64" ]; then
-            PLATFORM=x64
+            export PLATFORM=x64
             CROSS_TOOL="all"
         elif [ $ARCH == "arm64ec" ]; then
-            PLATFORM=x64
+            export PLATFORM=x64
             CROSS_TOOL="all"
         elif [ $ARCH == "arm" ]; then
-            PLATFORM=x64
+            export PLATFORM=x64
             CROSS_TOOL="all"
         else
         	echo "ARCH not set $ARCH"
-        	PLATFORM=x64
+        	export PLATFORM=x64
             CROSS_TOOL="all"
         fi        
     fi
@@ -652,29 +652,29 @@ if [ "$TYPE" = "vs" ]; then
         fi
     fi
     if [ $ARCH == 32 ] ; then
-        BUILD_PLATFORM="x86"
+        export BUILD_PLATFORM="x86"
     elif [ $ARCH == 64 ] ; then
-        BUILD_PLATFORM="x64"
+        export BUILD_PLATFORM="x64"
     elif [ $ARCH == "arm64" ] ; then
-        BUILD_PLATFORM="arm64"
+        export BUILD_PLATFORM="arm64"
     elif [ $ARCH == "arm64ec" ] ; then
-        BUILD_PLATFORM="arm64"
+        export BUILD_PLATFORM="arm64"
     elif [ $ARCH == "arm" ]; then
-        BUILD_PLATFORM="arm"
+        export BUILD_PLATFORM="arm"
     else
         echoError "Apothecary -a not a valid passed architecture:[${ARCH}]"
         exit;
     fi 
     if [ $ARCH == 32 ] ; then
-        PLATFORM="Win32"
+        export PLATFORM="Win32"
     elif [ $ARCH == 64 ] ; then
-        PLATFORM="x64"
+        export PLATFORM="x64"
     elif [ $ARCH == "arm64" ] ; then
-        PLATFORM="ARM64"
+        export PLATFORM="ARM64"
     elif [ $ARCH == "arm64ec" ] ; then
-        PLATFORM="ARM64EC"
+        export PLATFORM="ARM64EC"
     elif [ $ARCH == "arm" ]; then
-        PLATFORM="ARM"
+        export PLATFORM="ARM"
     fi 
 	if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ] || [ $ARCH == "ARM" ]; then
 		VS_VARS_PATH=$(cygpath -wa "$VS_BASE_PATH/VC/Auxiliary/Build/vcvarsall.bat")
@@ -750,17 +750,17 @@ if [ "$TYPE" = "msys2" ]; then
     export FLAG_RELEASE="-O3"
     
     if [ "${MINGW_PACKAGE_PREFIX+x}" ]; then
-        ARCH=$MINGW_PACKAGE_PREFIX
+        export ARCH=$MINGW_PACKAGE_PREFIX
     else
         if [ -z "$ARCH" ]; then
             if [ "$MSYSTEM" == "MINGW64" ] || [ "$MSYSTEM" == "mingw64" ]; then
-                    ARCH=mingw64
+                export ARCH=mingw64
             elif [ "$MSYSTEM" == "CLANGARM64" ] || [ "$MSYSTEM" == "clangarm64" ]; then
-                ARCH=clangarm64
+                export ARCH=clangarm64
             elif [ "$MSYSTEM" == "UCRT64" ]; then
-                ARCH=ucrt64
+                export ARCH=ucrt64
             elif [ "$MSYSTEM" == "CLANG64" ]; then
-                ARCH=clang64
+                export ARCH=clang64
             fi
         else
             case "$ARCH" in
@@ -768,28 +768,28 @@ if [ "$TYPE" = "msys2" ]; then
                     ;;
                 *)
                     if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
-                    ARCH=mingw64
+                        export ARCH=mingw64
                     elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
-                        ARCH=clangarm64
+                        export ARCH=clangarm64
                     elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
-                        ARCH=ucrt64
+                        export ARCH=ucrt64
                     elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
-                        ARCH=clang64
+                        export ARCH=clang64
                     fi
                     ;;
             esac
         fi
     fi
-    PLATFORM=$ARCH
+    export PLATFORM=$ARCH
 fi
 
 if [ "$TYPE" = "emscripten" ]; then
-    CPP_STANDARD=17
-    if [ "$ARCH" == "64" ] ; then
-        PLATFORM="WASM64"
+    export CPP_STANDARD=17
+    if [ $ARCH == 64 ] ; then
+        export PLATFORM="WASM64"
         PLATFORM_FLAG="-DMEMORY64"
     else
-        PLATFORM="WASM"
+        export PLATFORM="WASM"
         PLATFORM_FLAG=""
     fi
     if [ -z "${PTHREADS_ENABLED+x}" ]; then
@@ -808,35 +808,35 @@ fi
 if [ "$TYPE" = "ios" ]; then
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "armv7" ] ; then
-        PLATFORM="OS"
-    elif [ $ARCH == "x86_64" ] ; then
-        PLATFORM="SIMULATOR64"
+        export PLATFORM="OS"
+    elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
+        export PLATFORM="SIMULATOR64"
     elif [ $ARCH == "arm64" ] ; then
-        PLATFORM="OS64"
+        export PLATFORM="OS64"
     elif [ $ARCH == "SIM_arm64" ]; then
-        PLATFORM="SIMULATORARM64"
+        export PLATFORM="SIMULATORARM64"
     fi 
 fi
 
 if [ "$TYPE" = "tvos" ]; then
     export FLAG_RELEASE="-Os"
-    if [ $ARCH == "x86_64" ] || [ $ARCH == "64" ]; then
-        PLATFORM="SIMULATOR_TVOS"
+    if [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
+        export PLATFORM="SIMULATOR_TVOS"
     elif [ $ARCH == "arm64" ] ; then
-        PLATFORM="TVOS"
+        export PLATFORM="TVOS"
     elif [ $ARCH == "SIM_arm64" ]; then
-        PLATFORM="SIMULATORARM64_TVOS"
+        export PLATFORM="SIMULATORARM64_TVOS"
     fi 
 fi
 
 if [ "$TYPE" = "watchos" ]; then
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "arm64_32" ] || [ $ARCH == "arm64" ]; then
-        PLATFORM="WATCHOS"
+        export PLATFORM="WATCHOS"
     elif [ $ARCH == "x86_64" ] ; then
-        PLATFORM="SIMULATOR_WATCHOS"
+        export PLATFORM="SIMULATOR_WATCHOS"
     elif [ $ARCH == "SIM_arm64" ]; then
-        PLATFORM="SIMULATORARM64_WATCHOS"
+        export PLATFORM="SIMULATORARM64_WATCHOS"
     else
         echoError "watchOS incorrect ARCH:[$ARCH]"
     fi 
@@ -845,29 +845,29 @@ fi
 if [ "$TYPE" = "xros" ]; then
     export FLAG_RELEASE="-O3"
     if [ $ARCH == "arm64" ] ; then
-        PLATFORM="VISIONOS"
-    elif [ $ARCH == "x86_64" ] || [ $ARCH == "64" ]; then
-        PLATFORM="SIMULATOR64_VISIONOS"
+        export PLATFORM="VISIONOS"
+    elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
+        export PLATFORM="SIMULATOR64_VISIONOS"
     elif [ $ARCH == "SIM_arm64" ]; then
-        PLATFORM="SIMULATOR_VISIONOS"
+        export PLATFORM="SIMULATOR_VISIONOS"
     fi 
 fi
 
 if [ "$TYPE" = "catos" ]; then
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "arm64" ]; then
-            PLATFORM="MAC_CATALYST_ARM64"
-    elif [ $ARCH == "x86_64" ] || [ $ARCH == "64" ]; then
-        PLATFORM="MAC_CATALYST"
+        export PLATFORM="MAC_CATALYST_ARM64"
+    elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
+        export PLATFORM="MAC_CATALYST"
     fi 
 fi
 
 if [ "$TYPE" = "osx" ]; then
     export FLAG_RELEASE="-O3"
-    if [ $ARCH == "x86_64" ] || [ $ARCH == "64" ] ; then
-        PLATFORM="MAC"
+    if [ $ARCH == "x86_64" ] || [ $ARCH == 64 ] ; then
+        export PLATFORM="MAC"
     elif [ $ARCH == "arm64" ] ; then
-        PLATFORM="MAC_ARM64"
+        export PLATFORM="MAC_ARM64"
     else
         PLATFORM="MAC"
         echoWarning " Missing ARCH. See help: 'apothecary -a'."
@@ -877,17 +877,17 @@ fi
 if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
     export FLAG_RELEASE="-O3"
     if [ $TYPE == "linux" ] ; then
-        ABI="x86"
+        export ABI="x86"
     elif [ $TYPE == "linux64" ] ; then
-        ABI="x86_64"
+        export ABI="x86_64"
     elif [ $TYPE == "linuxaarch64" ]; then
-        ABI="aarch64"
+        export ABI="aarch64"
     elif [ $TYPE == "linuxarmv7l" ]; then
-        ABI="armv7l"
+        export ABI="armv7l"
     elif [ $TYPE == "msys2" ]; then
-        ABI="x86_64"
+        export ABI="x86_64"
     fi 
-    PLATFORM=ABI
+    export PLATFORM=${ABI}
 fi
 
 # Check if PLATFORM is not set or is empty
@@ -931,16 +931,16 @@ fi
 get_directory_path() {
     local type="$1"
     local base_dir="$2"
-    local platform="$3"
-    local abi="$4"
+    local pPlatform="$3"
+    local pAbi="$4"
     local final_path=""
 
     case "$type" in
         vs)
-            final_path="${base_dir}/lib/${type}/${platform}/"
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         osx|ios|tvos|xros|catos|watchos|macos)
-            final_path="${base_dir}/lib/${type}/${platform}/"
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         emscripten)
             final_path="${base_dir}/lib/${type}/"
@@ -949,7 +949,7 @@ get_directory_path() {
             final_path="${base_dir}/lib/${type}/"
             ;;
         android)
-            final_path="${base_dir}/lib/${type}/${abi}/"
+            final_path="${base_dir}/lib/${type}/${pAbi}/"
             ;;
         *)
             echo "Unsupported type: $type" >&2
@@ -1027,7 +1027,7 @@ function installAndroidToolchain() {
 		fi
 	fi
 
-    PLATFORM=$ARCH
+    export PLATFORM=$ARCH
 
 	cd $WD
 
@@ -2460,7 +2460,7 @@ if [[ "$TYPE" == "android" ]] ; then
 		ABI=""
 		echoError "Targeting android, ARCH not set! Please use -a arm64"
 	fi
-    PLATFORM=ABI
+    PLATFORM=$ABI
 else 
 	ABI=""
 fi
