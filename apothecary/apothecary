@@ -523,13 +523,13 @@ function with_vs_env(){
 # used when building for vs - set to 16 if not set explicitly
 if [ "$TYPE" = "vs" ]; then
     if [ $ARCH == "ARM64" ]; then
-        ARCH="arm64";
+        ARCH="arm64"
     fi
     if [ $ARCH == "ARM64EC" ] || [ $ARCH == "arm64EC" ]; then
-        ARCH="arm64ec";
+        ARCH="arm64ec"
     fi
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
-        ARCH="64";
+        ARCH="64"
     fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
@@ -2469,10 +2469,10 @@ fi
 
 if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
     if [ $ARCH == "ARM64" ]; then
-        ARCH="arm64";
+        ARCH="arm64"
     fi
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
-        ARCH="64";
+        ARCH="64"
     fi
     if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
         export MIN_SDK_VER=${IOS_MIN_SDK_VER}
