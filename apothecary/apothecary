@@ -527,7 +527,7 @@ if [ "$TYPE" = "vs" ]; then
         export ARCH="arm64ec"
     fi
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
-        export ARCH=64
+        export ARCH=x86_64
     fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
@@ -2470,7 +2470,7 @@ if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         ARCH="arm64"
     fi
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
-        ARCH="64"
+        ARCH="x86_64"
     fi
     if [[ "$TYPE" =~ ^(ios|catos)$ ]]; then
         export MIN_SDK_VER=${IOS_MIN_SDK_VER}
