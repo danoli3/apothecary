@@ -9,6 +9,13 @@ else
     export FORCE=""
 fi
 
+if [ -z "${ARCH+x}" ]; then
+    echo "Build: ARCH is set to: $ARCH"
+else
+    echo "Build: ARCH not set"
+    export ARCH=""
+fi
+
 if [ -z "${PTHREADS_ENABLED+x}" ]; then
     export PTHREADS_ENABLED=0
 fi
@@ -227,6 +234,10 @@ if [ "$TARGET" == "linux" ]; then
         export CC="gcc-6 -fPIE"
         export CXX="g++-6 -std=c++14 -fPIE"
         export COMPILER="g++6 -std=c++14 -fPIE"
+    elif [ "$OPT" == "gcc14" ]; then
+        export CC="gcc-14 -fPIE"
+        export CXX="g++-14 -std=c++23 -fPIE"
+        export COMPILER="g++14 -std=c++23 -fPIE"
     fi
 fi
 

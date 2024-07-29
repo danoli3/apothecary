@@ -531,7 +531,6 @@ if [ "$TYPE" = "vs" ]; then
     if [ $ARCH == "x86_64" ] || [ $ARCH == "X86_64" ]; then
         ARCH="64";
     fi
-    fi
     if [ -z ${VS_VER+x} ]; then 
         if [ $ARCH == "arm64" ] || [ $ARCH == "arm64ec" ]; then
             VS_VER=17
