@@ -53,9 +53,7 @@ if [ -z "${TYPE+x}" ]; then
     TYPE=
 fi
 
-if [ -z "${ARCH+x}" ]; then
-    ARCH=64
-fi
+ARCH=64
 
 # full path to this script's dir
 APOTHECARY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

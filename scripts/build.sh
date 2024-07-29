@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+# set -e
 # capture failing exits in commands obscured behind a pipe
 set -o pipefail
 
@@ -11,9 +11,6 @@ fi
 
 if [ -z "${ARCH+x}" ]; then
     echo "Build: ARCH is set to: $ARCH"
-else
-    echo "Build: ARCH not set"
-    export ARCH=""
 fi
 
 if [ -z "${PTHREADS_ENABLED+x}" ]; then
