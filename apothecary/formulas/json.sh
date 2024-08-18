@@ -54,10 +54,10 @@ function build() {
 function copy() {
 	# headers
 	mkdir -p $1/include
-	cp -v single_include/nlohmann/json.hpp $1/include
+	cp -v single_include/nlohmann/json.hpp $1/nlohmann/include
 
 	. "$SECURE_SCRIPT"
-	secure $1/include/json.hpp json.pkl
+	secure $1/include/nlohmann/json.hpp json.pkl
 
 	# copy license file
 	if [ -d "$1/license" ]; then
