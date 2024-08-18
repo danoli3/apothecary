@@ -53,8 +53,8 @@ function build() {
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
 	# headers
-	mkdir -p $1/include
-	cp -v single_include/nlohmann/json.hpp $1/nlohmann/include
+	mkdir -p $1/include/nlohmann
+	cp -v single_include/nlohmann/json.hpp $1/include/nlohmann/json.hpp
 
 	. "$SECURE_SCRIPT"
 	secure $1/include/nlohmann/json.hpp json.pkl
@@ -76,7 +76,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include/nlohmann" ${PLATFORM} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1
