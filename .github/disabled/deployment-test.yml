@@ -1,0 +1,135 @@
+name: build-xcframeworks
+on:
+  push:
+    branches:
+      - master
+      - bleeding
+    paths-ignore:
+      - '**/README.md'
+  pull_request:
+    branches:
+      - master
+      - bleeding
+    paths-ignore:
+      - '**/README.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wait-for-workflows:
+    runs-on: [ubuntu-latest]
+    if: github.repository == 'openframeworks/apothecary' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+    steps:
+    - name: Wait build-ios
+      uses: NathanFirmo/wait-for-other-action@v1.0.4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        workflow: 'build-ios.yml'
+    - name: Wait build-macos
+      uses: NathanFirmo/wait-for-other-action@v1.0.4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        workflow: 'build-macos.yml'
+    # - name: Wait build-xros
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     workflow: 'build-xros.yml'
+    # - name: Wait build-catos
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     workflow: 'build-catos.yml'
+    - name: Wait build-tvos
+      uses: NathanFirmo/wait-for-other-action@v1.0.4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        workflow: 'build-tvos.yml'
+    # - name: Wait build-watchos
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     workflow: 'build-watchos.yml'
+  build-xcframework:
+    runs-on: macos-14
+    if: github.repository == 'openframeworks/apothecary' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+    needs: wait-for-workflows
+    env:
+      DEVELOPER_DIR: "/Applications/Xcode_15.4.app/Contents/Developer"
+      TARGET: "macos"
+    steps:
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=bleeding" >> $GITHUB_ENV
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          else
+            echo "RELEASE=bleeding" >> $GITHUB_ENV
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          fi
+      - uses: actions/checkout@v4
+      jobs:
+        
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: osx
+          - os: windows-latest
+            platform: vs
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download OpenFrameworks Source
+      run: |
+        git clone --depth=1 https://github.com/openframeworks/openFrameworks.git openFrameworks
+        cd openFrameworks
+
+    - name: Copy Apothecary Libraries
+      run: |
+        # Adjust paths based on where Apothecary output is located
+        if [[ -d "/out" ]]; then
+          cp -r /out/* openFrameworks/libs/
+        elif [[ -d "/xout" ]]; then
+          cp -r /xout/* openFrameworks/libs/
+        else
+          echo "No Apothecary output found in /out or /xout"
+        fi
+
+    - name: Run ProjectGenerator
+      run: |
+        cd openFrameworks
+        ./projectGenerator --recursive ../example*
+
+    - name: Build Examples
+      run: |
+        cd openFrameworks
+        if [[ "${{ matrix.platform }}" == "linux" || "${{ matrix.platform }}" == "osx" ]]; then
+          for example in ../example*; do
+            make -C $example
+          done
+        else
+          powershell -command "ForEach ($example in Get-ChildItem -Path ..\\example*) { msbuild $example\\$example.sln }"
+        fi
+
+    - name: Upload Artifacts
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs
+        path: |
+          **/build/**/*.log
