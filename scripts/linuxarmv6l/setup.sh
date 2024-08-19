@@ -27,9 +27,9 @@ installPackages(){
     # else
     #     echo "$UBUNTU_VERSION doesn\'t need ppa"
     # fi
-    # sudo apt-get update -q
-    # sudo apt-get -y install multistrap unzip coreutils gperf build-essential
-    # sudo apt-get install -y autoconf automake pkgconf rsync
+     sudo apt-get update -q
+     sudo apt-get -y install multistrap unzip coreutils gperf build-essential
+     sudo apt-get install -y autoconf automake pkgconf rsync cmake
     # #workaround for https://bugs.launchpad.net/ubuntu/+source/multistrap/+bug/1313787
     # if [ $IS_UBUNTU -eq 0 ] && [ "$UBUNTU_VERSION"=="14.04" ]; then
     #     sudo sed -i s/\$forceyes//g /usr/sbin/multistrap
@@ -46,9 +46,11 @@ createRaspbianImg(){
 
 downloadToolchain(){
     echo " downloadToolchain "
-    downloader http://ci.openframeworks.cc/rpi_toolchain_gcc6.tar.bz2 $SILENT_ARGS
-    tar xjf rpi_toolchain_gcc6.tar.bz2
-    rm rpi_toolchain_gcc6.tar.bz2
+    #downloader http://ci.openframeworks.cc/rpi_toolchain_gcc6.tar.bz2 $SILENT_ARGS
+    #tar xjf rpi_toolchain_gcc6.tar.bz2
+    sudo apt-get gcc-arm-linux-gnueabihf
+    #rm rpi_toolchain_gcc6.tar.bz2
+
 }
 
 downloadFirmware(){
@@ -82,7 +84,7 @@ if [[ $(uname -m) != armv* ]]; then
 	ROOT=$( cd "$(dirname "$0")" ; pwd -P )
 	echo $ROOT
 	cd $ROOT
-	#installPackages
+	installPackages
 	#createRaspbianImg
 	downloadToolchain
 	downloadFirmware
@@ -92,11 +94,7 @@ if [[ $(uname -m) != armv* ]]; then
 	cd $ROOT/raspbian/usr/lib/arm-linux-gnueabihf
 	relativeSoftLinks
 	cd $ROOT/raspbian/usr/lib/gcc/arm-linux-gnueabihf/4.9
-
 	cd $ROOT/rpi_toolchain/arm-linux-gnueabihf/lib
-	#sed -i "s|/home/arturo/Code/openFrameworks/apothecary/scripts/linuxarm/rpi_toolchain/arm-linux-gnueabihf/lib|$ROOT/rpi_toolchain/arm-linux-gnueabihf/lib|g" libc.so
-	# for f in *.so; do
-	#     sed -i "s|/home/arturo/Code/openFrameworks/apothecary/scripts/linuxarm/rpi_toolchain/arm-linux-gnueabihf/lib|$ROOT/rpi_toolchain/arm-linux-gnueabihf/lib|g" $f
-	# done
+
 	
 fi
