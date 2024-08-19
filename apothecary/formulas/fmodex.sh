@@ -7,7 +7,7 @@
 # FmodEX is downloaded as a binary from the fmod.org website and copied
 # into the openFrameworks library directory.
 
-FORMULA_TYPES=( "msys2" "osx" "vs" "linux" "linux64" )
+FORMULA_TYPES=( "msys2" "osx" "vs" )
 FORMULA_DEPENDS=( )
 
 # define the version
