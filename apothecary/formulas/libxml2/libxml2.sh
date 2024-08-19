@@ -278,6 +278,9 @@ function build() {
             #./autogen.sh
             find . -name "test*.c" | xargs -r rm
             find . -name "run*.c" | xargs -r rm
+            ZLIB_ROOT="$LIBS_ROOT/zlib/"
+            ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+            ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
             mkdir -p build_$TYPE
             cd build_$TYPE
             rm -f CMakeCache.txt *.a *.o
@@ -290,7 +293,12 @@ function build() {
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
                 -DCMAKE_INSTALL_INCLUDEDIR=include \
+                -DZLIB_ROOT=${ZLIB_ROOT} \
+                -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+                -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
                 -DCMAKE_SYSTEM_NAME=$TYPE \
+                -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
+                -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}" \
                 -DCMAKE_SYSTEM_PROCESSOR=$ABI
                 
             cmake --build . --config Release
@@ -301,6 +309,9 @@ function build() {
         sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
         rm -f *.o
         mkdir -p build_$TYPE
         cd build_$TYPE
@@ -316,6 +327,9 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_SYSTEM_NAME=$TYPE \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DLIBXML2_WITH_LZMA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \

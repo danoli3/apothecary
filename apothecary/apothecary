@@ -917,6 +917,8 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
         export ABI="aarch64"
     elif [ $TYPE == "linuxarmv7l" ]; then
         export ABI="armv7l"
+    elif [ $TYPE == "linuxarmv6l" ]; then
+        export ABI="armv6l"
     elif [ $TYPE == "msys2" ]; then
         export ABI="x86_64"
     fi 
