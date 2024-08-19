@@ -2553,8 +2553,8 @@ fi
 CROSSCOMPILING=0
 if [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
     CROSSCOMPILING=1
-    if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
-        if [ "$TYPE" == "linux" ] || if [ "$TYPE" == "linux64" ]; then
+    if [[ -z ${TOOLCHAIN_PREFIX+z} ]]; then
+        if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ]; then
             export TOOLCHAIN_PREFIX="linux64-gcc"
         elif [ "$TYPE" == "linuxaarch64" ]; then
             export TOOLCHAIN_PREFIX="aarch64-linux-gnu"
