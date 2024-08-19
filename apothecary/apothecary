@@ -967,7 +967,6 @@ get_directory_path() {
     local type="$1"
     local base_dir="$2"
     local pPlatform="$3"
-    local pAbi="$4"
     local final_path=""
 
     case "$type" in
@@ -978,13 +977,13 @@ get_directory_path() {
             final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         emscripten)
-            final_path="${base_dir}/lib/${type}/"
+            final_path="${base_dir}/lib/${type}/${pPlatform}"
             ;;
-        linux64|linux|msys2)
+        linux64|linux|msys2|linuxaarch64|linuxarmv7l|linuxarmv6l)
             final_path="${base_dir}/lib/${type}/"
             ;;
         android)
-            final_path="${base_dir}/lib/${type}/${pAbi}/"
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         *)
             echo "Unsupported type: $type" >&2
