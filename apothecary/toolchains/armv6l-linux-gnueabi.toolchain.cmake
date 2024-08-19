@@ -18,8 +18,8 @@ if(NOT CMAKE_FIND_ROOT_PATH_MODE_PACKAGE)
 endif()
 
 
-set(CMAKE_C_FLAGS "-march=armv7-a -mfloat-abi=softfp -mfpu=neon")
-set(CMAKE_CXX_FLAGS "-march=armv7-a -mfloat-abi=softfp -mfpu=neon")
+set(CMAKE_C_FLAGS "-march=armv6 -mfloat-abi=softfp -mfpu=vfp")
+set(CMAKE_CXX_FLAGS "-march=armv6 -mfloat-abi=softfp -mfpu=vfp")
 
 add_definitions(-D__STDC_CONSTANT_MACROS)
 

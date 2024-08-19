@@ -2551,23 +2551,30 @@ if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 fi
 
 CROSSCOMPILING=0
-if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv7l" ]; then
-    if [[ $(uname -m) != armv* ]]; then
-        CROSSCOMPILING=1
-        if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
-            export TOOLCHAIN_PREFIX=arm-linux-gnueabihf
+if [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+    CROSSCOMPILING=1
+    if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
+        if [ "$TYPE" == "linux" ] || if [ "$TYPE" == "linux64" ]; then
+            export TOOLCHAIN_PREFIX="linux64-gcc"
+        elif [ "$TYPE" == "linuxaarch64" ]; then
+            export TOOLCHAIN_PREFIX="aarch64-linux-gnu"
+        elif [ "$TYPE" == "linuxarmv6l" ]; then
+            export TOOLCHAIN_PREFIX="armv6l-linux-gnueabi"
+        elif [ "$TYPE" == "linuxarmv7l" ]; then
+            export TOOLCHAIN_PREFIX="armv7l-linux-gnueabihf"
         fi
-
-        if [[  -z ${SYSROOT+z} ]]; then
-            echoError "Trying to cross compile but SYSROOT environment variable is not set"
-            echoError "Should be set to root of target OS image"
-            exit 1
-        fi
-        if [[  -z ${TOOLCHAIN_ROOT+z} ]];  then
-            echoWarning "Trying to cross compile but TOOLCHAIN_ROOT not set"
-            echoWarning "Trying to continue in case PATH is set to correct toolchain"
-            echoWarning "If compiling fails try setting TOOLCHAIN_ROOT to root of cross compiler toolchain"
-        fi
+    fi
+    TOOLCHAIN_PATH="$APOTHECARY_DIR/toolchains/"
+    TOOLCHAIN_FILE="${TOOLCHAIN_PATH}${TOOLCHAIN_PREFIX}.toolchain.cmake"
+    if [[  -z ${SYSROOT+z} ]]; then
+        echoError "Trying to cross compile but SYSROOT environment variable is not set"
+        echoError "Should be set to root of target OS image"
+        exit 1
+    fi
+    if [[  -z ${TOOLCHAIN_ROOT+z} ]];  then
+        echoWarning "Trying to cross compile but TOOLCHAIN_ROOT not set"
+        echoWarning "Trying to continue in case PATH is set to correct toolchain"
+        echoWarning "If compiling fails try setting TOOLCHAIN_ROOT to root of cross compiler toolchain"
     fi
 fi
 
