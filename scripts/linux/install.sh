@@ -43,7 +43,7 @@ echoDots(){
     done
 }
 
-echo "GCC Version: $OPT"
+echo "GCC Version: [$OPT]"
 
 if [ "$OPT" == "gcc4" ]; then
     sudo add-apt-repository -y ppa:dns/gnu
@@ -96,6 +96,17 @@ elif [ "$OPT" == "gcc7" ]; then
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 100
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 100
     sudo add-apt-repository -r "deb http://cz.archive.ubuntu.com/ubuntu bionic main universe"
+    g++ -v
+elif [ "$OPT" == "gcc8" ]; then
+    #https://gcc.gnu.org/gcc-8/changes.html
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt update
+    sudo apt install gcc-8 g++-8 gcc-13 g++-13 -y
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+    sudo update-alternatives --config gcc
+    gcc --version
     g++ -v
 elif [ "$OPT" == "gcc11" ]; then
     # https://gcc.gnu.org/gcc-11/changes.html

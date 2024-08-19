@@ -26,6 +26,7 @@ jobs:
         matrix:
           cfg:
           - {target: linux64, opt: gcc6}
+          - {target: linux64, opt: gcc8}
           - {target: linux64, opt: gcc11}
     env:
       TARGET: ${{matrix.cfg.target}}
@@ -42,13 +43,10 @@ jobs:
       run: |
         if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
           echo "RELEASE=nightly" >> $GITHUB_ENV
-          echo "PRERELEASE=false" >> $GITHUB_ENV
         elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
           echo "RELEASE=bleeding" >> $GITHUB_ENV
-          echo "PRERELEASE=true" >> $GITHUB_ENV
         else
           echo "RELEASE=bleeding" >> $GITHUB_ENV
-          echo "PRERELEASE=true" >> $GITHUB_ENV
         fi
     - name: BuildLinux64
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -68,6 +66,5 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ env.RELEASE }}
         release: ${{ env.RELEASE }}
-        prerelease: ${{ env.PRERELEASE }}
         files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.cfg.opt }}.tar.bz2
       
