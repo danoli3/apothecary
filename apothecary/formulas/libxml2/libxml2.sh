@@ -274,7 +274,8 @@ function build() {
         $EMSDK/upstream/emscripten/emmake make
         $EMSDK/upstream/emscripten/emmake make install
         cd ..
-    elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+
+    elif [ "$TYPE" == "msys2" ]; then
             #./autogen.sh
             find . -name "test*.c" | xargs -r rm
             find . -name "run*.c" | xargs -r rm
@@ -296,14 +297,14 @@ function build() {
                 -DZLIB_ROOT=${ZLIB_ROOT} \
                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
                 -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+                -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
                 -DCMAKE_SYSTEM_NAME=$TYPE \
-                -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
-                -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}" \
+                -DCMAKE_CXX_FLAGS="${FLAG_RELEASE}" \
+                -DCMAKE_C_FLAGS="${FLAG_RELEASE}" \
                 -DCMAKE_SYSTEM_PROCESSOR=$ABI
-                
             cmake --build . --config Release
             cd ..
-    elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
+    elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
         source ../../${TYPE}_configure.sh
         export CFLAGS="$CFLAGS -DTRIO_FPCLASSIFY=fpclassify"
         sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c
@@ -330,9 +331,11 @@ function build() {
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DCMAKE_CXX_FLAGS="${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="${FLAG_RELEASE}" \
             -DLIBXML2_WITH_LZMA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF
         cmake --build . --config Release
         cd ..
@@ -380,7 +383,7 @@ function copy() {
         secure $1/lib/$TYPE/$PLATFORM/libxml2.a
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
-    elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+    elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64|msys2)$ ]]; then
         cp -v "build_${TYPE}/libxml2.a" $1/lib/$TYPE/libxml2.a
         secure $1/lib/$TYPE/libxml2.a
         cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h

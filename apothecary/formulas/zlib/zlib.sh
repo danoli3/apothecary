@@ -164,7 +164,7 @@ function build() {
         # $EMSDK/upstream/emscripten/emmake make install
 	 	cmake --build . --config Release --target install 
 	    cd ..
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+    elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
 	    
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
@@ -179,8 +179,8 @@ function build() {
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake .. ${DEFS} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
@@ -195,6 +195,8 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include 
 	    cmake --build . --target install --config Release
 	    cd ..
+	elif [ "$TYPE" == "msys2" ]; then
+		echo "TO fix" 
 	fi
 }
 
@@ -250,7 +252,7 @@ function copy() {
 		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+    elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64|msys2)$ ]]; then
 		mkdir -p $1/include    
 	    mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
