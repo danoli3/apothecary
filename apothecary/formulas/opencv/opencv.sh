@@ -117,8 +117,8 @@ function build() {
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
       -DBUILD_opencv_apps=OFF \
-      -DBUILD_opencv_videoio=OFF \
-      -DBUILD_opencv_videostab=OFF \
+      -DBUILD_opencv_videoio=ON \
+      -DBUILD_opencv_videostab=ON \
       -DBUILD_opencv_highgui=ON \
       -DBUILD_opencv_imgcodecs=ON \
       -DBUILD_opencv_stitching=ON \
@@ -177,8 +177,8 @@ function build() {
       -DWITH_CUFFT=OFF \
       -DWITH_GIGEAPI=OFF \
       -DWITH_GPHOTO2=OFF \
-      -DWITH_GSTREAMER=OFF \
-      -DWITH_GSTREAMER_0_10=OFF \
+      -DWITH_GSTREAMER=ON \
+      -DVIDEOIO_PLUGIN_LIST=gstreamer \
       -DWITH_JASPER=OFF \
       -DWITH_IMAGEIO=OFF \
       -DWITH_IPP=OFF \
@@ -271,8 +271,10 @@ function build() {
         -DHAVE_opencv_python=OFF \
         -DHAVE_opencv_python2=OFF \
         -DBUILD_opencv_apps=OFF \
-        -DBUILD_opencv_videoio=OFF \
-        -DBUILD_opencv_videostab=OFF \
+        -DBUILD_opencv_videoio=ON \
+        -DBUILD_opencv_videostab=ON \
+        -DWITH_GSTREAMER=ON \
+        -DVIDEOIO_PLUGIN_LIST=gstreamer \
         -DBUILD_opencv_highgui=OFF \
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
@@ -304,8 +306,6 @@ function build() {
         -DWITH_CUFFT=OFF \
         -DWITH_GIGEAPI=OFF \
         -DWITH_GPHOTO2=OFF \
-        -DWITH_GSTREAMER=OFF \
-        -DWITH_GSTREAMER_0_10=OFF \
         -DWITH_JASPER=OFF \
         -DWITH_IMAGEIO=OFF \
         -DWITH_IPP=OFF \
@@ -458,9 +458,9 @@ function build() {
       -DBUILD_ANDROID_PROJECTS=OFF \
       -DBUILD_ANDROID_EXAMPLES=OFF \
       -DBUILD_opencv_objdetect=ON \
-      -DBUILD_opencv_video=OFF \
+      -DBUILD_opencv_video=ON \
       -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
-      -DBUILD_opencv_videoio=OFF \
+      -DBUILD_opencv_videoio=ON \
       -DBUILD_opencv_features2d=ON \
       -DBUILD_opencv_flann=OFF \
       -DBUILD_opencv_highgui=ON \
@@ -485,7 +485,7 @@ function build() {
       -DBUILD_opencv_apps=OFF \
       -DBUILD_JPEG=OFF \
       -DBUILD_PNG=OFF \
-      -DHAVE_opencv_androidcamera=OFF \
+      -DHAVE_opencv_androidcamera=ON \
       -DWITH_CAROTENE=OFF \
       -DWITH_CPUFEATURES=OFF \
       -DWITH_TIFF=OFF \
@@ -524,7 +524,7 @@ function build() {
         # if not, try docker path
         if [ -f /emsdk/emsdk_env.sh ]; then
             source /emsdk/emsdk_env.sh
-	    else
+      else
             echo "no EMSDK found, please install from https://emscripten.org"
             echo "and follow instructions to activate it in your shell"
             exit 1
@@ -577,8 +577,8 @@ function build() {
       -DBUILD_opencv_java=OFF \
       -DBUILD_opencv_python=OFF \
       -DBUILD_opencv_apps=OFF \
-      -DBUILD_opencv_videoio=OFF \
-      -DBUILD_opencv_videostab=OFF \
+      -DBUILD_opencv_videoio=ON \
+      -DBUILD_opencv_videostab=ON \
       -DBUILD_opencv_highgui=OFF \
       -DBUILD_opencv_imgcodecs=ON \
       -DBUILD_opencv_python2=OFF \
@@ -592,8 +592,6 @@ function build() {
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
       -DBUILD_opencv_objdetect=ON \
-      -DBUILD_opencv_video=OFF \
-      -DBUILD_opencv_videoio=OFF \
       -DBUILD_opencv_features2d=ON \
       -DBUILD_opencv_flann=ON \
       -DBUILD_opencv_photo=OFF \
@@ -602,7 +600,6 @@ function build() {
       -DBUILD_opencv_stitching=OFF \
       -DBUILD_opencv_superres=OFF \
       -DBUILD_opencv_ts=OFF \
-      -DBUILD_opencv_videostab=OFF \
       -DBUILD_opencv_calib3d=ON \
       -DWITH_MATLAB=OFF \
       -DWITH_CUDA=OFF \
