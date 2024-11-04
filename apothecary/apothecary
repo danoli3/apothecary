@@ -100,7 +100,7 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     TVOS_LATEST_SDK="xcrun -sdk tvos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
     IOS_SDK_VER=18.1
     IOS_MIN_SDK_VER=15.0
-    TVOS_MIN_SDK_VER=13.0
+    TVOS_MIN_SDK_VER=17.0
     XROS_MIN_SDK_VER=1.1
     WATCHOS_MIN_SDK_VER=6.0
     if ! which realpath >&/dev/null; then

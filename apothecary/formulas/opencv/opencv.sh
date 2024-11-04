@@ -70,29 +70,97 @@ function build() {
     mkdir -p "build_${TYPE}_${PLATFORM}"
     cd "build_${TYPE}_${PLATFORM}"
     rm -f CMakeCache.txt || true
+    CORE_DEFS="
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_STANDARD=${C_STANDARD} \
+    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+    -DCMAKE_CXX_EXTENSIONS=OFF \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_INSTALL_PREFIX=Release \
+    -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+    -DCMAKE_INSTALL_INCLUDEDIR=include \
+    -DZLIB_ROOT=${ZLIB_ROOT} \
+    -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+    -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+    -DPNG_ROOT=${LIBPNG_ROOT} \
+    -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+    -DPNG_LIBRARY=${LIBPNG_LIBRARY}"
+    
     DEFS="
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_EXTENSIONS=OFF
-            -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-            -DPNG_ROOT=${LIBPNG_ROOT} \
-            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} "
-      if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DWITH_CAROTENE=OFF"
-      else 
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
-      fi
+    -DBUILD_DOCS=OFF \
+    -DENABLE_BUILD_HARDENING=ON \
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_FAT_JAVA_LIB=OFF \
+    -DBUILD_JASPER=OFF \
+    -DBUILD_PACKAGE=OFF \
+    -DBUILD_opencv_java=OFF \
+    -DBUILD_opencv_python=OFF \
+    -DBUILD_opencv_python2=OFF \
+    -DBUILD_opencv_python3=OFF \
+    -DBUILD_opencv_apps=OFF \
+    -DBUILD_opencv_videoio=ON \
+    -DBUILD_opencv_videostab=ON \
+    -DBUILD_opencv_highgui=ON \
+    -DBUILD_opencv_imgcodecs=ON \
+    -DBUILD_opencv_stitching=ON \
+    -DBUILD_opencv_calib3d=ON \
+    -DBUILD_opencv_objdetect=ON \
+    -DOPENCV_ENABLE_NONFREE=OFF \
+    -DWITH_PNG=ON \
+    -DBUILD_PNG=OFF \
+    -DWITH_1394=OFF \
+    -DWITH_IMGCODEC_HDR=ON \
+    -DWITH_CARBON=OFF \
+    -DWITH_JPEG=OFF \
+    -DWITH_TIFF=ON \
+    -DWITH_FFMPEG=ON \
+    -DWITH_QUIRC=ON \
+    -DWITH_GIGEAPI=OFF \
+    -DBUILD_OBJC=ON \
+    -DWITH_CUDA=OFF \
+    -DWITH_METAL=ON
+    -DWITH_CUFFT=OFF \
+    -DWITH_JASPER=OFF \
+    -DWITH_LIBV4L=OFF \
+    -DWITH_IMAGEIO=OFF \
+    -DWITH_IPP=OFF \
+    -DWITH_OPENNI=OFF \
+    -DWITH_OPENNI2=OFF \
+    -DWITH_QT=OFF \
+    -DWITH_QUICKTIME=OFF \
+    -DWITH_V4L=OFF \
+    -DWITH_PVAPI=OFF \
+    -DWITH_OPENEXR=OFF \
+    -DWITH_EIGEN=ON \
+    -DBUILD_TESTS=OFF \
+    -DWITH_LAPACK=OFF \
+    -DWITH_WEBP=OFF \
+    -DWITH_GPHOTO2=OFF \
+    -DWITH_VTK=OFF \
+    -DWITH_CAP_IOS=ON \
+    -DWITH_WEBP=ON \
+    -DWITH_GTK=OFF \
+    -DWITH_GTK_2_X=OFF \
+    -DWITH_MATLAB=OFF \
+    -DWITH_OPENVX=ON \
+    -DWITH_ADE=OFF \
+    -DWITH_TBB=OFF \
+    -DWITH_OPENGL=OFF \
+    -DWITH_GSTREAMER=OFF \
+    -DVIDEOIO_PLUGIN_LIST=gstreamer \
+    -DWITH_IPP=OFF \
+    -DWITH_IPP_A=OFF \
+    -DBUILD_ZLIB=OFF \
+    -DWITH_ITT=OFF "
 
-    cmake .. ${DEFS} \
+    if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DWITH_CAROTENE=OFF"
+    else 
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
+    fi
+
+    cmake .. ${CORE_DEFS} ${DEFS} ${EXTRA_DEFS} \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
       -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
       -DPLATFORM=$PLATFORM \
@@ -104,114 +172,12 @@ function build() {
       -DENABLE_FAST_MATH=OFF \
       -DCMAKE_CXX_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
       -DCMAKE_C_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
-      -DCMAKE_BUILD_TYPE="Release" \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DBUILD_DOCS=OFF \
-      -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
-      -DBUILD_EXAMPLES=OFF \
-      -DBUILD_FAT_JAVA_LIB=OFF \
-      -DBUILD_JASPER=OFF \
-      -DBUILD_PACKAGE=OFF \
-      -DBUILD_opencv_java=OFF \
-      -DBUILD_opencv_python=OFF \
-      -DBUILD_opencv_python2=OFF \
-      -DBUILD_opencv_python3=OFF \
-      -DBUILD_opencv_apps=OFF \
-      -DBUILD_opencv_videoio=ON \
-      -DBUILD_opencv_videostab=ON \
-      -DBUILD_opencv_highgui=ON \
-      -DBUILD_opencv_imgcodecs=ON \
-      -DBUILD_opencv_stitching=ON \
-      -DBUILD_opencv_calib3d=ON \
-      -DBUILD_opencv_objdetect=ON \
-      -DOPENCV_ENABLE_NONFREE=OFF \
-      -DWITH_PNG=ON \
-      -DBUILD_PNG=OFF \
-      -DWITH_1394=OFF \
-      -DWITH_CARBON=OFF \
-      -DWITH_JPEG=OFF \
-      -DWITH_TIFF=OFF \
-      -DWITH_FFMPEG=OFF \
-      -DWITH_OPENCL=OFF \
-      -DWITH_OPENCLAMDBLAS=OFF \
-      -DWITH_OPENCLAMDFFT=OFF \
-      -DWITH_GIGEAPI=OFF \
-      -DWITH_CUDA=OFF \
-      -DWITH_CUFFT=OFF \
-      -DWITH_JASPER=OFF \
-      -DWITH_LIBV4L=OFF \
-      -DWITH_IMAGEIO=OFF \
-      -DWITH_IPP=OFF \
-      -DWITH_OPENNI=OFF \
-      -DWITH_QT=OFF \
-      -DWITH_QUICKTIME=OFF \
-      -DWITH_V4L=OFF \
-      -DWITH_PVAPI=OFF \
-      -DWITH_OPENEXR=ON \
-      -DWITH_EIGEN=OFF \
-      -DBUILD_TESTS=OFF \
-      -DWITH_LAPACK=OFF \
-      -DWITH_WEBP=OFF \
-      -DWITH_GPHOTO2=OFF \
-      -DWITH_VTK=OFF \
-      -DWITH_GTK=OFF \
-      -DWITH_GTK_2_X=OFF \
-      -DWITH_MATLAB=OFF \
-      -DWITH_GSTREAMER=OFF \
-      -DWITH_GSTREAMER_0_10=OFF \
-      -DWITH_GIGEAPI=OFF \
-      -DWITH_OPENVX=OFF \
-      -DWITH_1394=OFF \
-      -DWITH_ADE=OFF \
-      -DWITH_TBB=OFF \
-      -DWITH_TIFF=OFF \
-      -DWITH_OPENEXR=ON \
-      -DWITH_OPENGL=OFF \
-      -DWITH_OPENVX=OFF \
-      -DWITH_1394=OFF \
-      -DWITH_ADE=OFF \
-      -DWITH_JPEG=OFF \
-      -DWITH_FFMPEG=OFF \
-      -DWITH_GIGEAPI=OFF \
-      -DWITH_CUDA=OFF \
-      -DWITH_CUFFT=OFF \
-      -DWITH_GIGEAPI=OFF \
-      -DWITH_GPHOTO2=OFF \
-      -DWITH_GSTREAMER=ON \
-      -DVIDEOIO_PLUGIN_LIST=gstreamer \
-      -DWITH_JASPER=OFF \
-      -DWITH_IMAGEIO=OFF \
-      -DWITH_IPP=OFF \
-      -DWITH_IPP_A=OFF \
-      -DWITH_OPENNI=OFF \
-      -DWITH_OPENNI2=OFF \
-      -DWITH_QT=OFF \
-      -DWITH_QUICKTIME=OFF \
-      -DWITH_V4L=OFF \
-      -DWITH_LIBV4L=OFF \
-      -DWITH_MATLAB=OFF \
-      -DWITH_OPENCL=OFF \
-      -DWITH_OPENCLCLAMDBLAS=OFF \
-      -DWITH_OPENCLCLAMDFFT=OFF \
-      -DWITH_OPENCL_SVM=OFF \
-      -DWITH_LAPACK=OFF \
-      -DBUILD_ZLIB=OFF \
-      -DWITH_WEBP=OFF \
-      -DWITH_VTK=OFF \
-      -DWITH_PVAPI=OFF \
-      -DWITH_EIGEN=OFF \
-      -DWITH_ITT=OFF \
-      -DWITH_GTK=OFF \
-      -DWITH_GTK_2_X=OFF \
-      -DWITH_OPENCLAMDBLAS=OFF \
-      -DWITH_OPENCLAMDFFT=OFF \
-      -DBUILD_TESTS=OFF \
-      ${EXTRA_DEFS} \
-      -DBUILD_PERF_TESTS=OFF \
       -DENABLE_STRICT_TRY_COMPILE=ON \
-      -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} 
-      cmake --build . --config Release
-      cmake --install . --config Release
+      -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
+
+    cmake --build . --config Release
+    cmake --install . --config Release
+
     cd ..
 
   elif [ "$TYPE" == "vs" ] ; then
@@ -233,7 +199,6 @@ function build() {
     FLAGS_RELEASE=$(echo $FLAGS_RELEASE | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
     FLAGS_DEBUG=$(echo $FLAGS_DEBUG | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 
-
     DEFS="
         -DCMAKE_C_STANDARD=${C_STANDARD} \
         -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -247,16 +212,13 @@ function build() {
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
         -DWITH_OPENCLAMDBLAS=OFF \
         -DBUILD_TESTS=OFF \
-        -DWITH_CUDA=OFF \
         -DWITH_FFMPEG=OFF \
         -DWITH_WIN32UI=OFF \
         -DBUILD_PACKAGE=OFF \
         -DWITH_JASPER=OFF \
-        -DWITH_OPENEXR=OFF \
         -DWITH_GIGEAPI=OFF \
         -DWITH_JPEG=OFF \
         -DBUILD_WITH_DEBUG_INFO=OFF \
-        -DWITH_CUFFT=OFF \
         -DBUILD_TIFF=OFF \
         -DBUILD_JPEG=OFF \
         -DWITH_OPENCLAMDFFT=OFF \
@@ -273,12 +235,13 @@ function build() {
         -DBUILD_opencv_apps=OFF \
         -DBUILD_opencv_videoio=ON \
         -DBUILD_opencv_videostab=ON \
-        -DWITH_GSTREAMER=ON \
+        -DWITH_GSTREAMER=OFF \
         -DVIDEOIO_PLUGIN_LIST=gstreamer \
         -DBUILD_opencv_highgui=OFF \
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
         -DBUILD_opencv_calib3d=ON \
+        -DBUILD_opencv_videoio=ON \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_DOCS=OFF \
@@ -295,15 +258,13 @@ function build() {
         -DBUILD_OBJC=OFF \
         -DWITH_TIFF=OFF \
         -DWITH_OPENEXR=OFF \
-        -DWITH_OPENGL=OFF \
+        -DWITH_OPENGL=ON \
         -DWITH_OPENVX=OFF \
         -DWITH_1394=OFF \
         -DWITH_ADE=OFF \
         -DWITH_JPEG=OFF \
         -DWITH_FFMPEG=OFF \
         -DWITH_GIGEAPI=OFF \
-        -DWITH_CUDA=OFF \
-        -DWITH_CUFFT=OFF \
         -DWITH_GIGEAPI=OFF \
         -DWITH_GPHOTO2=OFF \
         -DWITH_JASPER=OFF \
@@ -324,14 +285,24 @@ function build() {
         -DWITH_LAPACK=OFF \
         -DBUILD_ZLIB=OFF \
         -DWITH_ZLIB=ON \
+        -DWITH_DIRECTX=ON \
+        -DWITH_MSMF=ON \
+        -DWITH_DSHOW=ON \
+        -DWITH_MSMF_DXVA=ON \
         -DWITH_WEBP=OFF \
         -DWITH_VTK=OFF \
+        -DWITH_OPENMP=OFF \
         -DWITH_PVAPI=OFF \
         -DWITH_EIGEN=OFF \
         -DWITH_GTK=OFF \
+        -DWITH_CUDNN=OFF \
+        -DWITH_CUDA=OFF \
+        -DWITH_CUFFT=OFF \
+        -DWITH_CUBLAS=ON \
+        -DWITH_NVCUVID=OFF \
+        -DWITH_NVCUVENC=OFF \
+        -DENABLE_SOLUTION_FOLDERS=OFF \
         -DWITH_GTK_2_X=OFF \
-        -DWITH_OPENCLAMDBLAS=OFF \
-        -DWITH_OPENCLAMDFFT=OFF \
         -DBUILD_TESTS=OFF \
         -DCV_DISABLE_OPTIMIZATION=OFF"
 
@@ -374,7 +345,7 @@ function build() {
         -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
         -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
         -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
-        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+        -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
         -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
         -D BUILD_SHARED_LIBS=ON \
         ${EXTRA_DEFS} \
@@ -405,15 +376,11 @@ function build() {
       local BUILD_FOLDER="build_android_x86"
       local BUILD_SCRIPT="cmake_android_x86.sh"
     fi
-
-    # NDK_ROOT=${NDK_OLD_ROOT}
-
     source ../../android_configure.sh $ABI cmake
 
     rm -rf $BUILD_FOLDER
     mkdir $BUILD_FOLDER
     cd $BUILD_FOLDER
-
 
     if [ "$ABI" = "armeabi-v7a" ]; then
       export ARM_MODE="-DANDROID_FORCE_ARM_BUILD=TRUE"
@@ -437,9 +404,9 @@ function build() {
     fi
     rm -f CMakeCache.txt || true
     cmake  \
-      -DANDROID_TOOLCHAIN=clang++ \
-      -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-      -DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake  \
+      -DANDROID_TOOLCHAIN=clang \
+      -DANDROID_ABI="${ABI}" \
+      -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
       -DCMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
       -DCMAKE_CXX_FLAGS="" \
       -DCMAKE_C_FLAGS="" \
@@ -457,6 +424,7 @@ function build() {
       -DANDROID_ABI=${ABI} \
       -DBUILD_ANDROID_PROJECTS=OFF \
       -DBUILD_ANDROID_EXAMPLES=OFF \
+      -DBUILD_KOTLIN_EXTENSIONS=ON \
       -DBUILD_opencv_objdetect=ON \
       -DBUILD_opencv_video=ON \
       -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
@@ -488,7 +456,7 @@ function build() {
       -DHAVE_opencv_androidcamera=ON \
       -DWITH_CAROTENE=OFF \
       -DWITH_CPUFEATURES=OFF \
-      -DWITH_TIFF=OFF \
+      -DWITH_TIFF=ON \
       -DWITH_OPENEXR=OFF \
       -DWITH_1394=OFF \
       -DWITH_JPEG=OFF \
@@ -507,6 +475,8 @@ function build() {
       -DWITH_PVAPI=OFF \
       -DWITH_EIGEN=OFF \
       -DWITH_ITT=OFF \
+      -DENABLE_NEON=ON \
+      -DENABLE_VFPV3=ON \
       ${EXTRA_DEFS} \
       -DBUILD_TESTS=OFF \
       -DANDROID_NDK=${NDK_ROOT} \
@@ -577,8 +547,8 @@ function build() {
       -DBUILD_opencv_java=OFF \
       -DBUILD_opencv_python=OFF \
       -DBUILD_opencv_apps=OFF \
-      -DBUILD_opencv_videoio=ON \
-      -DBUILD_opencv_videostab=ON \
+      -DBUILD_opencv_videoio=OFF \
+      -DBUILD_opencv_videostab=OFF \
       -DBUILD_opencv_highgui=OFF \
       -DBUILD_opencv_imgcodecs=ON \
       -DBUILD_opencv_python2=OFF \
@@ -612,8 +582,8 @@ function build() {
       -DENABLE_AVX=OFF \
       -DWITH_TIFF=OFF \
       -DWITH_OPENEXR=OFF \
-      -DWITH_OPENGL=OFF \
-      -DWITH_OPENVX=OFF \
+      -DWITH_OPENGL=ON \
+      -DWITH_OPENVX=ON \
       -DWITH_1394=OFF \
       -DWITH_ADE=OFF \
       -DWITH_JPEG=OFF \
@@ -624,7 +594,7 @@ function build() {
       -DWITH_CUFFT=OFF \
       -DWITH_GIGEAPI=OFF \
       -DWITH_GPHOTO2=OFF \
-      -DWITH_GSTREAMER=OFF \
+      -DWITH_GSTREAMER=ON \
       -DWITH_GSTREAMER_0_10=OFF \
       -DWITH_JASPER=OFF \
       -DWITH_IMAGEIO=OFF \
@@ -647,7 +617,7 @@ function build() {
       -DWITH_ITT=OFF \
       -DBUILD_ZLIB=ON \
       -DBUILD_PNG=OFF \
-      -DWITH_WEBP=OFF \
+      -DWITH_WEBP=ON \
       -DWITH_VTK=OFF \
       -DWITH_PVAPI=OFF \
       -DWITH_EIGEN=OFF \
