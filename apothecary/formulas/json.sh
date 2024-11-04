@@ -20,21 +20,21 @@ GIT_TAG=v$VER
 # download the source code and unpack it into LIB_NAME
 function download() {
 	. "$DOWNLOADER_SCRIPT"
-    mkdir json
-    cd json    
+		mkdir json
+		cd json    
 
-   if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then 
-    	downloader "${GIT_URL}/releases/download/v$VER/include.zip"
-	    # Extract the zip file
-	    unzip include.zip
-	    # Clean up the zip file after extraction
-	    rm include.zip
-    else 
-	    downloader "${GIT_URL}/releases/download/v$VER/json.tar.xz"
-	    # Extract the tar.xz file
-	    tar -xvf json.tar.xz --strip-components=1
-	    # Clean up the tar.xz file after extraction
-	    rm json.tar.xz
+	 if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then 
+			downloader "${GIT_URL}/releases/download/v$VER/include.zip"
+			# Extract the zip file
+			unzip include.zip
+			# Clean up the zip file after extraction
+			rm include.zip
+		else 
+			downloader "${GIT_URL}/releases/download/v$VER/json.tar.xz"
+			# Extract the tar.xz file
+			tar -xvf json.tar.xz --strip-components=1
+			# Clean up the tar.xz file after extraction
+			rm json.tar.xz
 	fi
 }
 
@@ -46,8 +46,75 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
-    echo
-	# nothing to do
+		echo
+		DEFINES="
+				-DJSON_BuildTests=OFF \
+				-DJSON_CI=OFF \
+				-DJSON_Diagnostics=OFF \
+				-DJSON_GlobalUDLs=ON \
+				-DJSON_ImplicitConversions=ON \
+				-DJSON_DisableEnumSerialization=OFF \
+				-DJSON_LegacyDiscardedValueComparison=OFF \
+				-DJSON_Install=ON \
+				-DJSON_MultipleHeaders=OFF \
+				-DJSON_SystemInclude=OFF"
+	
+		# Platform-specific configurations
+		local GENERATOR_NAME=""
+		local EXTRA_DEFS=""
+
+		if [ "$TYPE" == "vs" ]; then
+				GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
+				FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
+				EXTRA_DEFS="-A ${PLATFORM} ${CMAKE_WIN_SDK}"
+
+		elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+				GENERATOR_NAME="Xcode"
+				FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}"
+		elif [ "$TYPE" == "android" ]; then
+				GENERATOR_NAME="Unix Makefiles"
+				FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}"
+				EXTRA_DEFS="
+						-DCMAKE_TOOLCHAIN_FILE=\"${NDK_ROOT}/build/cmake/android.toolchain.cmake\" \
+						-DANDROID_ABI=$ABI \
+						-DANDROID_PLATFORM=${ANDROID_PLATFORM} \
+						-DANDROID_NDK=$NDK_ROOT"
+		elif [ "$TYPE" == "emscripten" ]; then
+			  FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}"
+				GENERATOR_NAME="Unix Makefiles"
+				EXTRA_DEFS="-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		else
+				FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}"
+				GENERATOR_NAME="Unix Makefiles"
+		fi
+
+		mkdir -p "BUILD_${TYPE}_${PLATFORM}"
+		cd "BUILD_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.a *.o
+
+		echo " ${DEFINES} ${EXTRA_DEFS} \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_C_STANDARD=${C_STANDARD} \
+				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+				-DCMAKE_CXX_EXTENSIONS=OFF \
+				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+				-DCMAKE_INSTALL_PREFIX=Release 	"
+
+		cmake .. ${DEFINES} ${EXTRA_DEFS} \
+				-DCMAKE_BUILD_TYPE=Release \
+				-DCMAKE_CXX_FLAGS="${FLAGS}" \
+				-DCMAKE_C_FLAGS="${FLAGS}" \
+				-DCMAKE_C_STANDARD=${C_STANDARD} \
+				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+				-DCMAKE_CXX_EXTENSIONS=OFF \
+				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+				-DCMAKE_INSTALL_PREFIX=Release \
+				-G "${GENERATOR_NAME}" || { echo "CMake configuration failed"; exit 1; }
+
+		cmake --build . --config Release --target install || { echo "Build failed"; exit 1; }
+		cd ..
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
@@ -55,14 +122,15 @@ function copy() {
 	# headers
 	mkdir -p $1/include/nlohmann
 	cp -v single_include/nlohmann/json.hpp $1/include/nlohmann/json.hpp
+	cp -v single_include/nlohmann/json_fwd.hpp $1/include/nlohmann/json_fwd.hpp
 
 	. "$SECURE_SCRIPT"
 	secure $1/include/nlohmann/json.hpp json.pkl
 
 	# copy license file
 	if [ -d "$1/license" ]; then
-        rm -rf $1/license
-    fi
+		rm -rf $1/license
+	fi
 	mkdir -p $1/license
 	cp -v LICENSE.MIT $1/license/
 }
@@ -75,12 +143,12 @@ function clean() {
 }
 
 function load() {
-    . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include/nlohmann" ${PLATFORM} )
-    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
-    if [ "$PREBUILT" -eq 1 ]; then
-        echo 1
-    else
-        echo 0
-    fi
+	. "$LOAD_SCRIPT"
+	LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include/nlohmann" ${PLATFORM} )
+	PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+	if [ "$PREBUILT" -eq 1 ]; then
+			echo 1
+	else
+			echo 0
+	fi
 }
