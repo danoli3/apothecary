@@ -155,9 +155,9 @@ function build() {
     -DWITH_ITT=OFF "
 
     if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
-      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DWITH_CAROTENE=OFF"
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DWITH_CAROTENE=OFF"
     else 
-      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON "
     fi
 
     cmake .. ${CORE_DEFS} ${DEFS} ${EXTRA_DEFS} \
@@ -170,6 +170,7 @@ function build() {
       -DENABLE_VISIBILITY=OFF \
       -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DENABLE_FAST_MATH=OFF \
+      -DCMAKE_EXE_LINKER_FLAGS="-framework Foundation -framework AVFoundation -framework CoreFoundation -framework CoreVideo" \
       -DCMAKE_CXX_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
       -DCMAKE_C_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
       -DENABLE_STRICT_TRY_COMPILE=ON \
@@ -212,7 +213,7 @@ function build() {
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
         -DWITH_OPENCLAMDBLAS=OFF \
         -DBUILD_TESTS=OFF \
-        -DWITH_FFMPEG=OFF \
+        -DWITH_FFMPEG=ON \
         -DWITH_WIN32UI=OFF \
         -DBUILD_PACKAGE=OFF \
         -DWITH_JASPER=OFF \
@@ -229,8 +230,8 @@ function build() {
         -DBUILD_opencv_python3=OFF \
         -DBUILD_NEW_PYTHON_SUPPORT=OFF \
         -DBUILD_opencv_objdetect=ON \
-        -DHAVE_opencv_python3=OFF \
-        -DHAVE_opencv_python=OFF \
+        -DHAVE_opencv_python3=ON \
+        -DHAVE_opencv_python=ON \
         -DHAVE_opencv_python2=OFF \
         -DBUILD_opencv_apps=OFF \
         -DBUILD_opencv_videoio=ON \
@@ -241,7 +242,6 @@ function build() {
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
         -DBUILD_opencv_calib3d=ON \
-        -DBUILD_opencv_videoio=ON \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_DOCS=OFF \
@@ -288,7 +288,7 @@ function build() {
         -DWITH_DIRECTX=ON \
         -DWITH_MSMF=ON \
         -DWITH_DSHOW=ON \
-        -DWITH_MSMF_DXVA=ON \
+        -DWITH_MSMF_DXVA=OFF \
         -DWITH_WEBP=OFF \
         -DWITH_VTK=OFF \
         -DWITH_OPENMP=OFF \
@@ -298,7 +298,7 @@ function build() {
         -DWITH_CUDNN=OFF \
         -DWITH_CUDA=OFF \
         -DWITH_CUFFT=OFF \
-        -DWITH_CUBLAS=ON \
+        -DWITH_CUBLAS=OFF \
         -DWITH_NVCUVID=OFF \
         -DWITH_NVCUVENC=OFF \
         -DENABLE_SOLUTION_FOLDERS=OFF \
@@ -307,9 +307,9 @@ function build() {
         -DCV_DISABLE_OPTIMIZATION=OFF"
 
       if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DBUILD_opencv_rgbd=OFF"
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DBUILD_opencv_rgbd=OFF"
       else 
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON"
       fi
     
     cmake .. ${DEFS} \
