@@ -6,16 +6,17 @@
 #
 # uses CMake
 
+FORMULA_TYPES=( "osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "vs" )
+FORMULA_DEPENDS=( "zlib" )
+
 # define the version
 VER=5.3.1
+BUILD_ID=1
+DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/assimp/assimp
 GIT_TAG=
-
-FORMULA_TYPES=( "osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "vs" )
-
-FORMULA_DEPENDS=( "zlib" )
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -315,6 +316,8 @@ function build() {
             -DASSIMP_BUILD_TESTS=0
             -DASSIMP_BUILD_SAMPLES=0
             -DASSIMP_BUILD_3MF_IMPORTER=0"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
         mkdir -p build_${TYPE}_${PLATFORM}
         cd build_${TYPE}_${PLATFORM}
         find ./ -name "*.o" -type f -delete

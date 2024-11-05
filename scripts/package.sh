@@ -13,6 +13,18 @@ fi
 # trap any script errors and exit
 # trap "trapError" ERR
 
+if [ -z "$1" ]; then
+   echo " TARGET: $1"
+else
+    TARGET=$1
+fi
+
+if [ -z "$2" ]; then
+   echo " Bundle: $2"
+else
+    BUNDLE=$2
+fi
+
 trapError() {
 	echo
 	echo " ^ Received error building $formula_name ^"
@@ -79,15 +91,15 @@ if [ -z "${OUTPUT_FOLDER+x}" ]; then
     export OUTPUT_FOLDER="$ROOT/out"
 fi
 
-if [[ "$TARGET" =~ ^(osx|ios|tvos|xros|catos|watchos|macos)$ ]]; then
-
+if [[ "$TARGET" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
     export OUTPUT_FOLDER="$ROOT/xout"
 fi
 
+if [[ "$TARGET" =~ ^(macos)$ ]]; then
+    export OUTPUT_FOLDER="$ROOT/xout_${BUNDLE}"
+fi
 
 #OUTPUT_FOLDER=$ROOT/out
-
-
 # VERBOSE=true
 
 if [ -z $TARGET ] ; then
@@ -180,6 +192,8 @@ if [ -z ${PARALLEL+x} ]; then
     fi
 fi
 
+
+
 echo "Parallel builds: $PARALLEL"
 
 if  type "ccache" > /dev/null; then
@@ -254,9 +268,17 @@ if  type "ccache" > /dev/null; then
     echo $(ccache -s)
 fi
 
-if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] || [[ ! -z ${APPVEYOR+x} && -z ${APPVEYOR_PULL_REQUEST_NUMBER+x} ]] || [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding") && -z "${GITHUB_HEAD_REF}" ]]; then
-    # exit here on PR's
-    echo "On Master or Bleeding Branch and not a PR - zipping build";
+if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] ||
+    [[ ! -z ${APPVEYOR+x} && -z ${APPVEYOR_PULL_REQUEST_NUMBER+x} ]] ||
+    [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding") && -z "${GITHUB_HEAD_REF}" ]] ||
+    [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+        
+        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "On a tag - proceeding with tag-specific build steps"
+            RELEASE="${GITHUB_REF##*/}"
+        else
+            echo "On Master or Bleeding branch - proceeding with branch-specific build steps"
+        fi
 else
     echo "This is a PR or not master/bleeding branch, exiting build before compressing";
     if [ -z "${RELEASE+x}" ]; then
@@ -293,12 +315,20 @@ else
 fi
 
 
+
+
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET_$OPT$ARCH$BUNDLE.tar.bz2
 if [ "$TARGET" == "msys2" ]; then
     TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${MSYSTEM,,}.zip
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
     echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
 elif [ "$TARGET" == "vs" ]; then
+    if [ ! -z "${VS_VER+x}" ]; then
+        if [ "${VS_VER}" == "16" ]; then 
+            echo "VS2019 Version"
+            TARGET="${TARGET}_2019"
+        fi
+    fi
     TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}_${BUNDLE}.zip
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
     echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
@@ -323,7 +353,7 @@ elif [ "$TARGET" == "android" ]; then
     echo "tar cjf $TARBALL $LIBS"
     tar cjvf $TARBALL $LIBS
 elif [ "$TARGET" == "macos" ]; then
-    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}.tar.bz2
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${BUNDLE}.tar.bz2
     echo "tar cjf $TARBALL $LIBS"
     tar cjvf $TARBALL $LIBS
 elif [[ "$TARGET" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then

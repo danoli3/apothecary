@@ -26,13 +26,16 @@ jobs:
         bundle: [1, 2, 3]
     env:
       BUNDLE: ${{ matrix.bundle }}
-      DEVELOPER_DIR: "/Applications/Xcode_15.4.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode_16.app/Contents/Developer"
     steps:
       - name: Determine Release
         id: vars
         shell: bash
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "RELEASE=nightly" >> $GITHUB_ENV
             echo "PRERELEASE=false" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
@@ -54,7 +57,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            // https://api.github.com/repos/openframeworks/apothecary/actions/artifacts?per_page=100
+            // https://api.github.com/repos/openframeworks/apothecary/actions/artifacts?per_page=250
             // Ensure the output directory exists
             const outputDir = path.join(process.env.GITHUB_WORKSPACE, 'out');
             if (!fs.existsSync(outputDir)){
@@ -63,14 +66,21 @@ jobs:
 
             // List all artifacts for the repository
             const artifacts = await github.rest.actions.listArtifactsForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: 'openframeworks',
+              repo: 'apothecary',
               sort: 'created_at',
               direction: 'desc',
-              per_page: 20
+              per_page: 50
             });
 
-            const artifactNamesToDownload = ['libs-tvos-tvos-1', 'libs-tvos-tvos-2', 'libs-tvos-tvos-3'];
+            const target = process.env.TARGET;
+            const bundle = process.env.MATRIX_BUNDLE;
+            const release = process.env.RELEASE;
+            const artifactName1 = `libs-${release}-${target}-1`;
+            const artifactName2 = `libs-${release}-${target}-2`;
+            const artifactName3 = `libs-${release}-${target}-3`;
+
+            const artifactNamesToDownload = [artifactName1, artifactName2, artifactName3];
             let count = 0;
             const max=3;
             
@@ -141,26 +151,26 @@ jobs:
         run: ls -lah out/
       - name: Cleanup out of bundle
         working-directory: ${{ env.GITHUB_WORKSPACE }}
-        run: scripts/artifact-clean.sh
+        run: scripts/artifact/artifact-clean.sh
         env:
           BUNDLE: ${{ matrix.bundle }}
           ARCH: SIM_arm64
       - name: Package Binaries for Artifact
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
-        run: scripts/artifact.sh
+        run: scripts/artifact/artifact.sh
         env:
           BUNDLE: ${{ matrix.bundle }}
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Upload binaries as Artifact
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         uses: actions/upload-artifact@v4
         with:
-          name: libs-tvos-${{ env.TARGET }}-${{ matrix.bundle }}
+          name: libs-${{ env.RELEASE }}-${{ env.TARGET }}-${{ matrix.bundle }}
           path: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
           retention-days: 31
       - name: Remove .tar.bz2 files
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         run: |
           echo "Removing .tar.bz2 files from out/ directory..."
           rm -f out/*.tar.bz2
@@ -173,18 +183,17 @@ jobs:
           BUNDLE: ${{ matrix.bundle }}
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Package
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/package.sh
         env:
           BUNDLE: ${{ matrix.bundle }}
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Update Release XCFramework
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: johnwbyrd/update-release@v1.0.0
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        uses: softprops/action-gh-release@v2.0.8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.RELEASE }}
-          release: ${{ env.RELEASE }}
-          prerelease: ${{ env.PRERELEASE }}
+          tag_name: ${{ env.RELEASE }}
+          draft: false
           files: xout/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2

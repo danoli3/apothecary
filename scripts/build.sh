@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+# set -e
 # capture failing exits in commands obscured behind a pipe
 set -o pipefail
 
@@ -9,8 +9,12 @@ else
     export FORCE=""
 fi
 
+if [ -z "${ARCH+x}" ]; then
+    echo "Build: ARCH is set to: $ARCH"
+fi
+
 if [ -z "${PTHREADS_ENABLED+x}" ]; then
-    export PTHREADS_ENABLED=0
+    export PTHREADS_ENABLED=1
 fi
 
 # Print the value to verify it's set
@@ -183,7 +187,7 @@ function travis_nanoseconds() {
 }
 
 if [ -z ${PARALLEL+x} ]; then
-    if [ "$TARGET" == "osx" ]; then
+    if [ "$TARGET" == "osx" ] || [ "$TARGET" == "macos" ]; then
         PARALLEL=4
     elif [ "$TARGET" == "ios" ] || [ "$TARGET" == "tvos" ]; then
         PARALLEL=2
@@ -218,7 +222,7 @@ if  type "ccache" > /dev/null; then
 fi
 
 if [ "$TARGET" == "linux" ]; then
-    TARGET="linux64"
+    export TARGET="linux64"
     if [ "$OPT" == "gcc5" ]; then
         export CC="gcc-5"
         export CXX="g++-5 -std=c++11"
@@ -227,6 +231,10 @@ if [ "$TARGET" == "linux" ]; then
         export CC="gcc-6 -fPIE"
         export CXX="g++-6 -std=c++14 -fPIE"
         export COMPILER="g++6 -std=c++14 -fPIE"
+    elif [ "$OPT" == "gcc14" ]; then
+        export CC="gcc-14 -fPIE"
+        export CXX="g++-14 -std=c++23 -fPIE"
+        export COMPILER="g++14 -std=c++23 -fPIE"
     fi
 fi
 

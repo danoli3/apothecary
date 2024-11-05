@@ -13,9 +13,11 @@ FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emsc
 
 FORMULA_DEPENDS=( "zlib" "libpng" )
 
-VER=31950
+VER=31990
 GIT_URL=https://github.com/danoli3/FreeImage
-GIT_TAG=3.19.5
+GIT_TAG=3.19.9
+BUILD_ID=1
+DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -76,7 +78,7 @@ function build() {
 				-DBUILD_JXR=OFF \
 				-DENABLE_BITCODE=OFF \
 				-DENABLE_ARC=OFF \
-				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+				-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake
 		        "         
@@ -222,7 +224,7 @@ function build() {
 			-DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
 			-DCMAKE_INSTALL_LIBDIR="build_${TYPE}_${ARCH}" \
 			-DCMAKE_BUILD_TYPE=Release \
-			-D CMAKE_VERBOSE_MAKEFILE=ON \
+			-D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -DCMAKE_INSTALL_PREFIX=. \
 			${CMAKE_WIN_SDK} \
 			-A "${PLATFORM}" \
@@ -238,7 +240,7 @@ function build() {
 			-DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}" \
 			-DCMAKE_INSTALL_LIBDIR="build_${TYPE}_${ARCH}" \
 			-DCMAKE_BUILD_TYPE=Debug \
-			-D CMAKE_VERBOSE_MAKEFILE=ON \
+			-D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -DCMAKE_INSTALL_PREFIX=. \
 			${CMAKE_WIN_SDK} \
 			-A "${PLATFORM}" \
@@ -273,8 +275,8 @@ function build() {
 			-DBUILD_WEBP=OFF \
 			-DBUILD_JXR=OFF \
 			-DBUILD_TESTS=OFF \
-			-DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE}" \
-			-DCMAKE_C_FLAGS="${FLAG_RELEASE}" \
+			-DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE} " \
+			-DCMAKE_C_FLAGS="${FLAG_RELEASE} " \
 			-DPNG_ROOT=${LIBPNG_ROOT} \
 			-DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \

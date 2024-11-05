@@ -6,9 +6,12 @@
 #
 
 FORMULA_TYPES=( "osx" "msys2" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten")
+FORMULA_DEPENDS=( )
 
 # define the version
-VER=3.11.2
+VER=3.11.3
+BUILD_ID=2
+DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/nlohmann/json
@@ -50,11 +53,11 @@ function build() {
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
 	# headers
-	mkdir -p $1/include
-	cp -v single_include/nlohmann/json.hpp $1/include
+	mkdir -p $1/include/nlohmann
+	cp -v single_include/nlohmann/json.hpp $1/include/nlohmann/json.hpp
 
 	. "$SECURE_SCRIPT"
-	secure $1/include/json.hpp json.pkl
+	secure $1/include/nlohmann/json.hpp json.pkl
 
 	# copy license file
 	if [ -d "$1/license" ]; then
@@ -73,7 +76,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "json" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include/nlohmann" ${PLATFORM} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1

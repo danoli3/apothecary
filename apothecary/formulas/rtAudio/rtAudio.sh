@@ -16,6 +16,8 @@ FORMULA_TYPES=( "osx" "vs" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxa
 
 # define the version
 VER=6.0.1
+BUILD_ID=2
+DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/thestk/rtaudio
@@ -85,12 +87,13 @@ function build() {
 			rm -f CMakeCache.txt *.lib *.o
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}"
 	    VS_DEFS="
-	        -DRTAUDIO_API_WASAPI=ON \
-	        -DRTAUDIO_API_DS=ON \
-	        -DRTAUDIO_API_ASIO=ON \
-	        -DNEED_PTHREAD=ON \
+	        -DAUDIO_WINDOWS_DS=ON \
+	        -DAUDIO_WINDOWS_ASIO=ON \
+	        -DAUDIO_WINDOWS_WASAPI=ON \
+	        -DBUILD_SHARED_LIBS=OFF \
+	        -DBUILD_TESTING=OFF \
 	        -DRTAUDIO_STATIC_MSVCRT=OFF
-	        "         
+	        "
 	    cmake .. ${VS_DEFS} ${DEFS} \
 	    	-UCMAKE_CXX_FLAGS \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -98,6 +101,7 @@ function build() {
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_INSTALL_PREFIX=Release \
+	        -DRTAUDIO_BUILD_SHARED_LIBS=OFF \
 	        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        ${CMAKE_WIN_SDK} \
 	        -A "${PLATFORM}" \
@@ -107,7 +111,7 @@ function build() {
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}"
 	    cmake .. ${VS_DEFS} ${DEFS}  \
 	    	-UCMAKE_CXX_FLAGS \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS}  ${EXCEPTION_FLAGS}" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${EXCEPTION_FLAGS}" \
 	        -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Debug \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -136,7 +140,7 @@ function build() {
 			-DRTAUDIO_API_ALSA=ON \
 			-DRTAUDIO_API_PULSE=ON \
 			-DRTAUDIO_API_JACK=ON \
-			-DCMAKE_VERBOSE_MAKEFILE=ON \
+			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 			-DBUILD_TESTING=OFF
 		make
 		make install
@@ -152,7 +156,7 @@ function build() {
 			-DAUDIO_WINDOWS_WASAPI=ON \
 			-DAUDIO_WINDOWS_DS=ON \
 			-DAUDIO_WINDOWS_ASIO=ON \
-			-DCMAKE_VERBOSE_MAKEFILE=ON \
+			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 			-DBUILD_TESTING=OFF
 		make
 		make install
@@ -175,8 +179,9 @@ function copy() {
 	if [ "$TYPE" == "vs" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
-    cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/rtaudio.lib" $1/lib/$TYPE/$PLATFORM/rtaudio.lib
-    cp -vf "build_${TYPE}_${PLATFORM}/Debug/lib/rtaudiod.lib" $1/lib/$TYPE/$PLATFORM/rtaudioD.lib
+    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/rtaudio.lib" $1/lib/$TYPE/$PLATFORM/rtaudio.lib
+    	#cp -vf "build_${TYPE}_${PLATFORM}/Release/bin/rtaudio.dll" $1/lib/$TYPE/$PLATFORM/rtaudio.dll
+    	cp -vf "build_${TYPE}_${PLATFORM}/Debug/lib/rtaudiod.lib" $1/lib/$TYPE/$PLATFORM/rtaudioD.lib
 		secure $1/lib/$TYPE/$PLATFORM/rtaudio.lib rtaudio
 	elif [ "$TYPE" == "msys2" ] ; then
 		cd build
