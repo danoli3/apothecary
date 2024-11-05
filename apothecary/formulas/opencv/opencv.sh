@@ -99,8 +99,6 @@ function build() {
     -DBUILD_opencv_python2=OFF \
     -DBUILD_opencv_python3=OFF \
     -DBUILD_opencv_apps=OFF \
-    -DBUILD_opencv_videoio=ON \
-    -DBUILD_opencv_videostab=ON \
     -DBUILD_opencv_highgui=ON \
     -DBUILD_opencv_imgcodecs=ON \
     -DBUILD_opencv_stitching=ON \
@@ -159,6 +157,12 @@ function build() {
     else 
       EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON "
     fi
+
+    if [[ "$TYPE" =~ ^(tvos)$ ]]; then
+      EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
+    else 
+      EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+    fi    
 
     cmake .. ${CORE_DEFS} ${DEFS} ${EXTRA_DEFS} \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
