@@ -68,10 +68,8 @@ if [ "$BUNDLE" == "1" ]; then
             "rtAudio"
             "tess2"
             "uriparser"
-            # # Formulas with depenencies in the end
-            "cairo"
             "metalangle"
-
+            "cairo"
         )
     elif [ "$BUNDLE" == "2" ]; then
         if [[ "$TARGET" =~ ^(osx|macos)$ ]]; then
@@ -101,7 +99,7 @@ if [ "$BUNDLE" == "1" ]; then
         )
     else 
          FORMULAS=(
-        "pixman"
+        	"pixman"
             "pkg-config"
             "zlib"
             "utf8"
@@ -132,6 +130,7 @@ if [ "$BUNDLE" == "1" ]; then
             "fmt"
             "openssl"
             "curl"
+            "metalangle"
             # "poco"
             )
     fi

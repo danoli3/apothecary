@@ -193,6 +193,24 @@ WIN10_INSTALLED_SDK_2022=10.0.20348.0
 WIN10_INSTALLED_SDK_2022_HEX=0x0A004F5C
 
 WIN11_INSTALLED_SDK_2022=10.0.22621.0
+if [ -z "${VS_TYPE+x}" ]; then # Professional # Enterprise # Community
+    VS_TYPE=Community 
+fi
+if [ -z "${VS_COMPILER+x}" ]; then # MSVC / # Clang LLVM 
+    VS_COMPILER=MSVC 
+fi
+if [ -z "${VS_HOST+x}" ]; then
+    VS_HOST=amd64 
+fi
+TARGET_WIN_11=0
+
+if [ -z "${XCFRAMEWORK_ALL+x}" ]; then
+    export XCFRAMEWORK_ALL=false
+fi
+
+if [ -z "${LOADSAVE_RESULT+x}" ]; then
+    declare -a LOADSAVE_RESULT=0
+fi
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 
@@ -1828,6 +1846,8 @@ function xframeworkFormula() {
 
     export X_TYPE=macos
     export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
+
+    echoStart " xframeworkFormula [\"$1\"] for:[${X_TYPE}]"
 
     XLIBSLOCAL="$APOTHECARY_DIR/../xout"
     if [[  ! -e "$XLIBSLOCAL" ]]; then
