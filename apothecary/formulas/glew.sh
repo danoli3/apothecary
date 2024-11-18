@@ -160,7 +160,6 @@ function clean() {
 
 	if [ "$TYPE" == "vs" ] ; then	
 		rm -rf build_${TYPE}_${ARCH}
-		rm -rf $1/lib/$TYPE/*
 	else
 		make clean
 		rm -f *.a *.lib
