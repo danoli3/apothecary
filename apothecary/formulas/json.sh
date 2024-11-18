@@ -10,7 +10,7 @@ FORMULA_DEPENDS=( )
 
 # define the version
 VER=3.11.3
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 
 # tools for git use

@@ -11,8 +11,9 @@ FORMULA_DEPENDS=( "zlib" "libpng" )
 
 # define the version
 VER=4.10.0
-BUILD_ID=1
+BUILD_ID=3
 DEFINES=""
+FRAMEWORKS=""
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv
@@ -99,8 +100,6 @@ function build() {
     -DBUILD_opencv_python2=OFF \
     -DBUILD_opencv_python3=OFF \
     -DBUILD_opencv_apps=OFF \
-    -DBUILD_opencv_videoio=ON \
-    -DBUILD_opencv_videostab=ON \
     -DBUILD_opencv_highgui=ON \
     -DBUILD_opencv_imgcodecs=ON \
     -DBUILD_opencv_stitching=ON \
@@ -152,13 +151,30 @@ function build() {
     -DWITH_IPP=OFF \
     -DWITH_IPP_A=OFF \
     -DBUILD_ZLIB=OFF \
-    -DWITH_ITT=OFF "
+    -DWITH_ITT=OFF \
+    -DBUILD_TESTS=OFF "
 
     if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
-      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DWITH_CAROTENE=OFF"
-    else 
-      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DWITH_CAROTENE=ON -DWITH_GTK_2_X=OFF -DCV_DISABLE_OPTIMIZATION=OFF"
+    else
+      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCV_DISABLE_OPTIMIZATION=OFF"
     fi
+
+    if [[ "$TYPE" =~ ^(tvos|watchos)$ ]]; then
+	    if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
+	      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DWITH_CAROTENE=OFF"
+	    else
+	      EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCV_DISABLE_OPTIMIZATION=OFF"
+	    fi
+	fi
+
+    if [[ "$TYPE" =~ ^(tvos)$ ]]; then
+      EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
+    else 
+      EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+    fi    
+
+    FRAMEWORKS="-framework Foundation -framework AVFoundation -framework CoreFoundation -framework CoreVideo"
 
     cmake .. ${CORE_DEFS} ${DEFS} ${EXTRA_DEFS} \
       -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -170,6 +186,7 @@ function build() {
       -DENABLE_VISIBILITY=OFF \
       -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DENABLE_FAST_MATH=OFF \
+      -DCMAKE_EXE_LINKER_FLAGS="${FRAMEWORKS}" \
       -DCMAKE_CXX_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
       -DCMAKE_C_FLAGS="-fvisibility-inlines-hidden -stdlib=libc++ -fPIC -Wno-implicit-function-declaration -DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
       -DENABLE_STRICT_TRY_COMPILE=ON \
@@ -212,7 +229,7 @@ function build() {
         -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
         -DWITH_OPENCLAMDBLAS=OFF \
         -DBUILD_TESTS=OFF \
-        -DWITH_FFMPEG=OFF \
+        -DWITH_FFMPEG=ON \
         -DWITH_WIN32UI=OFF \
         -DBUILD_PACKAGE=OFF \
         -DWITH_JASPER=OFF \
@@ -229,8 +246,8 @@ function build() {
         -DBUILD_opencv_python3=OFF \
         -DBUILD_NEW_PYTHON_SUPPORT=OFF \
         -DBUILD_opencv_objdetect=ON \
-        -DHAVE_opencv_python3=OFF \
-        -DHAVE_opencv_python=OFF \
+        -DHAVE_opencv_python3=ON \
+        -DHAVE_opencv_python=ON \
         -DHAVE_opencv_python2=OFF \
         -DBUILD_opencv_apps=OFF \
         -DBUILD_opencv_videoio=ON \
@@ -241,7 +258,6 @@ function build() {
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
         -DBUILD_opencv_calib3d=ON \
-        -DBUILD_opencv_videoio=ON \
         -DBUILD_PERF_TESTS=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_DOCS=OFF \
@@ -288,7 +304,7 @@ function build() {
         -DWITH_DIRECTX=ON \
         -DWITH_MSMF=ON \
         -DWITH_DSHOW=ON \
-        -DWITH_MSMF_DXVA=ON \
+        -DWITH_MSMF_DXVA=OFF \
         -DWITH_WEBP=OFF \
         -DWITH_VTK=OFF \
         -DWITH_OPENMP=OFF \
@@ -298,7 +314,7 @@ function build() {
         -DWITH_CUDNN=OFF \
         -DWITH_CUDA=OFF \
         -DWITH_CUFFT=OFF \
-        -DWITH_CUBLAS=ON \
+        -DWITH_CUBLAS=OFF \
         -DWITH_NVCUVID=OFF \
         -DWITH_NVCUVENC=OFF \
         -DENABLE_SOLUTION_FOLDERS=OFF \
@@ -307,9 +323,9 @@ function build() {
         -DCV_DISABLE_OPTIMIZATION=OFF"
 
       if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DENABLE_SSE=OFF -DENABLE_SSE2=OFF -DENABLE_SSE3=OFF -DENABLE_SSE41=OFF -DENABLE_SSE42=OFF -DENABLE_SSSE3=OFF -DBUILD_opencv_rgbd=OFF"
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DBUILD_opencv_rgbd=OFF"
       else 
-        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DENABLE_SSE=ON -DENABLE_SSE2=ON -DENABLE_SSE3=ON -DENABLE_SSE41=ON -DENABLE_SSE42=ON -DENABLE_SSSE3=ON"
+        EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON"
       fi
     
     cmake .. ${DEFS} \

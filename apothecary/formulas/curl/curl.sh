@@ -12,16 +12,15 @@ FORMULA_DEPENDS=( "openssl" "zlib" "brotli" )
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
 
-VER=8.9.1
-VER_D=8_9_1
-SHA1=9bcf387f274ae96ad591115d9f9f23700ec76ceb
+VER=8.11.0
+VER_D=8_11_0
+SHA1=9648c31756362343f1a0daba881e189d6fe8b4f4
 BUILD_ID=1
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/curl/curl
 GIT_TAG=$VER
-
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -60,8 +59,16 @@ function prepare() {
     apothecaryDepend prepare openssl
     apothecaryDepend build openssl
     apothecaryDepend copy openssl  
-    
 
+    if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+        patch -p1 < "$FORMULA_DIR/apple-patch.diff"
+        if [ $? -ne 0 ]; then
+            echo "Failed to apply apple-patch.diff"
+            exit 1
+        else
+            echo "apple-patch.diff applied successfully"
+        fi
+    fi 
     echo "prepared"
 
 
@@ -107,7 +114,6 @@ function build() {
         LIBBROTLI_COMMON_LIB="$LIBBROTLI_LIBRARY/brotlicommon.lib"
         LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
         LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
-
 
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig;${PKG_CONFIG_PATH};${OF_LIBS_OPENSSL}/lib/$TYPE/$PLATFORM;${ZLIB_ROOT}/lib/$TYPE/$PLATFORM;${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
@@ -157,6 +163,7 @@ function build() {
             -DBROTLI_INCLUDE_DIRS="${LIBBROTLI_INCLUDE_DIR}" \
             -DUSE_RESOLVE_ON_IPS=OFF \
             -DENABLE_ARES=OFF \
+            -DHAVE__FSEEKI64=OFF \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             ${CMAKE_WIN_SDK} \
             -DOPENSSL_ROOT_DIR="$OF_LIBS_OPENSSL_ABS_PATH" \
@@ -294,10 +301,16 @@ function build() {
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DENABLE_STRICT_TRY_COMPILE=ON \
+            -DHAVE_GETPASS_R=0 \
+            -DCURL_USE_LIBSSH2=OFF \
+            -DCURL_USE_LIBPSL=OFF \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
+            -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
             -DCURL_STATICLIB=ON \
             -DBUILD_STATIC_LIBS=ON \
             -DENABLE_UNICODE=ON \
@@ -305,6 +318,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DHAVE__FSEEKI64=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
@@ -328,8 +342,8 @@ function build() {
             -DCURL_ENABLE_SSL=${CURL_ENABLE_SSL} \
             -DCMAKE_MACOSX_BUNDLE=OFF \
             -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
+            -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
             -DUSE_NGHTTP2=OFF \
-            -DCURL_USE_SECTRANSP=OFF \
             -DCURL_DISABLE_POP3=ON \
             -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_IMAP=ON \

@@ -259,38 +259,42 @@ if [ -z "$FORMULAS" ]; then
     exit 0
 fi
 
-
-# if [ "$TRAVIS" = true ] && [ "$TARGET" == "emscripten" ]; then
-#     docker cp emscripten:$CCACHE_DOCKER /home/travis/.ccache
-# fi
-
-if  type "ccache" > /dev/null; then
-    echo $(ccache -s)
-fi
-
-if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] ||
-    [[ ! -z ${APPVEYOR+x} && -z ${APPVEYOR_PULL_REQUEST_NUMBER+x} ]] ||
-    [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding") && -z "${GITHUB_HEAD_REF}" ]] ||
-    [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-        
-        if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "On a tag - proceeding with tag-specific build steps"
-            RELEASE="${GITHUB_REF##*/}"
-        else
-            echo "On Master or Bleeding branch - proceeding with branch-specific build steps"
-        fi
-else
-    echo "This is a PR or not master/bleeding branch, exiting build before compressing";
-    if [ -z "${RELEASE+x}" ]; then
-        exit 0
-    fi
-fi
-
 if [ -z ${APPVEYOR+x} ]; then
     if [[ $TRAVIS_SECURE_ENV_VARS == "false" ]] && [[ -z "${GA_CI_SECRET}" ]]; then
         echo "No secure vars set so exiting before compressing";
         exit 0
     fi
+fi
+
+if  type "ccache" > /dev/null; then
+    echo $(ccache -s)
+fi
+
+CUR_BRANCH="master";
+if [ -n "${ALWAYS_BUILD+x}" ]; then
+    echo "ALWAYS_BUILD is set - proceeding with build regardless of branch/tag"
+    CUR_BRANCH="latest"
+	RELEASE="latest"
+else
+	if [[ ( "${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding" || "${GITHUB_REF##*/}" == "latest" ) && -z "${GITHUB_HEAD_REF}" ]] \
+	    || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+
+	    # Check if we are on a tag
+	    if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+	        echo "On a tag - proceeding with tag-specific build steps"
+	        RELEASE="${GITHUB_REF##*/}"  # Use tag name as the release
+	        CUR_BRANCH="$RELEASE"
+	    else
+	        echo "On Master, Bleeding, or Latest branch - proceeding with branch-specific build steps"
+	        CUR_BRANCH="latest"
+	        RELEASE="latest"
+	    fi
+
+	else
+	    echo "This is a PR or not on master/bleeding branch; exiting build before compressing."
+	    # Exit early if this is a PR or a branch we don't want to build
+	    exit 0
+	fi
 fi
 
 echo "Compressing libraries from $OUTPUT_FOLDER"
@@ -302,8 +306,7 @@ else
     LIBS=$(ls $OUTPUT_FOLDER)
     LIBS=$(echo "$LIBS" | tr '\n' ' ')
 fi
-    
-CUR_BRANCH="master";
+
 if [ -z "${RELEASE+x}" ]; then
     if [ "$GITHUB_ACTIONS" = true ]; then
         CUR_BRANCH="${GITHUB_REF##*/}"
@@ -314,7 +317,9 @@ else
     CUR_BRANCH="$RELEASE"
 fi
 
-
+# Output variables for verification (optional)
+echo "Release: [$RELEASE]"
+echo "Current Branch: [$CUR_BRANCH]"
 
 
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET_$OPT$ARCH$BUNDLE.tar.bz2

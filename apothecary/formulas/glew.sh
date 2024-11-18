@@ -51,7 +51,7 @@ function build() {
 		rm -f CMakeCache.txt *.a *.o 
 		cmake  ../build/cmake \
 			-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_C_STANDARD=${CPP_STANDARD} \
+			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -86,14 +86,16 @@ function build() {
 		rm -f CMakeCache.txt *.lib *.o 
 		DEFS="-DLIBRARY_SUFFIX=${ARCH}"
 
+		env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
+  		env CFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
 		cmake ../build/cmake ${DEFS} \
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
-		    -DCMAKE_C_STANDARD=${CPP_STANDARD} \
+		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-		    -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
-		    -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
-		    -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
-            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+		    -UCMAKE_CXX_FLAGS \
+		    -UCMAKE_C_FLAGS \
+		    -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
 		    -DBUILD_SHARED_LIBS=OFF \
 		    -DCMAKE_BUILD_TYPE=Release \
@@ -104,6 +106,7 @@ function build() {
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
             ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
 		    -G "${GENERATOR_NAME}" 
@@ -157,7 +160,6 @@ function clean() {
 
 	if [ "$TYPE" == "vs" ] ; then	
 		rm -rf build_${TYPE}_${ARCH}
-		rm -rf $1/lib/$TYPE/*
 	else
 		make clean
 		rm -f *.a *.lib

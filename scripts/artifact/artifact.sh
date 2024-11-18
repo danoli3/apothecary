@@ -247,19 +247,31 @@ if  type "ccache" > /dev/null; then
     echo $(ccache -s)
 fi
 
-if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]] || [[ ! -z ${APPVEYOR+x} && -z ${APPVEYOR_PULL_REQUEST_NUMBER+x} ]] || [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding") && -z "${GITHUB_HEAD_REF}" ]]; then
-    # exit here on PR's
-    echo "On Master or Bleeding Branch and not a PR - zipping build";
+CUR_BRANCH="master";
+if [ -n "${ALWAYS_BUILD+x}" ]; then
+    echo "ALWAYS_BUILD is set - proceeding with build regardless of branch/tag"
+    CUR_BRANCH="latest"
+	RELEASE="latest"
 else
-    echo "This is a PR or not master/bleeding branch, exiting build before compressing";
-    exit 0
-fi
+	if [[ ( "${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding" || "${GITHUB_REF##*/}" == "latest" ) && -z "${GITHUB_HEAD_REF}" ]] \
+	    || [[ "${GITHUB_REF}" == refs/tags/* ]]; then
 
-if [ -z ${APPVEYOR+x} ]; then
-    if [[ $TRAVIS_SECURE_ENV_VARS == "false" ]] && [[ -z "${GA_CI_SECRET}" ]]; then
-        echo "No secure vars set so exiting before compressing";
-        exit 0
-    fi
+	    # Check if we are on a tag
+	    if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+	        echo "On a tag - proceeding with tag-specific build steps"
+	        RELEASE="${GITHUB_REF##*/}"  # Use tag name as the release
+	        CUR_BRANCH="$RELEASE"
+	    else
+	        echo "On Master, Bleeding, or Latest branch - proceeding with branch-specific build steps"
+	        CUR_BRANCH="latest"
+	        RELEASE="latest"
+	    fi
+
+	else
+	    echo "This is a PR or not on master/bleeding branch; exiting build before compressing."
+	    # Exit early if this is a PR or a branch we don't want to build
+	    exit 0
+	fi
 fi
 
 echo "Compressing libraries from $OUTPUT_FOLDER"
@@ -271,33 +283,54 @@ else
     LIBS=$(ls $OUTPUT_FOLDER)
     LIBS=$(echo "$LIBS" | tr '\n' ' ')
 fi
-    
-CUR_BRANCH="master";
-if [ "$GITHUB_ACTIONS" = true ]; then
-    CUR_BRANCH="${GITHUB_REF##*/}"
-elif [ "$TRAVIS" = true ]; then
-    CUR_BRANCH="$TRAVIS_BRANCH"
+
+if [ -z "${RELEASE+x}" ]; then
+    if [ "$GITHUB_ACTIONS" = true ]; then
+        CUR_BRANCH="${GITHUB_REF##*/}"
+    elif [ "$TRAVIS" = true ]; then
+        CUR_BRANCH="$TRAVIS_BRANCH"
+    fi
+else
+    CUR_BRANCH="$RELEASE"
 fi
 
-# if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-
-# fi
-
-TARBALL=../openFrameworksLibs_${CUR_BRANCH}_$TARGET$OPT$ARCH$BUNDLE.tar.bz2
+TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET_$OPT$ARCH$BUNDLE.tar.bz2
 if [ "$TARGET" == "msys2" ]; then
-    TARBALL=../openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${MSYSTEM,,}.zip
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${MSYSTEM,,}.zip
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
     echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
 elif [ "$TARGET" == "vs" ]; then
-    TARBALL=../openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}_${BUNDLE}.zip
+    if [ ! -z "${VS_VER+x}" ]; then
+        if [ "${VS_VER}" == "16" ]; then 
+            echo "VS2019 Version"
+            TARGET="${TARGET}_2019"
+        fi
+    fi
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}_${BUNDLE}.zip
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
     echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
 elif [ "$TARGET" == "emscripten" ]; then
+    if [ "$ARCH" == "64" ]; then
+            POSTFIX="_memory64"
+    else
+            POSTFIX=""
+    fi
+    if [ "$PTHREADS_ENABLED" == "1" ]; then
+            PTHREADS_POSTFIX="_pthreads"
+    else
+            PTHREADS_POSTFIX=""
+    fi
+    rm -f *.pc
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}${PTHREADS_POSTFIX}.tar.bz2
     run "cd ${OUTPUT_FOLDER}; tar cjf $TARBALL $LIBS"
     echo "tar cjf $TARBALL $LIBS"
     echo " a $TARBALL $LIBS"
 elif [ "$TARGET" == "android" ]; then
-    TARBALL=../openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.zip
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.zip
+    echo "tar cjf $TARBALL $LIBS"
+    tar cjvf $TARBALL $LIBS
+elif [ "$TARGET" == "macos" ]; then
+    TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${BUNDLE}.tar.bz2
     echo "tar cjf $TARBALL $LIBS"
     tar cjvf $TARBALL $LIBS
 elif [[ "$TARGET" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -309,5 +342,5 @@ else
     tar cjvf $TARBALL $LIBS
 fi
 
-echo "Packaged libs to upload $TARBALL"
+echo "Artefact Package libs to upload $TARBALL"
 echo "done "
