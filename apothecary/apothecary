@@ -86,7 +86,7 @@ USE_SAVE=1
 
 # xcode Developer root
 if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
-    XS="xcode-select -print-path" # stupid hack to keep my syntax highlighting from breaking :P
+    XS="xcode-select -print-path"
     XCODE_DEV_ROOT=
 
     # used when building some libs for osx
@@ -95,12 +95,11 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     OSX_MIN_SDK_VER=10.15
 
     # used when building for ios, the sdks you have installed are found in:
-    # $XCODE_DEV_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator#.#.sdk
-    IOS_LATEST_SDK="xcrun -sdk iphoneos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
-    TVOS_LATEST_SDK="xcrun -sdk tvos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
     IOS_SDK_VER=18.1
+    IOS_LATEST_SDK=$(xcrun -sdk iphoneos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     IOS_MIN_SDK_VER=15.0
     TVOS_MIN_SDK_VER=17.0
+    TVOS_LATEST_SDK=$(xcrun -sdk tvos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     XROS_MIN_SDK_VER=1.1
     WATCHOS_MIN_SDK_VER=6.0
     if ! which realpath >&/dev/null; then
@@ -849,6 +848,12 @@ if [ "$TYPE" = "emscripten" ]; then
 fi
 
 if [ "$TYPE" = "ios" ]; then
+    if [[ "$IOS_LATEST_SDK" == "SDKNotInstalled" ]]; then
+        echoError "No iOS SDK installed. Please install Xcode and ensure the iOS SDK is available."
+        exit 1
+    else
+        echoVerbose "iOS SDK version: $IOS_LATEST_SDK"
+    fi
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "armv7" ] ; then
         export PLATFORM="OS"
@@ -862,6 +867,12 @@ if [ "$TYPE" = "ios" ]; then
 fi
 
 if [ "$TYPE" = "tvos" ]; then
+    if [[ "$TVOS_LATEST_SDK" == "SDKNotInstalled" ]]; then
+        echoError "No tvOS SDK installed. Please install Xcode and ensure the tvOS SDK is available."
+        exit 1
+    else
+        echoVerbose "tvOS SDK version: $TVOS_LATEST_SDK"
+    fi
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
         export PLATFORM="SIMULATOR_TVOS"
