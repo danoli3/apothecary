@@ -99,7 +99,7 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     IOS_LATEST_SDK=$(xcrun -sdk iphoneos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     IOS_MIN_SDK_VER=15.0
     TVOS_MIN_SDK_VER=17.0
-    TVOS_LATEST_SDK=$(xcrun -sdk tvos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
+    TVOS_LATEST_SDK=$(xcrun -sdk appletvos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     XROS_MIN_SDK_VER=1.1
     WATCHOS_MIN_SDK_VER=6.0
     if ! which realpath >&/dev/null; then
