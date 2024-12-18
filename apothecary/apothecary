@@ -2462,8 +2462,8 @@ echoVerbose "Valid build types: ${VALID_TYPES[*]}"
 # set xcode dev root on osx
 if [ "$HOST_OS" == "osx" ] ; then
 	XCODE_DEV_ROOT=$($XS) # Sets to path from Xcode Path
-	OSX_SDK_VER=$($OSX_LATEST_SDK) # sets to latest OSX SDK
-	IOS_SDK_VER=$($IOS_LATEST_SDK) # sets to latest iOS SDK
+	OSX_SDK_VER=$OSX_LATEST_SDK
+	IOS_SDK_VER=$IOS_LATEST_SDK
 fi
 
 # check if we have a valid build type
