@@ -63,11 +63,11 @@ function prepare() {
         cp -fr $FORMULA_DIR/glob.h .
     fi
 
-    apothecaryDependencies download
+    # apothecaryDependencies download
     
-    apothecaryDepend prepare zlib
-    apothecaryDepend build zlib
-    apothecaryDepend copy zlib
+    # apothecaryDepend prepare zlib
+    # apothecaryDepend build zlib
+    # apothecaryDepend copy zlib
 
     rm -f ./CMakeLists.txt
     cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
@@ -240,8 +240,8 @@ function build() {
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
         . "$DOWNLOADER_SCRIPT"
-        downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD"
-        downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD"
+        downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD" "config.guess"
+        downloader "http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD" "config.sub"
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
