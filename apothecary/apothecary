@@ -842,7 +842,7 @@ if [ "$TYPE" = "emscripten" ]; then
     else
         PTHREADS_FLAG=""
     fi
-    export FLAG_RELEASE+="-Os ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG "
+    export FLAG_RELEASE+="-O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG "
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi
@@ -942,6 +942,8 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
         export ABI="aarch64"
     elif [ $TYPE == "linuxarmv7l" ]; then
         export ABI="armv7l"
+    elif [ $TYPE == "linuxarmv6l" ]; then
+        export ABI="armv6l"
     elif [ $TYPE == "msys2" ]; then
         export ABI="x86_64"
     fi 
