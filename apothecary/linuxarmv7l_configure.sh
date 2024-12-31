@@ -5,7 +5,7 @@ RASP="$RPI_ROOT/raspbianpi3ab45"
 
 # Update PATH and library paths
 export PATH=$RASP/bin:$PATH
-export LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$RASP/lib
 
 # Set GCC cross-compilation variables
 export GCC_PREFIX="arm-linux-gnueabihf"

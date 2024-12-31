@@ -6,7 +6,7 @@ RASP="$RPI_ROOT/raspbian"
 
 # Update PATH and library paths
 export PATH=$RASP/bin:$PATH
-export LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$RASP/lib
 
 # Set GCC cross-compilation variables
 export GCC_PREFIX="aarch64-linux-gnu"
