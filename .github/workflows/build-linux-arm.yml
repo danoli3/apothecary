@@ -36,12 +36,7 @@ jobs:
       - name: Download and extract tar file
         if: steps.folder-check.outputs.folder-exists == 'false'
         run: >
-          cd $WORKDIR &&
-          wget https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download \
-          --no-check-certificate -O cross-gcc-14.2.0-pi_64.tar.gz &&
-          tar xf cross-gcc-14.2.0-pi_64.tar.gz &&
-          rm cross-gcc-14.2.0-pi_64.tar.gz &&
-          mv cross-pi-gcc-14.2.0-64 raspbian
+          cd $WORKDIR && wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download" -O cross-gcc-14.2.0-pi_64.tar.gz && tar xf cross-gcc-14.2.0-pi_64.tar.gz &&rm cross-gcc-14.2.0-pi_64.tar.gz &&mv cross-pi-gcc-14.2.0-64 raspbian
                     
       - name: Script Install and Build
         run: ./scripts/$TARGET/install_and_build.sh
