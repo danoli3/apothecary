@@ -22,6 +22,9 @@ RASP="$ROOT/raspbian"
 PATH=$RASP/bin:$PATH
 LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
 
+
+export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/
+
 export AR="aarch64-linux-gnu-gcc-ar"
 export CC="aarch64-linux-gnu-gcc"
 export CXX="aarch64-linux-gnu-g++"
@@ -30,7 +33,7 @@ export FC="aarch64-linux-gnu-gfortran"
 export RANLIB="aarch64-linux-gnu-gcc-ranlib"
 export LD="$CXX"
 
-GCCPATH="$RASP/libexec/gcc/aarch64-linux-gnu/10.3.1"
+GCCPATH="$RASP/libexec/gcc/aarch64-linux-gnu/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
