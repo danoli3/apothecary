@@ -33,7 +33,7 @@ EOF
 }
 
 downloadToolchain(){
-    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3%2B.tar.gz && tar xf cross-gcc-14.2.0-pi_3%2B.tar.gz && rm cross-gcc-14.2.0-pi_3%2B.tar.gz && mv cross-gcc-14.2.0-pi_3%2B raspbianpi3ab45
+    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3+.tar.gz && tar xf cross-gcc-14.2.0-pi_3+.tar.gz && rm cross-gcc-14.2.0-pi_3+.tar.gz && mv cross-gcc-14.2.0-pi_3+ raspbianpi3ab45
 
 }
 
