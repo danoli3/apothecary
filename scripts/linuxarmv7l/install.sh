@@ -33,16 +33,8 @@ EOF
 }
 
 downloadToolchain(){
-    #wget http://archlinuxarm.org/builder/xtools/x-tools7h.tar.xz
-    #tar xf x-tools7h.tar.xz
-    #rm x-tools7h.tar.xz
-    if [ "$(ls -A ~/rpi2_toolchain)" ]; then
-        echo "Using cached RPI2 toolchain"
-    else
-        wget -q https://github.com/openframeworks/openFrameworks/releases/download/tools/rpi2_toolchain.tar.bz2
-        tar xjf rpi2_toolchain.tar.bz2 -C ~/
-        rm rpi2_toolchain.tar.bz2
-    fi
+    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3%2B.tar.gz && tar xf cross-gcc-14.2.0-pi_3%2B.tar.gz && rm cross-gcc-14.2.0-pi_3%2B.tar.gz && mv cross-gcc-14.2.0-pi_3%2B raspbianpi3ab45
+
 }
 
 downloadFirmware(){
@@ -95,9 +87,10 @@ if [[ $(uname -m) != armv* ]]; then
 	ROOT=$( cd "$(dirname "$0")" ; pwd -P )
 	echo $ROOT
 	cd $ROOT
-	installJunest
-	createArchImg
-	downloadFirmware
+	# installJunest
+	# createArchImg
+	# downloadFirmware
+    downloadToolchain
 
 	#cd $HOME/archlinux/usr/lib
 	#relativeSoftLinks "../.." "..\/.."

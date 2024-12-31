@@ -38,9 +38,8 @@ createRaspbianImg(){
 }
 
 downloadToolchain(){
-    wget -nv https://github.com/openframeworks/openFrameworks/releases/download/tools/rpi_toolchain_gcc6.tar.bz2
-    tar xjf rpi_toolchain_gcc6.tar.bz2
-    rm rpi_toolchain_gcc6.tar.bz2
+    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0-1 raspbianpi1zero
+
 }
 
 downloadFirmware(){
@@ -75,8 +74,9 @@ if [[ $(uname -m) != armv* ]]; then
 	echo $ROOT
 	cd $ROOT
 	installPackages
-	createRaspbianImg
-	downloadFirmware
+	# createRaspbianImg
+	# downloadFirmware
+    downloadToolchain
 
 	
 fi

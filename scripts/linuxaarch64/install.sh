@@ -25,10 +25,8 @@ createRaspbianImg(){
 }
 
 downloadToolchain(){
-    wget https://github.com/openframeworks/openFrameworks/releases/download/tools/cross-gcc-10.3.0-pi_64.tar.gz
-    tar xvf cross-gcc-10.3.0-pi_64.tar.gz
-    mv cross-pi-gcc-10.3.0-64 rpi_toolchain
-    rm cross-gcc-10.3.0-pi_64.tar.gz
+    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0-1 raspbianpi1zero
+
 }
 
 downloadFirmware(){
@@ -62,18 +60,18 @@ ROOT=$( cd "$(dirname "$0")" ; pwd -P )
 echo $ROOT
 cd $ROOT
 installPackages
-createRaspbianImg
+# createRaspbianImg
 downloadToolchain
-downloadFirmware
+# downloadFirmware
 
-cp -rn rpi_toolchain/aarch64-linux-gnu/libc/lib/* $ROOT/raspbian/usr/lib/
-cp -rn rpi_toolchain/aarch64-linux-gnu/libc/usr/lib/* $ROOT/raspbian/usr/lib/
-cp -rn rpi_toolchain/aarch64-linux-gnu/lib/* $ROOT/raspbian/usr/lib/
+# cp -rn rpi_toolchain/aarch64-linux-gnu/libc/lib/* $ROOT/raspbian/usr/lib/
+# cp -rn rpi_toolchain/aarch64-linux-gnu/libc/usr/lib/* $ROOT/raspbian/usr/lib/
+# cp -rn rpi_toolchain/aarch64-linux-gnu/lib/* $ROOT/raspbian/usr/lib/
 
-cd $ROOT/raspbian/usr/lib
-relativeSoftLinks
-cd $ROOT/raspbian/usr/lib/aarch64-linux-gnu
-relativeSoftLinks
+# cd $ROOT/raspbian/usr/lib
+# relativeSoftLinks
+# cd $ROOT/raspbian/usr/lib/aarch64-linux-gnu
+# relativeSoftLinks
 
 sudo apt-get update && sudo apt-get install -y autoconf libtool automake dos2unix
 sudo apt-get update && sudo apt-get install -y cmake
