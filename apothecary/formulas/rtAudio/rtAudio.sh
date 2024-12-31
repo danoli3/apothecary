@@ -136,6 +136,9 @@ function build() {
 	    cd ..
 	elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
 		# Compile the program
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
 		mkdir -p build
 		cd build
 		rm -f CMakeCache.txt *.a *.o
@@ -208,8 +211,13 @@ function copy() {
 	elif [ "$TYPE" == "osx" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
-    cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
-		secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
+    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+    	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
+	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linuxx86|linuxx64)$ ]]; then
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
+    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+    	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
 	fi
 
 	# copy license file

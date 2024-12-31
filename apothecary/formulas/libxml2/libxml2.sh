@@ -310,6 +310,8 @@ function build() {
         cmake .. \
             ${DEFS} \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -330,11 +332,8 @@ function build() {
 function copy() {
     # prepare headers directory if needed
     mkdir -p $1/include/libxml
-    
-    # create a common lib directory path
     mkdir -p $1/lib/$TYPE
     . "$SECURE_SCRIPT"
-    # copy files specific to each build TYPE
     if [ "$TYPE" == "vs" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/"* $1/include/
@@ -368,10 +367,10 @@ function copy() {
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
-        cp -v "build_${TYPE}/libxml2.a" $1/lib/$TYPE/libxml2.a
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/libxml2.a
         secure $1/lib/$TYPE/libxml2.a
-        cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
-        cp -Rv include/libxml/* $1/include/libxml/
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
+        cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
     else
         echo "Unknown build TYPE: $TYPE"
         exit 1

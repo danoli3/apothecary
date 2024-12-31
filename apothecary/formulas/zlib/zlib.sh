@@ -168,22 +168,24 @@ function build() {
 	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
-	    
+	    if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
 	    rm -f CMakeCache.txt *.a *.o *.so
-	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+	    DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake .. ${DEFS} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \

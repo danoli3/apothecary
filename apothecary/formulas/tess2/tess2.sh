@@ -194,14 +194,35 @@ function build() {
         if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
-	    mkdir -p build
-	    cd build
-	    cp -v $FORMULA_DIR/Makefile .
-	    cp -v $FORMULA_DIR/tess2.make .
-	    make config=release tess2
+	    echoVerbose "building $TYPE | $ARCH "
+        echoVerbose "--------------------"
+	    mkdir -p "build_${TYPE}_${ARCH}"
+	    cd "build_${TYPE}_${ARCH}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	    DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF"         
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+		    -DZLIB_BUILD_EXAMPLES=OFF \
+		    -DSKIP_EXAMPLE=ON \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release
 	    cd ..
-	    mkdir -p build/$TYPE
-	    mv build/libtess2.a build/$TYPE
 	else
 		mkdir -p build/$TYPE
 		cd build/$TYPE
@@ -229,10 +250,10 @@ function copy() {
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/ 
     	cp -f "build_${TYPE}_${PLATFORM}/Release/lib/tess2.lib" $1/lib/$TYPE/$PLATFORM/tess2.lib
 		secure $1/lib/$TYPE/$PLATFORM/tess2.lib tess2
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linuxarmv6l|linuxarmv7l|linuxaarch64|linuxx86|linuxx64)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libtess2.a" $1/lib/$TYPE/$PLATFORM/libtess2.a
-        secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
+		secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/

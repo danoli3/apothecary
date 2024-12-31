@@ -164,14 +164,15 @@ function build() {
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				cmake --build . --target install --config Release
 	    cd ..
-	elif [ "$TYPE" == "linuxaarch64" ]; then
-      source ../../${TYPE}_configure.sh
-      mkdir -p build_$TYPE
+	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+      	if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+      	mkdir -p build_$TYPE
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFINES} \
-	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 				-DCMAKE_C_STANDARD=${C_STANDARD} \
