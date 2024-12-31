@@ -54,7 +54,6 @@ if [[ "$TARGET" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; th
             # All formulas
             "glew"
             "videoInput"
-            "rtAudio"
             "tess2"
             "kiss"
             "uriparser"
