@@ -25,15 +25,15 @@ LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
 export GCC_PREFIX=aarch64-linux-gnu
 export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/
 
-export AR="aarch64-linux-gnu-gcc-ar"
-export CC="aarch64-linux-gnu-gcc"
-export CXX="aarch64-linux-gnu-g++"
-export CPP="aarch64-linux-gnu-cpp"
-export FC="aarch64-linux-gnu-gfortran"
-export RANLIB="aarch64-linux-gnu-gcc-ranlib"
+export AR="${GCC_PREFIX}-gcc-ar"
+export CC="${GCC_PREFIX}-gcc"
+export CXX="${GCC_PREFIX}-g++"
+export CPP="${GCC_PREFIX}-cpp"
+export FC="${GCC_PREFIX}-gfortran"
+export RANLIB="${GCC_PREFIX}-gcc-ranlib"
 export LD="$CXX"
 
-GCCPATH="$RASP/libexec/gcc/aarch64-linux-gnu/${GCC_VERSION}"
+GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
