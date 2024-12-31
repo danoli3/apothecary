@@ -38,7 +38,7 @@ createRaspbianImg(){
 }
 
 downloadToolchain(){
-    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0-1 raspbianpi1zero
+    wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3+.tar.gz && tar xf cross-gcc-14.2.0-pi_3+.tar.gz && rm cross-gcc-14.2.0-pi_3+.tar.gz && mv cross-pi-gcc-14.2.0-2 raspbianpi3ab45
 
 }
 
