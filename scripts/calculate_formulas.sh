@@ -38,14 +38,30 @@ FORMULAS=(
     "curl"
     # "poco"
     "svgtiny"
-    #"uri"
     "cairo"
     "fmt"
     "metalangle"
 )
 
 # Seperate in bundles on osx
-if [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
+if [[ "$TARGET" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; then
+    FORMULAS=(
+            # Dependencies for other formulas (cairo)
+            "glm"
+            "json"
+            "utf8"
+            "brotli"
+            # All formulas
+            "glew"
+            "videoInput"
+            "rtAudio"
+            "tess2"
+            "kiss"
+            "uriparser"
+            # # Formulas with depenencies in the end
+            "cairo"
+        )
+elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 if [ "$BUNDLE" == "1" ]; then
 
         FORMULAS=(
