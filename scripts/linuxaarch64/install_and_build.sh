@@ -22,7 +22,7 @@ RASP="$ROOT/raspbian"
 PATH=$RASP/bin:$PATH
 LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
 
-
+export GCC_PREFIX=aarch64-linux-gnu
 export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/
 
 export AR="aarch64-linux-gnu-gcc-ar"
