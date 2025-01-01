@@ -640,6 +640,7 @@ if [ "$TYPE" = "vs" ]; then
         export EXCEPTION_FLAGS=""
         export FLAGS_RELEASE="-O3 -DUNICODE -D_UNICODE"
         export FLAGS_DEBUG="-O0 -DUNICODE -D_UNICODE"
+        export EXE_FLAGS=""
     else
         if [ $ARCH == "arm64ec" ]; then              
             export VS_C_FLAGS="/Gy /GL- /guard:cf"
@@ -649,6 +650,7 @@ if [ "$TYPE" = "vs" ]; then
         export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} /O2 /DNDEBUG -DUNICODE -D_UNICODE"
         export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION} /Od /DDEBUG -DUNICODE -D_UNICODE"
         export EXCEPTION_FLAGS="/EHsc"
+        export EXE_FLAGS="/NODEFAULTLIB:libvcruntime.lib /DEFAULTLIB:ucrt.lib /DEFAULTLIB:msvcrt.lib"
     fi
 
     VS_BAT="vcvarsall.bat"

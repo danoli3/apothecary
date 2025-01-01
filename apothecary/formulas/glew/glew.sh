@@ -8,7 +8,7 @@
 # use "make glew.lib" to build only the lib without demos/tests
 # the OPT flag is used for CFLAGS (& LDFLAGS I think?)
 
-FORMULA_TYPES=( "osx" "vs" )
+FORMULA_TYPES=( "osx" "vs" "linux64" "linuxaarch64" "linuxarmv6l" "linuxarmv7l" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -47,6 +47,9 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
+	DEFINES="-DGLEW_X11=ON \
+		    -DGLEW_EGL=OFF \
+		    -DBUILD_UTILS=OFF"
 
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
@@ -56,6 +59,7 @@ function build() {
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o 
 		cmake  ../build/cmake \
+			${DEFINES} \
 			-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -72,9 +76,6 @@ function build() {
 			-DENABLE_ARC=OFF \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
 			-DENABLE_VISIBILITY=OFF \
-			-DGLEW_X11=ON \
-		    -DGLEW_EGL=OFF \
-		    -DBUILD_UTILS=OFF \
 		    -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -86,42 +87,106 @@ function build() {
 		echo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN C_FLAGS: ${VS_C_FLAGS} CONVENTION: ${CALLING_CONVENTION} SDK:${CMAKE_WIN_SDK}"
 		echo "--------------------"
 		GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-
-
 		mkdir -p "build_${TYPE}_${ARCH}"
 		cd "build_${TYPE}_${ARCH}"
-
-		rm -f CMakeCache.txt *.lib *.o 
-		DEFS="-DLIBRARY_SUFFIX=${ARCH}"
-		
-		cmake ../build/cmake ${DEFS} \
+		rm -f CMakeCache.txt *.lib *.o 		
+		cmake ../build/cmake \
+			-DLIBRARY_SUFFIX=${ARCH} \
+			${DEFINES} \
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_C_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 		    -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS} ${CALLING_CONVENTION}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS} ${CALLING_CONVENTION}" \
+            -DCMAKE_EXE_LINKER_FLAGS="${EXE_FLAGS}" \
 		    -DCMAKE_CXX_EXTENSIONS=OFF \
 		    -DBUILD_SHARED_LIBS=OFF \
 		    -DCMAKE_BUILD_TYPE=Release \
-		    -DGLEW_X11=ON \
-		    -DGLEW_EGL=OFF \
-		    -DBUILD_UTILS=OFF \
 		    -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
-		    -G "${GENERATOR_NAME}" 
-
+		    -G "${GENERATOR_NAME}"
 		cmake --build . --config Release --target install
 		cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
 		make clean
 		make
+	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+		echoVerbose "building $TYPE | $ARCH "
+        echoVerbose "--------------------"
+	    mkdir -p "build_${TYPE}_${ARCH}"
+	    cd "build_${TYPE}_${ARCH}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF"         
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release
+	    cd ..
+	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+	    if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+		echoVerbose "building $TYPE | $ARCH "
+        echoVerbose "--------------------"
+	    mkdir -p "build_${TYPE}_${ARCH}"
+	    cd "build_${TYPE}_${ARCH}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF"         
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_C_COMPILER=${CC} \
+		    -DCMAKE_CXX_COMPILER=${CXX} \
+		    -DCMAKE_AR=${AR} \
+		    -DCMAKE_RANLIB=${RANLIB} \
+		    -DCMAKE_SYSROOT=${SYSROOT} \
+		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
+	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release
+	    cd ..
 	fi
+
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
