@@ -11,13 +11,14 @@ export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Update PATH and library paths
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64
-export PATH=$RASP/bin:$PATH
+export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
 # Define cross-compilation tools
 export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
 export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
 export CPP="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-cpp"
 export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
+export AS="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-as"
 export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
@@ -29,29 +30,20 @@ export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
 # GStreamer version for dependencies
 export GST_VERSION="1.0"
-
-# Package configuration path
-export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig:$SYSROOT/usr/lib/$GCC_PREFIX/pkgconfig:$SYSROOT/usr/share/pkgconfig"
-
 # Compiler flags for ARM64
 export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -I$SYSROOT/opt/vc/include \
-    -I$SYSROOT/opt/vc/include/IL \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
 # Linker flags for ARM64
 export LDFLAGS="--sysroot=${SYSROOT} \
-    -L${SYSROOT}/usr/lib/${GCC_PREFIX} \
-    -L${SYSROOT}/usr/lib/${GCC_PREFIX} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
-    -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION} \
-    -L${SYSROOT}/lib/${GCC_PREFIX}"
+    -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 
 # Host system for cross-compilation
 export HOST="${GCC_PREFIX}"
