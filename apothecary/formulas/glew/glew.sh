@@ -129,7 +129,8 @@ function build() {
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake .. ${DEFINES} \
+	    cmake  ../build/cmake \
+	 		${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
@@ -148,10 +149,12 @@ function build() {
 	    if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
-		echoVerbose "building $TYPE | $ARCH "
-        echoVerbose "--------------------"
-	    mkdir -p "build_${TYPE}_${ARCH}"
-	    cd "build_${TYPE}_${ARCH}"
+		echo "building $TYPE | $PLATFORM"
+        echo "--------------------"
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.a *.o 
+		
 	    rm -f CMakeCache.txt *.a *.o *.so
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
@@ -160,7 +163,8 @@ function build() {
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake .. ${DEFINES} \
+	    cmake  ../build/cmake \
+	    	${DEFINES} \
 	        -DCMAKE_C_COMPILER=${CC} \
 		    -DCMAKE_CXX_COMPILER=${CXX} \
 		    -DCMAKE_AR=${AR} \
@@ -203,7 +207,7 @@ function copy() {
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
 		. "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libGLEW.a glew.pkl
-    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l)$ ]]; then
+    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l|linux64|linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
