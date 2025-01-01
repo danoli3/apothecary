@@ -171,7 +171,7 @@ function build() {
 		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
 		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -198,6 +198,12 @@ function copy() {
 
 	# libs
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
+		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
+		. "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/libGLEW.a glew.pkl
+    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
