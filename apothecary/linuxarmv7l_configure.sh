@@ -8,7 +8,7 @@ RASP="$RPI_ROOT/raspbianpi3ab45"
 export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib
 export PATH=$RASP/bin:$PATH
 
 # Define cross-compilation tools
@@ -47,6 +47,7 @@ export CFLAGS="--sysroot=${SYSROOT} \
 export LDFLAGS="--sysroot=${SYSROOT} \
     -L$SYSROOT/usr/lib \
     -L$SYSROOT/usr/lib/arm-linux-gnueabihf \
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L$SYSROOT/opt/vc/lib/"
 
 # Host system for cross-compilation

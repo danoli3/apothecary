@@ -10,7 +10,7 @@ export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Update PATH and library paths
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64
 export PATH=$RASP/bin:$PATH
 
 # Define cross-compilation tools
@@ -49,6 +49,7 @@ export LDFLAGS="--sysroot=${SYSROOT} \
     -L${SYSROOT}/usr/lib/${GCC_PREFIX} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION} \
     -L${SYSROOT}/lib/${GCC_PREFIX}"
 
