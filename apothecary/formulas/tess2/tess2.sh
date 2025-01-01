@@ -217,7 +217,7 @@ function build() {
 		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
 		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \

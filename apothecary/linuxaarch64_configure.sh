@@ -53,6 +53,11 @@ export LDFLAGS="--sysroot=${SYSROOT} \
 export HOST="${GCC_PREFIX}"
 
 # Debugging output
+echo "--------------------"
+echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Toolchain Path: $RASP"
 echo "GCC Path: $GCCPATH"
+echo "LDFLAGS : $LDFLAGS"
+echo "CFLAGS : $CFLAGS"
+echo "--------------------"

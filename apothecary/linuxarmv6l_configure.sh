@@ -37,6 +37,11 @@ export LDFLAGS="--sysroot=${SYSROOT} -L$SYSROOT/usr/lib -L$SYSROOT/usr/lib/arm-l
 # Host system for cross-compilation
 export HOST="${GCC_PREFIX}"
 
+echo "--------------------"
+echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Toolchain Path: $RASP"
 echo "GCC Path: $GCCPATH"
+echo "LDFLAGS : $LDFLAGS"
+echo "CFLAGS : $CFLAGS"
+echo "--------------------"
