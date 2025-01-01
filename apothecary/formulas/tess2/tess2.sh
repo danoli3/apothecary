@@ -207,8 +207,18 @@ function build() {
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake .. ${DEFINES} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	    	-DCMAKE_C_COMPILER=${CC} \
+		    -DCMAKE_CXX_COMPILER=${CXX} \
+		    -DCMAKE_AR=${AR} \
+		    -DCMAKE_RANLIB=${RANLIB} \
+		    -DCMAKE_SYSROOT=${SYSROOT} \
+		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
+	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
@@ -220,7 +230,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_VERBOSE_MAKEFILE=TRUE
 	    cmake --build . --target install --config Release
 	    cd ..
 	else
