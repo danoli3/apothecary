@@ -241,7 +241,6 @@ function build() {
 	    cmake --build . --target install --config Release
 	    cd ..
 	fi
-	fi
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root

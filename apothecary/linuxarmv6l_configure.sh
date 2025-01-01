@@ -12,13 +12,13 @@ export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Define cross-compilation tools
-export AR="${GCC_PREFIX}-gcc-ar"
-export CC="${GCC_PREFIX}-gcc"
-export CXX="${GCC_PREFIX}-g++"
-export CPP="${GCC_PREFIX}-cpp"
-export FC="${GCC_PREFIX}-gfortran"
-export RANLIB="${GCC_PREFIX}-gcc-ranlib"
-export LD="$CXX"
+export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
+export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
+export CPP="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-cpp"
+export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
+export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
+export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
+export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
 # GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"

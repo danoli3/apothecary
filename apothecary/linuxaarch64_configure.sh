@@ -13,13 +13,13 @@ export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Define cross-compilation tools
-export AR="${GCC_PREFIX}-gcc-ar"
-export CC="${GCC_PREFIX}-gcc"
-export CXX="${GCC_PREFIX}-g++"
-export CPP="${GCC_PREFIX}-cpp"
-export FC="${GCC_PREFIX}-gfortran"
-export RANLIB="${GCC_PREFIX}-gcc-ranlib"
-export LD="$CXX"
+export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
+export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
+export CPP="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-cpp"
+export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
+export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
+export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
+export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
 # GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
@@ -38,14 +38,16 @@ export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -I$SYSROOT/opt/vc/include \
     -I$SYSROOT/opt/vc/include/IL \
+    -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
+    -D_FILE_OFFSET_BITS=64 \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
 # Linker flags for ARM64
 export LDFLAGS="--sysroot=${SYSROOT} \
     -L${SYSROOT}/usr/lib/${GCC_PREFIX} \
-    -L${SYSROOT}/usr/lib/aarch64-linux-gnu \
-    -L${TOOLCHAIN_ROOT}/aarch64-linux-gnu/lib64 \
-    -L${TOOLCHAIN_ROOT}/aarch64-linux-gnu/libc/lib64 \
+    -L${SYSROOT}/usr/lib/${GCC_PREFIX} \
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION} \
     -L${SYSROOT}/lib/${GCC_PREFIX}"
 
