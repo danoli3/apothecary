@@ -4,13 +4,14 @@
 export RPI_ROOT=$SYSROOT
 RASP="$RPI_ROOT/raspbian"
 
-# Update PATH and library paths
-export PATH=$RASP/bin:$PATH
-export LD_LIBRARY_PATH=$RASP/lib
 
 # Set GCC cross-compilation variables
 export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
+
+# Update PATH and library paths
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}
+export PATH=$RASP/bin:$PATH
 
 # Define cross-compilation tools
 export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
@@ -58,8 +59,10 @@ export HOST="${GCC_PREFIX}"
 echo "--------------------"
 echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
+echo "Library Path: $LIBRARY_PATH"
 echo "Toolchain Path: $RASP"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"
+echo "Path: $PATH"
 echo "--------------------"

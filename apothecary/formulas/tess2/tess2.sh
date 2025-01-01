@@ -211,6 +211,7 @@ function build() {
 		    -DCMAKE_CXX_COMPILER=${CXX} \
 		    -DCMAKE_AR=${AR} \
 		    -DCMAKE_RANLIB=${RANLIB} \
+		    -DCMAKE_LD=${LD} \
 		    -DCMAKE_SYSROOT=${SYSROOT} \
 		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
 		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
@@ -218,7 +219,7 @@ function build() {
 		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
+	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} -L${LIBRARY_PATH} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
