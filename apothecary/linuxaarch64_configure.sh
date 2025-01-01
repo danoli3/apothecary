@@ -2,7 +2,7 @@
 
 # Set Raspbian toolchain directory
 export RPI_ROOT=$SYSROOT
-RASP="$RPI_ROOT/raspbian"
+RASP="$RPI_ROOT"
 
 
 # Set GCC cross-compilation variables
@@ -11,6 +11,7 @@ export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Update PATH and library paths
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64
+export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
 # Define cross-compilation tools
@@ -21,7 +22,8 @@ export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
 export AS="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-as"
 export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
-export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
+# export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
+export LD="$CXX"
 
 # GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
