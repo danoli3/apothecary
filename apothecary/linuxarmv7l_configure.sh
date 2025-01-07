@@ -32,7 +32,7 @@ export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -march=armv7-a -mfpu=vfp -mfloat-abi=hard \
+    -march=armv7-a -mfpu=neon -mfpu=vfp -mfloat-abi=hard \
     -fPIC -ftree-vectorize -Wno-psabi -pipe \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS \
