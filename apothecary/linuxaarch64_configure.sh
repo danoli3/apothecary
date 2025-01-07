@@ -10,7 +10,7 @@ export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Update PATH and library paths
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64:${TOOLCHAIN_ROOT}/lib
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
@@ -44,6 +44,7 @@ export LDFLAGS="--sysroot=${SYSROOT} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
     -L/usr/lib64 \
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 

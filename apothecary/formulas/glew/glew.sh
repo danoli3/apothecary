@@ -156,6 +156,7 @@ function build() {
 
 		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT --sysroot=${SYSROOT}"
 	    rm -f CMakeCache.txt *.a *.o *.so
+	 
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \

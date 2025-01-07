@@ -8,8 +8,16 @@ set(CMAKE_SYSTEM_PROCESSOR aarch64)
 set(CMAKE_LIBRARY_ARCHITECTURE aarch64-linux-gnu)
 set(GCC_VERSION 14.2.0)
 
-set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_ROOT})
-set(CMAKE_SYSROOT ${TOOLCHAIN_ROOT})
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
+set(rootfs_dir ${SYSROOT}/rootfs>) # warning change compiled rootfs path here.
+
+set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
+set(CMAKE_SYSROOT ${rootfs_dir})
 
 set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64 \
     -L${CMAKE_SYSROOT}/lib \

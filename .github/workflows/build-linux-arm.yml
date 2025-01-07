@@ -14,7 +14,7 @@ jobs:
       TARGET: linuxaarch64
       ARCH: arm64
       WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
       TOOLCHAIN_PREFIX: "aarch64-linux-gnu"
     steps:
@@ -29,7 +29,7 @@ jobs:
       - name: Check if folder exists
         id: folder-check
         run: >
-          if [ -d $SYSROOT ]; then
+          if [ -d $TOOLCHAIN_ROOT ]; then
             echo "Raspbian folder already exists. Skipping download and extract."
             echo "::set-output name=folder-exists::true"
           else
@@ -41,6 +41,18 @@ jobs:
         run: >
           cd $WORKDIR && wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download" -O cross-gcc-14.2.0-pi_64.tar.gz && tar xf cross-gcc-14.2.0-pi_64.tar.gz &&rm cross-gcc-14.2.0-pi_64.tar.gz &&mv cross-pi-gcc-14.2.0-64 raspbian
                     
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs_arm64.sh &&
+          ./build_rootfs_arm64.sh create .
+
       - name: Script Install and Build
         run: ./scripts/$TARGET/install_and_build.sh
       - name: Update Release
@@ -59,7 +71,7 @@ jobs:
       TARGET: linuxarmv6l
       ARCH: armv6
       WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianpi1zero"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi1zero"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
@@ -74,7 +86,7 @@ jobs:
       - name: Check if folder exists
         id: folder-check
         run: >
-          if [ -d $SYSROOT ]; then
+          if [ -d $TOOLCHAIN_ROOT ]; then
             echo "Raspbian folder already exists. Skipping download and extract."
             echo "::set-output name=folder-exists::true"
           else
@@ -86,6 +98,19 @@ jobs:
         run: >
           cd $WORKDIR &&
           wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0 raspbianpi1zero
+      
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs.sh &&
+          ./build_rootfs.sh create .
+
       - name: Ensure Script is Executable
         run: chmod +x ./scripts/$TARGET/install_and_build.sh
       - name: Script Install and Build
@@ -106,11 +131,16 @@ jobs:
       TARGET: linuxarmv7l
       ARCH: armv7
       WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianpi3ab45"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianrootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi3ab45"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v2
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
@@ -121,7 +151,7 @@ jobs:
       - name: Check if folder exists
         id: folder-check
         run: >
-          if [ -d $SYSROOT ]; then
+          if [ -d $TOOLCHAIN_ROOT ]; then
             echo "Raspbian folder already exists. Skipping download and extract."
             echo "::set-output name=folder-exists::true"
           else
@@ -133,6 +163,18 @@ jobs:
         run: >
           cd $WORKDIR &&
           wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3+.tar.gz && tar xf cross-gcc-14.2.0-pi_3+.tar.gz && rm cross-gcc-14.2.0-pi_3+.tar.gz && mv cross-pi-gcc-14.2.0-2 raspbianpi3ab45
+
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs.sh &&
+          ./build_rootfs.sh create .
 
       - name: Ensure Script is Executable
         run: chmod +x ./scripts/$TARGET/install_and_build.sh

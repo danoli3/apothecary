@@ -9,8 +9,11 @@ set(CMAKE_SYSTEM_PROCESSOR armv7)
 set(CMAKE_LIBRARY_ARCHITECTURE arm-linux-gnueabihf)
 set(GCC_VERSION 14.2.0)
 
-set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_ROOT})
-set(CMAKE_SYSROOT ${TOOLCHAIN_ROOT})
+set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
+set(rootfs_dir ${SYSROOT}/rootfs>) # warning change compiled rootfs path here.
+
+set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
+set(CMAKE_SYSROOT ${rootfs_dir})
 
 set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/lib \
