@@ -154,7 +154,7 @@ function build() {
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 
-		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT"
+		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT --sysroot=${SYSROOT}"
 	    rm -f CMakeCache.txt *.a *.o *.so
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
@@ -167,17 +167,10 @@ function build() {
 	    	${DEFINES} \
 	        -DCMAKE_C_COMPILER=${CC} \
 		    -DCMAKE_CXX_COMPILER=${CXX} \
-		    -DCMAKE_AR=${AR} \
-		    -DCMAKE_RANLIB=${RANLIB} \
-		    -DCMAKE_SYSROOT=${SYSROOT} \
-		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
 		    -DTOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} \
 			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}-clang.toolchain.cmake \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
@@ -189,7 +182,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_VERBOSE_MAKEFILE=true
 	    cmake --build . --target install --config Release
 	    cd ..
 	fi
