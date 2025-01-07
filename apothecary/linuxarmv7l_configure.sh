@@ -40,10 +40,10 @@ export CFLAGS="--sysroot=${SYSROOT} \
 
 # Linker flags for ARMv7
 export LDFLAGS="--sysroot=${SYSROOT} \
-    -L$SYSROOT/usr/lib \
-    -L$SYSROOT/usr/lib/arm-linux-gnueabihf \
+    -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib \
+    -L${TOOLCHAIN_ROOT}/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
-    -L$SYSROOT/opt/vc/lib/"
+    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib"
 
 # Host system for cross-compilation
 export HOST="${GCC_PREFIX}"

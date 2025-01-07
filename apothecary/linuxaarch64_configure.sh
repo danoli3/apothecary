@@ -41,7 +41,7 @@ export CFLAGS="--sysroot=${SYSROOT} \
 
 # Linker flags for ARM64
 export LDFLAGS="--sysroot=${SYSROOT} \
-    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
+    -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
