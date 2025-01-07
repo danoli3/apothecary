@@ -43,6 +43,7 @@ export CFLAGS="--sysroot=${SYSROOT} \
 export LDFLAGS="--sysroot=${SYSROOT} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
+    -L/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 

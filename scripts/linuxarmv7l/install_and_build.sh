@@ -40,7 +40,7 @@ export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
 export LIBC_USR=${RASP}/${GCC_PREFIX}/libc/usr/
-export CRT=${LIBC_USR}/lib64
+export CRT=${LIBC_USR}/lib
 
 sudo chmod +x SSymlinker
 ./SSymlinker -s ${LIBC_USR}/include/asm -d /usr/include
