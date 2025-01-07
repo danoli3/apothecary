@@ -8,7 +8,7 @@ RASP="$RPI_ROOT"
 export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
@@ -32,7 +32,7 @@ export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -march=armv7-a -mfpu=neon -mfpu=vfp -mfloat-abi=hard \
+    -march=armv7-a -mfpu=vfp -mfloat-abi=hard \
     -fPIC -ftree-vectorize -Wno-psabi -pipe \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS \
@@ -55,6 +55,7 @@ echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
 echo "Toolchain Path: $RASP"
+echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"

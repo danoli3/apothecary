@@ -10,7 +10,7 @@ export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
 # Update PATH and library paths
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
@@ -27,8 +27,8 @@ export LD="$CXX"
 
 # GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
-export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
-export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
+export ARFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
+export RANLIBFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
 
 # GStreamer version for dependencies
 export GST_VERSION="1.0"
@@ -38,7 +38,7 @@ export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 \
-    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -mfpu=neon"
+    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
 # Linker flags for ARM64
 export LDFLAGS="--sysroot=${SYSROOT} \
@@ -56,6 +56,7 @@ echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
 echo "Toolchain Path: $RASP"
+echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"

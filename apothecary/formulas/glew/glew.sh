@@ -153,8 +153,8 @@ function build() {
         echo "--------------------"
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
-		rm -f CMakeCache.txt *.a *.o 
-		
+
+		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT"
 	    rm -f CMakeCache.txt *.a *.o *.so
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \

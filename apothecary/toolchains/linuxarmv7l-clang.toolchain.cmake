@@ -19,10 +19,10 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC \
     -L${CMAKE_SYSROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}")
 
 # Update compiler flags for ARMv7
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -finput-charset=UTF-8 -fexec-charset=UTF-8 -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -finput-charset=UTF-8 -fexec-charset=UTF-8 -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib")
 

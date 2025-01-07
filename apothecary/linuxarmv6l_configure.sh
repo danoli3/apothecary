@@ -7,7 +7,7 @@ RASP="$RPI_ROOT"
 export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib
+export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
@@ -47,6 +47,7 @@ echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
 echo "Toolchain Path: $RASP"
+echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"
