@@ -22,8 +22,7 @@ export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
 export AS="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-as"
 export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
-# export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
-export LD="$CXX"
+export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
 # GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
