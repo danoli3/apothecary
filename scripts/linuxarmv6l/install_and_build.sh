@@ -21,10 +21,11 @@ cd $ROOT
 RASP="$ROOT/raspbianpi1zero"
 
 PATH=$RASP/bin:$PATH
-LD_LIBRARY_PATH=$RASP/lib
 
 export GCC_PREFIX=arm-linux-gnueabihf
 export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/arm-linux-gnueabihf/*/
+
+LD_LIBRARY_PATH=${RASP}/${GCC_PREFIX}/libc/usr/lib:${RASP}/${GCC_PREFIX}/libc/lib:${RASP}/lib
 
 export AR="${GCC_PREFIX}-gcc-ar"
 export CC="${GCC_PREFIX}-gcc"
@@ -38,15 +39,20 @@ GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
-# sudo chmod +x SSymlinker
-# ./SSymlinker -s /usr/include/${GCC_PREFIX}/asm -d /usr/include
-# ./SSymlinker -s /usr/include/${GCC_PREFIX}/gnu -d /usr/include
-# ./SSymlinker -s /usr/include/${GCC_PREFIX}/bits -d /usr/include
-# ./SSymlinker -s /usr/include/${GCC_PREFIX}/sys -d /usr/include
-# ./SSymlinker -s /usr/include/${GCC_PREFIX}/openssl -d /usr/include
-# ./SSymlinker -s /usr/lib/${GCC_PREFIX}/crtn.o -d /usr/lib/crtn.o
-# ./SSymlinker -s /usr/lib/${GCC_PREFIX}/crt1.o -d /usr/lib/crt1.o
-# ./SSymlinker -s /usr/lib/${GCC_PREFIX}/crti.o -d /usr/lib/crti.o
+export LIBC_USR=${RASP}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/
+export CRT=${LIBC_USR}/lib
+
+sudo chmod +x SSymlinker
+./SSymlinker -s ${LIBC_USR}/include/asm -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/gnu -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/bits -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/sys -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/sound -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/video -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include -d /usr/include
+./SSymlinker -s ${CRT}/crtn.o -d /usr/lib/crtn.o
+./SSymlinker -s ${CRT}/crt1.o -d /usr/lib/crt1.o
+./SSymlinker -s ${CRT}/crti.o -d /usr/lib/crti.o
 
 echo 'export PATH=$PATH' >> .bashrc
 echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> .bashrc
