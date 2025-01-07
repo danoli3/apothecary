@@ -19,6 +19,11 @@ jobs:
       TOOLCHAIN_PREFIX: "aarch64-linux-gnu"
     steps:
       - uses: actions/checkout@v2
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
@@ -76,6 +81,11 @@ jobs:
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v2
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
