@@ -54,6 +54,10 @@ sudo chmod +x SSymlinker
 ./SSymlinker -s ${CRT}/crt1.o -d /usr/lib/crt1.o
 ./SSymlinker -s ${CRT}/crti.o -d /usr/lib/crti.o
 
+ln -sf ${CRT}/crti.o /usr/lib/crti.o
+ln -sf ${CRT}/crt1.o /usr/lib/crt1.o
+ln -sf ${CRT}/crtn.o /usr/lib/crtn.o
+
 echo 'export PATH=$PATH' >> .bashrc
 echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> .bashrc
 source .bashrc
