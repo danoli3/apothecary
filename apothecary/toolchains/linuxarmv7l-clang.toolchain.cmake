@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
@@ -10,21 +12,19 @@ set(GCC_VERSION 14.2.0)
 set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_ROOT})
 set(CMAKE_SYSROOT ${TOOLCHAIN_ROOT})
 
-# Update linker flags for ARMv7
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC \
-    -Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
+set(EXTRA_LINKS "-L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib \
     -L${CMAKE_SYSROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}")
 
+
+# Update linker flags for ARMv7
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
+
 # Update compiler flags for ARMv7
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
-    -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
-    -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard -rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
-    -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
-    -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv7-a -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
 
 # Compiler Binary
 set(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE})
