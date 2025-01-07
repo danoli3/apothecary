@@ -18,7 +18,7 @@ wget https://raw.githubusercontent.com/abhiTronix/raspberry-pi-cross-compilers/m
 ROOT=/home/runner/work/apothecary/apothecary
 echo $ROOT
 cd $ROOT
-RASP="$ROOT/raspbianpi1zero"
+export RASP="$ROOT/raspbianpi1zero"
 
 PATH=$RASP/bin:$PATH
 
@@ -39,7 +39,7 @@ GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
-export LIBC_USR=${RASP}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/
+export LIBC_USR=${RASP}/${GCC_PREFIX}/libc/usr/
 export CRT=${LIBC_USR}/lib
 
 sudo chmod +x SSymlinker
