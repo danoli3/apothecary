@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
@@ -18,29 +20,22 @@ set(EXTA_LINKS "-fPIC \
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTA_LINKS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -finput-charset=UTF-8 ${EXTA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTA_LINKS}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -finput-charset=UTF-8 ${EXTA_LINKS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTA_LINKS})
 
 ## Compiler Binary 
-SET(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/aarch64-linux-gnu)
+SET(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/aarch64-linux-gnu")
 
 SET (CMAKE_C_COMPILER ${BIN_PREFIX}-gcc)
 SET (CMAKE_CXX_COMPILER ${BIN_PREFIX}-g++ )
-SET (CMAKE_LINKER ${BIN_PREFIX}-ld 
-            CACHE STRING "Set the cross-compiler tool LD" FORCE)
-SET (CMAKE_AR ${BIN_PREFIX}-ar 
-            CACHE STRING "Set the cross-compiler tool AR" FORCE)
-SET (CMAKE_NM {BIN_PREFIX}-nm 
-            CACHE STRING "Set the cross-compiler tool NM" FORCE)
-SET (CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy 
-            CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
-SET (CMAKE_OBJDUMP ${BIN_PREFIX}-objdump 
-            CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
-SET (CMAKE_RANLIB ${BIN_PREFIX}-ranlib 
-            CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
-SET (CMAKE_STRIP {BIN_PREFIX}-strip 
-            CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
+SET (CMAKE_LINKER ${BIN_PREFIX}-ld CACHE STRING "Set the cross-compiler tool LD" FORCE)
+SET (CMAKE_AR ${BIN_PREFIX}-ar CACHE STRING "Set the cross-compiler tool AR" FORCE)
+SET (CMAKE_NM {BIN_PREFIX}-nm CACHE STRING "Set the cross-compiler tool NM" FORCE)
+SET (CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
+SET (CMAKE_OBJDUMP ${BIN_PREFIX}-objdump CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
+SET (CMAKE_RANLIB ${BIN_PREFIX}-ranlib CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
+SET (CMAKE_STRIP {BIN_PREFIX}-strip CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
