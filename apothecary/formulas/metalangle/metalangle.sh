@@ -243,6 +243,28 @@ function copy() {
 	mkdir -p "$1/include/third_party/jsoncpp/source/include"
 	cp -Rv third_party/jsoncpp/source/include/* "$1/include/third_party/jsoncpp/source/include/"
 
+	# find "$1/include" -type f > "$1/include/files.txt"
+	EXTENSIONS=(
+	    ".asm" ".jpg" ".gif" ".sh" ".py" ".gn" ".gni" ".yml" ".cfg"
+	    ".frag" ".comp" ".vert" ".tese" ".tesc" ".geom" ".hlsl" ".spv"
+	    ".vk" ".patch" ".rchit" ".multi" ".template" ".m4" ".inc" ".DS_Store" ".clang-format"
+	)
+
+	# Iterate through each extension and remove matching files
+	for ext in "${EXTENSIONS[@]}"; do
+	    find "$1/include" -type f -name "*$ext" -exec rm -v {} \;
+	done
+
+	echo "Removing not needed shaders folder: 1/include/src/libANGLE/renderer/d3d"
+	if [ -d "$1/include/src/libANGLE/renderer/d3d/d3d9/shaders" ]; then
+    	rm -rf "$1/include/src/libANGLE/renderer/d3d/d3d9/shaders"
+	fi
+	if [ -d "$1/include/src/libANGLE/renderer/d3d/d3d11/shaders" ]; then
+    	rm -rf "$1/include/src/libANGLE/renderer/d3d/d3d11/shaders"
+	fi
+
+	# find "$1/include" -type f > "$1/include/filesafter.txt"
+
     . "$SECURE_SCRIPT"
     mkdir -p $1/lib/$TYPE
 
