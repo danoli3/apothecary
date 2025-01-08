@@ -8,7 +8,7 @@ FORMULA_DEPENDS=( )
 
 # define the version
 VER=1.0
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
