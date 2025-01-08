@@ -437,7 +437,6 @@ fi
 # If formula already exists force download
 if [ -z "${FORCE_DOWNLOAD+x}" ]; then
     export FORCE_DOWNLOAD=0
-    echo "FORCE_DOWNLOAD is zero: $FORCE_DOWNLOAD"
 else
 	echo "FORCE_DOWNLOAD is set: $FORCE_DOWNLOAD"
 fi

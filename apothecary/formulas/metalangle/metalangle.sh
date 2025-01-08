@@ -281,6 +281,14 @@ function load() {
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1
     else
+    	TARGET_DIR="$LIBS_DIR_REAL/$1"
+	    # Check if the folder exists
+	    if [ -d "$TARGET_DIR" ]; then
+	        echoInfo "Deleting existing folder: $TARGET_DIR"
+	        rm -rf "$TARGET_DIR"
+	    else
+	        echoInfo "Folder does not exist: $TARGET_DIR"
+	    fi
         echo 0
     fi
 }
