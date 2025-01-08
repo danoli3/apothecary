@@ -9,6 +9,7 @@ FORMULA_DEPENDS=( )
 
 # define the version
 VER=130
+BUILD_ID=1
 
 # tools for git use
 GIT_URL=https://github.com/mborgerding/kissfft.git
@@ -63,7 +64,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "glfw3" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "glfw3" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1

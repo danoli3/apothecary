@@ -141,6 +141,8 @@ jobs:
             fi
             rm -f xout/*.tar.bz2 
             rm -f out/*.tar.bz2
+      - name: List output directory1
+        run: ls -lah out/
       - name: Build iOS arm64
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/build.sh

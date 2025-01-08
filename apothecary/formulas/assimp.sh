@@ -425,7 +425,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "assimp" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "assimp" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1

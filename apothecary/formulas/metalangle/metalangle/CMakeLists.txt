@@ -63,7 +63,6 @@ if(__linux__)
 endif()
 
 
-
 set (libangle_common_sources
   src/common/Color.h
   src/common/Color.inc
@@ -1053,6 +1052,24 @@ include_directories(
 
 # Setup target
 add_library(${TARGET_NAME} STATIC ${SRC_FILES})
+
+target_link_libraries(${TARGET_NAME} "-framework QuartzCore -framework Metal -framework CoreFoundation -framework Foundation -framework UIKIT -framework CoreGraphics -framework OpenGLES -framework IOSurface")
+
+
+if (TYPE STREQUAL "catos")
+
+	set_target_properties(${TARGET_NAME} PROPERTIES
+	    XCODE_ATTRIBUTE_SUPPORTS_MACCATALYST "YES"
+	)
+    # Catalyst-specific settings
+    set(CMAKE_OSX_SYSROOT "macosx.internal")  # or "iphoneos.internal" depending on your setup
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "13.3")  # Set this to your desired deployment target
+
+    # Additional define for Catalyst
+    add_definitions(-DSUPPORTS_MACCATALYST=YES)
+else()
+    # Non-Catalyst specific settings
+endif()
 
 target_include_directories(${TARGET_NAME}
   PUBLIC

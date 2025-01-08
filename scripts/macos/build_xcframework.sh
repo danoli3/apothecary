@@ -36,7 +36,7 @@ fi
 for formula in "${FORMULAS[@]}" ; do
     formula_name="${formula%.*}"
     ARGS="$FORCE -t$TARGET -d$OUTPUT_FOLDER -a$ARCH"
-    #echo "./apothecary $ARGS framework $formula_name"
+    echo "[${formula_name}] ./apothecary $ARGS framework $formula_name"
     eval "cd $APOTHECARY_PATH";
     echo "---------"
     eval "./apothecary -x $ARGS framework $formula_name"
