@@ -23,7 +23,7 @@ jobs:
       - name: Update and Upgrade System Packages
         run: |
           sudo apt update && sudo apt dist-upgrade -y
-          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
@@ -86,7 +86,7 @@ jobs:
       - name: Update and Upgrade System Packages
         run: |
           sudo apt update && sudo apt dist-upgrade -y
-          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
@@ -152,7 +152,7 @@ jobs:
       - name: Update and Upgrade System Packages
         run: |
           sudo apt update && sudo apt dist-upgrade -y
-          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
         uses: actions/cache@v2
