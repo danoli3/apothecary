@@ -86,7 +86,7 @@ USE_SAVE=1
 
 # xcode Developer root
 if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
-    XS="xcode-select -print-path" # stupid hack to keep my syntax highlighting from breaking :P
+    XS="xcode-select -print-path"
     XCODE_DEV_ROOT=
 
     # used when building some libs for osx
@@ -95,12 +95,11 @@ if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
     OSX_MIN_SDK_VER=10.15
 
     # used when building for ios, the sdks you have installed are found in:
-    # $XCODE_DEV_ROOT/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator#.#.sdk
-    IOS_LATEST_SDK="xcrun -sdk iphoneos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
-    TVOS_LATEST_SDK="xcrun -sdk tvos --show-sdk-version" # stupid hack to keep my syntax highlighting from breaking :P
     IOS_SDK_VER=18.1
+    IOS_LATEST_SDK=$(xcrun -sdk iphoneos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     IOS_MIN_SDK_VER=15.0
     TVOS_MIN_SDK_VER=17.0
+    TVOS_LATEST_SDK=$(xcrun -sdk appletvos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
     XROS_MIN_SDK_VER=1.1
     WATCHOS_MIN_SDK_VER=6.0
     if ! which realpath >&/dev/null; then
@@ -186,8 +185,11 @@ fi
 # by default assume visual studio pro
 # -x changes to visual studio express
 VS_BUILD_TOOL=devenv
-WIN10_INSTALLED_SDK_2019=10.0.190410.0
+
+WIN10_INSTALLED_SDK_2019=10.0.19041.0
 WIN10_INSTALLED_SDK_2019_HEX=0x0A004A31
+WIN11_INSTALLED_SDK_2019=10.0.22000.0
+WIN11_INSTALLED_SDK_2019_HEX=0x0A0055F0
 
 WIN10_INSTALLED_SDK_2022=10.0.20348.0
 WIN10_INSTALLED_SDK_2022_HEX=0x0A004F5C
@@ -214,6 +216,11 @@ fi
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 
+# if [ -z "${USE_CCACHE+x}" ]; then
+#     export CC="ccache gcc"
+#     export CXX="ccache g++"
+#     export CMAKE_DEFS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+# fi
 
 # nice, detailed help message
 HELP="usage: apothecary [options] <command> [<core|addons|libName|addonName>]
@@ -770,8 +777,14 @@ if [ "$TYPE" = "vs" ]; then
         export VS_YEAR=2019
         export VS_VER=16
         export VS_VER_GEN="$VS_VER $VS_YEAR"
-        export CMAKE_WIN_SDK_HEX=${WIN10_INSTALLED_SDK_2019_HEX}
-        export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2019} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2019} "
+        if [ $ARCH == "arm64ec" ] || [ $TARGET_WIN_11 == 1 ]; then
+            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN11_INSTALLED_SDK_2019} -DCMAKE_SYSTEM_VERSION=${WIN11_INSTALLED_SDK_2019} "
+            export CMAKE_WIN_SDK_HEX=${WIN11_INSTALLED_SDK_2019_HEX}
+        else 
+            export CMAKE_WIN_SDK_HEX=${WIN10_INSTALLED_SDK_2019_HEX}
+            export CMAKE_WIN_SDK="-DCMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=${WIN10_INSTALLED_SDK_2019} -DCMAKE_SYSTEM_VERSION=${WIN10_INSTALLED_SDK_2019} "
+
+        fi
     fi    
     echoVerbose "PLATFORM set to ${PLATFORM} Visual Studio ${VS_VER_GEN} - ${CROSS_TOOL} - ${VS_HOST}"
 
@@ -850,12 +863,18 @@ if [ "$TYPE" = "emscripten" ]; then
     else
         PTHREADS_FLAG=""
     fi
-    export FLAG_RELEASE+="-Os ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG "
+    export FLAG_RELEASE+="-O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG "
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi
 
 if [ "$TYPE" = "ios" ]; then
+    if [[ "$IOS_LATEST_SDK" == "SDKNotInstalled" ]]; then
+        echoError "No iOS SDK installed. Please install Xcode and ensure the iOS SDK is available."
+        exit 1
+    else
+        echoVerbose "iOS SDK version: $IOS_LATEST_SDK"
+    fi
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "armv7" ] ; then
         export PLATFORM="OS"
@@ -869,6 +888,12 @@ if [ "$TYPE" = "ios" ]; then
 fi
 
 if [ "$TYPE" = "tvos" ]; then
+    if [[ "$TVOS_LATEST_SDK" == "SDKNotInstalled" ]]; then
+        echoError "No tvOS SDK installed. Please install Xcode and ensure the tvOS SDK is available."
+        exit 1
+    else
+        echoVerbose "tvOS SDK version: $TVOS_LATEST_SDK"
+    fi
     export FLAG_RELEASE="-Os"
     if [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
         export PLATFORM="SIMULATOR_TVOS"
@@ -938,6 +963,8 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
         export ABI="aarch64"
     elif [ $TYPE == "linuxarmv7l" ]; then
         export ABI="armv7l"
+    elif [ $TYPE == "linuxarmv6l" ]; then
+        export ABI="armv6l"
     elif [ $TYPE == "msys2" ]; then
         export ABI="x86_64"
     fi 
@@ -2531,8 +2558,8 @@ echoVerbose "Valid build types: ${VALID_TYPES[*]}"
 # set xcode dev root on osx
 if [ "$HOST_OS" == "osx" ] ; then
 	XCODE_DEV_ROOT=$($XS) # Sets to path from Xcode Path
-	OSX_SDK_VER=$($OSX_LATEST_SDK) # sets to latest OSX SDK
-	IOS_SDK_VER=$($IOS_LATEST_SDK) # sets to latest iOS SDK
+	OSX_SDK_VER=$OSX_LATEST_SDK
+	IOS_SDK_VER=$IOS_LATEST_SDK
 fi
 
 # check if we have a valid build type

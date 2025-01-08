@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I./include
+CFLAGS=-I./include -fPIC
 
 LIB=libkiss.a
 LIBDEST=./lib/linuxarmv6l/

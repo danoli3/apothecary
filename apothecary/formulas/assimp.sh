@@ -35,13 +35,6 @@ function download() {
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
     echo "Prepare"
-
-    apothecaryDependencies download
-    
-    apothecaryDepend prepare zlib
-    apothecaryDepend build zlib
-    apothecaryDepend copy zlib
-   
 }
 
 # executed inside the lib src dir
@@ -58,14 +51,14 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
         find ./ -name "*.o" -type f -delete
-        DEFS="
+        DEFINES="
             -DASSIMP_BUILD_TESTS=0
             -DASSIMP_BUILD_SAMPLES=0
             -DASSIMP_BUILD_3MF_IMPORTER=0
             -DASSIMP_BUILD_ZLIB=OFF 
             -DASSIMP_WARNINGS_AS_ERRORS=OFF"
 
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -108,7 +101,7 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         find ./ -name "*.o" -type f -delete
         rm -f CMakeCache.txt || true
-        DEFS="
+        DEFINES="
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -120,7 +113,7 @@ function build() {
             -DASSIMP_WARNINGS_AS_ERRORS=OFF \
             -DBUILD_WITH_STATIC_CRT=OFF"
 
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             ${CMAKE_WIN_SDK} \
             -G "${GENERATOR_NAME}" \
@@ -138,7 +131,7 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY}
         cmake --build . --config Release
 
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             ${CMAKE_WIN_SDK} \
             -G "${GENERATOR_NAME}" \
@@ -178,7 +171,7 @@ function build() {
 
         if [ "$ABI" == "armeabi-v7a" ]; then
             export HOST=armv7a-linux-android
-            local buildOpts="
+            DEFINES="
                 -DBUILD_SHARED_LIBS=OFF
                 -DASSIMP_BUILD_TESTS=0
                 -DASSIMP_BUILD_SAMPLES=0
@@ -196,7 +189,7 @@ function build() {
 
         elif [ "$ABI" == "arm64-v8a" ]; then
             export HOST=aarch64-linux-android
-            local buildOpts="
+            DEFINES="
                 -DBUILD_SHARED_LIBS=OFF
                 -DASSIMP_BUILD_TESTS=0
                 -DASSIMP_BUILD_SAMPLES=0
@@ -213,7 +206,7 @@ function build() {
                 -DCMAKE_INSTALL_PREFIX=install"
         elif [ "$ABI" == "x86" ]; then
             export HOST=x86-linux-android
-            local buildOpts="
+            DEFINES="
                 -DBUILD_SHARED_LIBS=OFF
                 -DASSIMP_BUILD_TESTS=0
                 -DASSIMP_BUILD_SAMPLES=0
@@ -229,7 +222,7 @@ function build() {
                 -DCMAKE_INSTALL_PREFIX=install"
         elif [ "$ABI" == "x86_64" ]; then
             export HOST=x86_64-linux-android
-            local buildOpts="
+            DEFINES="
                 -DBUILD_SHARED_LIBS=OFF
                 -DASSIMP_BUILD_TESTS=0
                 -DASSIMP_BUILD_SAMPLES=0
@@ -257,7 +250,7 @@ function build() {
         export CMAKE_LDFLAGS="$LDFLAGS"
         
         cmake -S .. -DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
-            $buildOpts \
+            ${DEFINES} \
             -DCMAKE_C_COMPILER=${CC} \
             -DASSIMP_ANDROID_JNIIOSYSTEM=OFF \
             -DANDROID_STL=c++_shared \
@@ -311,7 +304,7 @@ function build() {
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
         # warning, assimp on github uses the ASSIMP_ prefix for CMake options ...
         # these may need to be updated for a new release
-        local buildOpts="
+        DEFINES="
             -DBUILD_SHARED_LIBS=OFF
             -DASSIMP_BUILD_TESTS=0
             -DASSIMP_BUILD_SAMPLES=0
@@ -326,9 +319,9 @@ function build() {
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             -B . \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-            $buildOpts \
-            -DCMAKE_C_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE}" \
-            -DCMAKE_CXX_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE}" \
+            ${DEFINES} \
+            -DCMAKE_C_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE} -Wno-nontrivial-memaccess" \
+            -DCMAKE_CXX_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE} -Wno-nontrivial-memaccess" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \

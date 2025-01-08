@@ -10,30 +10,24 @@ FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" 
 FORMULA_DEPENDS=( "zlib" "libpng" "brotli" )
 
 # define the version
-VER=2.13.2
-BUILD=1
-FVER=213
+VER=2.13.3
 BUILD_ID=1
 DEFINES=""
 
-GIT_VER=VER-2-13-2
+GIT_VER="VER-${VER//./-}"
 
 # tools for git use
-GIT_URL=https://git.savannah.gnu.org/r/freetype/freetype2.git
-GIT_TAG=VER-2-13
-URL=http://download.savannah.nongnu.org/releases/freetype
-MIRROR_URL=https://mirror.ossplanet.net/nongnu/freetype
+GIT_TAG="VER-${VER%.*}"
 GIT_HUB=https://github.com/freetype/freetype/tags
-GIT_HUB_URL=https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-2.tar.gz
-
-
+URL="https://github.com/freetype/freetype/archive/refs/tags/${GIT_VER}.tar.gz"
+GIT_URL="https://github.com/freetype/freetype"
 
 # download the source code and unpack it into LIB_NAME
 function download() {
 	echo "Downloading freetype-$GIT_VER"
 
 	. "$DOWNLOADER_SCRIPT"
-	downloader $GIT_HUB_URL
+	downloader $URL
 	
 	tar -xzf $GIT_VER.tar.gz
 	mv freetype-$GIT_VER freetype
@@ -51,7 +45,7 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
-	DEFS="	
+	DEFINES="	
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -111,7 +105,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
 		    -DBUILD_SHARED_LIBS=OFF"
 
-			cmake .. ${DEFS} \
+			cmake .. ${DEFINES} \
 				${EXTRA_DEFS} \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DCMAKE_INCLUDE_PATH="$LIBBROTLI_INCLUDE_DIR;$LIBPNG_INCLUDE_DIR;$ZLIB_INCLUDE_DIR" \
@@ -194,7 +188,7 @@ function build() {
 		    -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG=lib \
 		    -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=bin"
 		 env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
-         cmake .. ${DEFS} \
+         cmake .. ${DEFINES} \
          	${EXTRA_DEFS} \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=OFF \
@@ -224,7 +218,7 @@ function build() {
         cmake --build . --config Release --target install   
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=OFF \
 		    ${CMAKE_WIN_SDK} \
@@ -269,7 +263,7 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -294,7 +288,7 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-D FT_REQUIRE_ZLIB=ON \
         	-D FT_DISABLE_BZIP2=ON \
         	-D FT_REQUIRE_HARFBUZZ=OFF \
@@ -337,7 +331,8 @@ function build() {
         EXTRA_DEFS="
             -DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} 
             "
-        cmake -D CMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
+        cmake ${DEFINES} \
+        	-D CMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
         	-D CMAKE_OSX_SYSROOT:PATH=${SYSROOT} \
       		-D CMAKE_C_COMPILER=${CC} \
      	 	-D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
@@ -400,7 +395,7 @@ function build() {
         rm -f CMakeCache.txt *.a *.o *.a
         export PATH="${PATH}:${LIBPNG_INCLUDE_DIR}"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	${BROTLI} \
 	    	-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \

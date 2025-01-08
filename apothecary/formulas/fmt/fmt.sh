@@ -4,10 +4,10 @@
 # https://github.com/fmtlib/fmt
 
 FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux64" "linuxaarch64" )
-FORMULA_DEPENDS=(  ) 
+FORMULA_DEPENDS=(  )
 
 # define the version
-VER=10.2.1
+VER=11.0.2
 
 # tools for git use
 GIT_URL=https://github.com/fmtlib/fmt
@@ -21,20 +21,20 @@ DEFINES=""
 function download() {
 	. "$DOWNLOADER_SCRIPT"
 
-	git clone --branch $GIT_TAG --depth=1 $GIT_URL 
+	git clone --branch $GIT_TAG --depth=1 $GIT_URL
 
 	# if [ "$TYPE" == "vs" ] ; then
 	# 	downloader "${URL}.zip"
 	# 	unzip -q "${VER}.zip"
 	# 	mv "fmt-${VER}" fmt
 	# 	rm "${VER}.zip"
-	# else 
+	# else
 	# 	downloader "${URL}.tar.gz"
 	# 	tar -xf "${VER}.tar.gz"
 	# 	mv "fmt-${VER}" fmt
 	# 	rm "${VER}.tar.gz"
 	# fi
-	
+
 
 }
 
@@ -45,14 +45,14 @@ function prepare() {
 	# . "$DOWNLOADER_SCRIPT"
 	rm -f ./CMakeLists.txt
 	cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
-	
+
 }
 
 # executed inside the lib src dir
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
 
-	export DEFS="
+	DEFINES="
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -64,12 +64,12 @@ function build() {
 		    -DFMT_SYSTEM_HEADERS=OFF \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
-	
+
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o
-		cmake .. ${DEFS} \
+		cmake .. ${DEFINES} \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
 				-DCMAKE_INSTALL_PREFIX=Release \
@@ -83,11 +83,11 @@ function build() {
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
 		cmake --build . --config Release --target install
-		cd ..	
+		cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
 	  	echoVerbose "--------------------"
-	  	GENERATOR_NAME="Visual Studio ${VS_VER_GEN}" 
+	  	GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
 
 	  	mkdir -p "build_${TYPE}_${ARCH}"
 		cd "build_${TYPE}_${ARCH}"
@@ -95,7 +95,7 @@ function build() {
 
   		env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
   		env CFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
-		cmake .. ${DEFS} \
+		cmake .. ${DEFINES} \
 			-B . \
 	    	-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -111,7 +111,7 @@ function build() {
 
 		cmake --build . --config Release  --target install
 
-		cd ..	
+		cd ..
 
 	elif [ "$TYPE" == "android" ] ; then
 
@@ -120,7 +120,7 @@ function build() {
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
-			cmake .. ${DEFS} \
+			cmake .. ${DEFINES} \
 				-DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
 				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
 				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -151,7 +151,7 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
         	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -170,10 +170,10 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+        		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 				-DCMAKE_C_STANDARD=${C_STANDARD} \
 				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -191,7 +191,7 @@ function build() {
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o *.a
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 			-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 			-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -202,14 +202,14 @@ function build() {
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-			-DCMAKE_INSTALL_INCLUDEDIR=include \
-			-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
-			-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
-			-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. 
+			-DCMAKE_INSTALL_INCLUDEDIR=include
+			# -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
+			# -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
+			# -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=.
 	    cmake --build . --target install --config Release
 	    cd ..
 	fi
-		
+
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
@@ -233,14 +233,14 @@ function copy() {
 		cp -R "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -v "build_${TYPE}/bin/fmt_wasm.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
+		cp -v "build_${TYPE}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		cp -R "build_${TYPE}/Release/include/" $1/include
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/bin/.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
+		cp -v "build_${TYPE}_${PLATFORM}/Release/bin/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
-		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include	
+		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	fi
 
 	# copy license file
@@ -255,11 +255,11 @@ function copy() {
 function clean() {
 	if [ "$TYPE" == "vs" ] ; then
 		if [ -d "build_${TYPE}_${ARCH}" ]; then
-		    rm -r build_${TYPE}_${ARCH}     
+		    rm -r build_${TYPE}_${ARCH}
 		fi
 	elif [ "$TYPE" == "android" ] ; then
 		if [ -d "build_${TYPE}_${ABI}" ]; then
-			rm -r build_${TYPE}_${ABI}     
+			rm -r build_${TYPE}_${ABI}
 	  	fi
 	elif [ "$TYPE" == "emscripten" ] ; then
 		if [ -d "build_${TYPE}" ]; then
@@ -267,7 +267,7 @@ function clean() {
 	  fi
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
-			rm -r build_${TYPE}_${PLATFORM}     
+			rm -r build_${TYPE}_${PLATFORM}
 	  	fi
 	else
 		echoVerbose "clean not setup for $TYPE"

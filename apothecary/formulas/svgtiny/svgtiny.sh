@@ -6,7 +6,7 @@
 #
 # uses a makeifle build system
 
-FORMULA_TYPES=( "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" )
+FORMULA_TYPES=( "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "msys2" )
 FORMULA_DEPENDS=( "zlib" "libxml2" )
 
 # define the version by sha
@@ -79,9 +79,18 @@ function prepare() {
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
     if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+
+    if [ "$TYPE" == "msys2" ]; then
+		MINGW_PREFIX="${MINGW_PREFIX:-/mingw64}"  # Default to /mingw64 if MINGW_PREFIX is not set
+        LIBXML2_ROOT="$MINGW_PREFIX"  # Adjust for architecture
+        LIBXML2_INCLUDE_DIR="$LIBXML2_ROOT/include/libxml2"
+        LIBXML2_LIBRARY="$LIBXML2_ROOT/lib/libxml2.a"  # Adjust path for MSYS2 system libraries
+    else
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
         LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
+    fi
+
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -96,7 +105,7 @@ function build() {
 	        -DCMAKE_INSTALL_INCLUDEDIR=include"         
 	    cmake .. ${DEFS} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DDO_XML_INSTALL=ON \
@@ -333,15 +342,15 @@ function copy() {
         secure $1/lib/$TYPE/$ABI/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-        cp -f "build_${TYPE}_$PLATFORM/svgtiny_wasm.a" $1/lib/$TYPE/$PLATFORM/svgtiny.a        
+        cp -f "build_${TYPE}_$PLATFORM/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/svgtiny.a        
         secure $1/lib/$TYPE/$PLATFORM/svgtiny.a svgtiny.pkl
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
+	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
 		mkdir -p $1/lib/$TYPE/${ARCH}
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
-    elif [ "$TYPE" == "msys2" ] ; then
-		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
-        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
+#    elif [ "$TYPE" == "msys2" ] ; then
+#		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
+#        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	fi
 
 	# copy license file
