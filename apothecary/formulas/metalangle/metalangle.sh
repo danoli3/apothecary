@@ -205,8 +205,10 @@ function copy() {
 	echo "copy"
 	# # headers
 	mkdir -p $1
+	if [ -d "$1/include" ]; then
+		rm -rf $1/include/*
+	fi
 	mkdir -p $1/include
-    # rm -rf $1/include/*
     cp -Rv include/* $1/include
 
     echo "Copying src headers..."
@@ -303,7 +305,7 @@ function load() {
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1
     else
-    	TARGET_DIR="$LIBS_DIR_REAL/$1"
+    	TARGET_DIR="$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM"
 	    # Check if the folder exists
 	    if [ -d "$TARGET_DIR" ]; then
 	        echoInfo "Deleting existing folder: $TARGET_DIR"
