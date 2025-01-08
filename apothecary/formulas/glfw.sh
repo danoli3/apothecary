@@ -12,7 +12,7 @@ FORMULA_DEPENDS=( )
 GIT_URL=https://github.com/glfw/glfw
 VER=3.4
 GIT_BRANCH=$VER
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
@@ -66,7 +66,7 @@ function build() {
             -DGLFW_BUILD_EXAMPLES=OFF \
             -DGLFW_BUILD_TESTS=OFF \
             -DGLFW_BUILD_DOCS=OFF \
-            -DGLFW_VULKAN_STATIC=OFF"         
+            -DGLFW_VULKAN_STATIC=OFF"
      
         cmake .. ${DEFINES} \
         	-DLIBRARY_SUFFIX=${ARCH} \
@@ -76,7 +76,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_LIBDIR="lib" \            
+            -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             ${CMAKE_WIN_SDK} \
             -A "${PLATFORM}" \
@@ -183,7 +183,7 @@ function build() {
 			    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			    -DCMAKE_CXX_EXTENSIONS=OFF \
-				$DEFINES	
+				$DEFINES
 
  		make clean
  		make -j${PARALLEL_MAKE}
