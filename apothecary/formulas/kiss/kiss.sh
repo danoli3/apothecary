@@ -9,6 +9,7 @@ FORMULA_DEPENDS=( )
 
 # define the version
 VER=130
+BUILD_ID=1
 
 # tools for git use
 GIT_URL=https://github.com/mborgerding/kissfft.git
