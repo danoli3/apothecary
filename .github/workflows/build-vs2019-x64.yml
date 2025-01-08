@@ -123,11 +123,25 @@ jobs:
             for zip in out/*.zip; do
                 echo "Extracting $zip..."
                 unzip -o "$zip" -d out/
+                echo "Removing $zip..."
+                rm "$zip"
             done
-            echo "Extraction complete."
-            rm out/*.zip
+            echo "First-level extraction and cleanup complete."
+
+            # Check and extract second-level zip files and remove them
+            if ls out/*.zip 1> /dev/null 2>&1; then
+                for nested_zip in out/*.zip; do
+                    echo "Extracting nested zip $nested_zip..."
+                    unzip -o "$nested_zip" -d out/
+                    echo "Removing $nested_zip..."
+                    rm "$nested_zip"
+                done
+                echo "Second-level extraction and cleanup complete."
+            else
+                echo "No nested zip files found."
+            fi
           else
-            echo "No zip files to extract."
+              echo "No zip files to extract."
           fi
           if ls out/*.tar.bz2 1> /dev/null 2>&1; then
             for tarball in out/*.tar.bz2; do

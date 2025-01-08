@@ -13,9 +13,9 @@ FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emsc
 
 FORMULA_DEPENDS=( "zlib" "libpng" )
 
-VER=31990
+VER=31991
 GIT_URL=https://github.com/danoli3/FreeImage
-GIT_TAG=3.19.9
+GIT_TAG=3.19.10
 BUILD_ID=1
 DEFINES=""
 
@@ -264,6 +264,8 @@ function build() {
 		
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-B build \
+	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+	    	-DLINK_FLAGS="${LINK_FLAGS}" \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -288,6 +290,8 @@ function build() {
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include
+        #$EMSDK/upstream/emscripten/emmake make -j
+        #$EMSDK/upstream/emscripten/emmake make install
 	    cmake --build build --target install --config Release
 	    cd ..
 	else
