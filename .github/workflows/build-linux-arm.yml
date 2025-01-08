@@ -119,7 +119,7 @@ jobs:
         run: |
           cd $SYSROOT &&
           sudo chmod +x ./build_rootfs.sh
-          ./build_rootfs_arm64.sh download
+          ./build_rootfs.sh download
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
@@ -184,7 +184,7 @@ jobs:
         run: |
           cd $SYSROOT &&
           sudo chmod +x ./build_rootfs.sh
-          ./build_rootfs_arm64.sh download
+          ./build_rootfs.sh download
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
