@@ -157,18 +157,36 @@ elif [ "$OPT" == "gcc14" ]; then
     g++ -v
 elif [ "$OPT" == "gcc15" ]; then
     # https://gcc.gnu.org/gcc-15/changes.html
+
     sudo apt update
-    sudo apt install -y software-properties-common
-    # Add the Ubuntu Toolchain PPA for newer GCC versions
-    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    sudo apt update
-    sudo apt install -y gcc-15 g++-15 # Install experimental GCC and G++ version 15
-    # Configure alternatives to set GCC 15 as default
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 15 \
-                             --slave /usr/bin/g++ g++ /usr/bin/g++-15
-    sudo update-alternatives --config gcc  # GCC 15 as the default
-    gcc --version
-    g++ -v
+    sudo apt install -y build-essential flex bison libgmp-dev libmpc-dev libmpfr-dev texinfo wget
+
+    wget https://ftp.gnu.org/gnu/gcc/gcc-15.0.0/gcc-15.0.0.tar.gz
+    tar -xvzf gcc-15.0.0.tar.gz
+    cd gcc-15.0.0
+
+    mkdir build
+    cd build
+
+    ../configure --prefix=/usr/local/gcc-15 --enable-languages=c,c++ --disable-multilib
+
+    make -j$(nproc)
+    sudo make install
+
+    echo "export PATH=/usr/local/gcc-15/bin:\$PATH" >> ~/.bashrc
+    source ~/.bashrc
+    # sudo apt update
+    # sudo apt install -y software-properties-common
+    # # Add the Ubuntu Toolchain PPA for newer GCC versions
+    # sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    # sudo apt update
+    # sudo apt install -y gcc-15 g++-15 # Install experimental GCC and G++ version 15
+    # # Configure alternatives to set GCC 15 as default
+    # sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 15 \
+    #                          --slave /usr/bin/g++ g++ /usr/bin/g++-15
+    # sudo update-alternatives --config gcc  # GCC 15 as the default
+    # gcc --version
+    # g++ -v
 
 else
     echo "GCC version not specified on OPT env var, set one of gcc14, gcc6 or gcc13"
