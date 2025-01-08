@@ -322,6 +322,7 @@ function build() {
             ${DEFINES} \
             -DCMAKE_C_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE} -Wno-nontrivial-memaccess" \
             -DCMAKE_CXX_FLAGS="-DNDEBUG -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE} -Wno-nontrivial-memaccess" \
+            -DLINK_FLAGS="${LINK_FLAGS}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -341,8 +342,9 @@ function build() {
             -DASSIMP_BUILD_ZLIB=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
-        $EMSDK/upstream/emscripten/emmake make
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -G 'Unix Makefiles'
+        $EMSDK/upstream/emscripten/emmake make -j
         $EMSDK/upstream/emscripten/emmake make install
         # cmake --build . --config Release
         cd ..

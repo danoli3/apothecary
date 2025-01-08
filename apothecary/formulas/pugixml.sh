@@ -65,7 +65,8 @@ function build() {
 			    -DCMAKE_INSTALL_PREFIX=Release \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
-				-DCMAKE_INSTALL_LIBDIR=lib 
+				-DCMAKE_INSTALL_LIBDIR=lib \
+            	-G 'Unix Makefiles'
 		$EMSDK/upstream/emscripten/emmake make
         $EMSDK/upstream/emscripten/emmake make install
 		# cmake --build . --config Release --target install

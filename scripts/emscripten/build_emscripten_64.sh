@@ -22,6 +22,7 @@ export PLATFORM=emscripten
 export ARCH=64
 export NO_FORCE=ON
 export PTHREADS_ENABLED=1
+export ALWAYS_BUILD=1
 
 echo "Target: $TARGET"
 echo "Architecture: $ARCH"
