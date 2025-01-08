@@ -14,7 +14,7 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
-set(rootfs_dir ${SYSROOT}/rootfs>) # warning change compiled rootfs path here.
+set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
 
 set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
 set(CMAKE_SYSROOT ${rootfs_dir})
@@ -28,9 +28,9 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=cortex-a53")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=cortex-a53")
 
 ## Compiler Binary 
 set(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE})

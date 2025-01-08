@@ -9,8 +9,11 @@ set(CMAKE_SYSTEM_PROCESSOR armv6)
 set(CMAKE_LIBRARY_ARCHITECTURE arm-linux-gnueabihf)
 set(GCC_VERSION 14.2.0)
 
-set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_ROOT})
-set(CMAKE_SYSROOT ${TOOLCHAIN_ROOT})
+set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
+set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
+
+set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
+set(CMAKE_SYSROOT ${rootfs_dir})
 
 set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/lib \
@@ -22,8 +25,8 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
 # Update compiler flags for ARMv7
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv6 -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv6 -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv6 -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv6 -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard ${EXTRA_LINKS}")
 
 # Compiler Binary
 set(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE})

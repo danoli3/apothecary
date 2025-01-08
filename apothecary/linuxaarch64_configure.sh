@@ -12,7 +12,7 @@ export GCC_VERSION="14.2.0" # Adjust as needed
 # Update PATH and library paths
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
-export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
+export PATH=$TOOLCHAIN_ROOT/bin:$LIBRARY_PATH:$PATH
 
 # Define cross-compilation tools
 export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
