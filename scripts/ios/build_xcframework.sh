@@ -21,6 +21,8 @@ export TARGET=ios
 export ARCH=arm64
 export NO_FORCE=ON
 
+export OUTPUT_FOLDER=$(realpath "$ROOT/out")
+
 echo "Target: $TARGET"
 echo "Architecture: $ARCH"
 echo "Bundle: $BUNDLE"
@@ -37,7 +39,7 @@ for formula in "${FORMULAS[@]}" ; do
     ARGS="$FORCE -t$TARGET -d$OUTPUT_FOLDER -a$ARCH"
     #echo "./apothecary $ARGS framework $formula_name"
     eval "cd $APOTHECARY_PATH";
-    echo "---------"
+    echo "---------[./apothecary $ARGS framework $formula_name] "
     eval "./apothecary $ARGS framework $formula_name" 
     
 done
