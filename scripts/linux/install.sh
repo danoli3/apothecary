@@ -144,16 +144,34 @@ elif [ "$OPT" == "gcc13" ]; then
 elif [ "$OPT" == "gcc14" ]; then
     # https://gcc.gnu.org/gcc-14/changes.html
     sudo apt update
-    sudo apt install software-properties-common
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt install -y software-properties-common
+    # Add the Ubuntu Toolchain PPA for newer GCC versions
+    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install gcc-13 g++-13 -y
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 14 --slave /usr/bin/g++ g++ /usr/bin/g++-14
-    sudo update-alternatives --config gcc
+    sudo apt install -y gcc-14 g++-14 # Install GCC and G++ version 14
+    # Configure alternatives to set GCC 14 as default
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 14 \
+                             --slave /usr/bin/g++ g++ /usr/bin/g++-14
+    sudo update-alternatives --config gcc  # GCC 14 as the default
     gcc --version
     g++ -v
+elif [ "$OPT" == "gcc15" ]; then
+    # https://gcc.gnu.org/gcc-15/changes.html
+    sudo apt update
+    sudo apt install -y software-properties-common
+    # Add the Ubuntu Toolchain PPA for newer GCC versions
+    sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    sudo apt update
+    sudo apt install -y gcc-15 g++-15 # Install experimental GCC and G++ version 15
+    # Configure alternatives to set GCC 15 as default
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 15 \
+                             --slave /usr/bin/g++ g++ /usr/bin/g++-15
+    sudo update-alternatives --config gcc  # GCC 15 as the default
+    gcc --version
+    g++ -v
+
 else
-	echo "GCC version not specified on OPT env var, set one of gcc4, gcc5 or gcc6"
+    echo "GCC version not specified on OPT env var, set one of gcc14, gcc6 or gcc13"
 fi
 
 sudo apt-get -y install libasound-dev libjack-dev libpulse-dev oss4-dev #rtaudio
