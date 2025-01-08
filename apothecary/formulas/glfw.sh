@@ -62,7 +62,11 @@ function build() {
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include"         
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DGLFW_BUILD_EXAMPLES=OFF \
+            -DGLFW_BUILD_TESTS=OFF \
+            -DGLFW_BUILD_DOCS=OFF \
+            -DGLFW_VULKAN_STATIC=OFF"         
      
         cmake .. ${DEFINES} \
         	-DLIBRARY_SUFFIX=${ARCH} \
@@ -72,11 +76,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DGLFW_BUILD_EXAMPLES=OFF \
-            -DGLFW_BUILD_TESTS=OFF \
-            -DGLFW_BUILD_DOCS=OFF \
-            -DGLFW_VULKAN_STATIC=OFF \
+            -DCMAKE_INSTALL_LIBDIR="lib" \            
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             ${CMAKE_WIN_SDK} \
             -A "${PLATFORM}" \
@@ -94,14 +94,15 @@ function build() {
         fi
 		# *nix build system
 
+		DEFINES="${DEFINES} -DGLFW_BUILD_DOCS=OFF \
+				-DGLFW_BUILD_TESTS=OFF \
+				-DGLFW_BUILD_EXAMPLES=OFF"
+
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.o *.a
 
-		cmake .. -DGLFW_BUILD_DOCS=OFF \
-				-DGLFW_BUILD_TESTS=OFF \
-				-DGLFW_BUILD_EXAMPLES=OFF \
-				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
+		cmake .. -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DENABLE_BITCODE=OFF \
@@ -126,7 +127,7 @@ function build() {
 		cmake --build . --config Release --target install
 		cd ..
 
-	if [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
 		if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
             DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include -DGLFW_BUILD_WAYLAND=OFF"
@@ -164,7 +165,6 @@ function build() {
 				$DEFINES
 		cmake --build . --config Release --target install
 		cd ..
-
 	else
         if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
