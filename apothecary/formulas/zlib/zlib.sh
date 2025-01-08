@@ -143,11 +143,11 @@ function build() {
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	-DCMAKE_INSTALL_LIBDIR="lib" \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+	    	-DLINK_FLAGS="${LINK_FLAGS}" \
 	    	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	    	-D BUILD_SHARED_LIBS=OFF \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
-		    -G 'Unix Makefiles' \
 		    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -158,11 +158,14 @@ function build() {
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include 
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -G 'Unix Makefiles'
         #     -DCMAKE_INSTALL_INCLUDEDIR=include 
         # $EMSDK/upstream/emscripten/emmake make
         # $EMSDK/upstream/emscripten/emmake make install
-	 	cmake --build . --config Release --target install 
+	 	# cmake --build . --config Release --target install
+	 	$EMSDK/upstream/emscripten/emmake make -j
+	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
 	    
