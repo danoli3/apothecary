@@ -132,7 +132,7 @@ jobs:
                 unzip -o "$zip" -d out/
             done
             echo "Extraction complete."
-            rm out/*.zip
+            # rm out/*.zip
           else
             echo "No zip files to extract."
           fi
@@ -146,8 +146,8 @@ jobs:
           else
             echo "No .tar.bz2 files to extract."
           fi
-          rm -f xout/*.tar.bz2 
-          rm -f out/*.tar.bz2
+          # rm -f xout/*.tar.bz2
+          # rm -f out/*.tar.bz2
     - name: List output directory1
       run: ls -lah out/
     - name: BuildARM64EC
