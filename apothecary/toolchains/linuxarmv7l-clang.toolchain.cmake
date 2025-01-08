@@ -15,6 +15,17 @@ set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
 set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
 set(CMAKE_SYSROOT ${rootfs_dir})
 
+if(NOT DEFINED C_STANDARD)
+    set(C_STANDARD 17) # Default to C17
+endif()
+if(NOT DEFINED CPP_STANDARD)
+    set(CPP_STANDARD 17) # Default to C++17
+endif()
+set(CMAKE_C_STANDARD ${C_STANDARD})
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CPP_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib \
     -L${CMAKE_SYSROOT}/lib \
     -L${CMAKE_SYSROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/lib \
@@ -41,6 +52,14 @@ set(CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy CACHE STRING "Set the cross-compiler too
 set(CMAKE_OBJDUMP ${BIN_PREFIX}-objdump CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
 set(CMAKE_RANLIB ${BIN_PREFIX}-ranlib CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
 set(CMAKE_STRIP ${BIN_PREFIX}-strip CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+
+if(NOT EXISTS ${CMAKE_C_COMPILER})
+    message(FATAL_ERROR "C Compiler not found: ${CMAKE_C_COMPILER}")
+endif()
+
+if(NOT EXISTS ${CMAKE_CXX_COMPILER})
+    message(FATAL_ERROR "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
+endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

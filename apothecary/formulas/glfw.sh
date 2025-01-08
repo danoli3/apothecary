@@ -6,15 +6,10 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=( "osx" "vs" )
+FORMULA_TYPES=( "osx" "vs" "linux" "linux64")
 FORMULA_DEPENDS=( )
 
-# define the version by branch  
-# VER=2018-cmake-fix
-# tools for git use
-# GIT_URL=https://github.com/ofTheo/glfw/
 GIT_URL=https://github.com/glfw/glfw
-# VER=master
 VER=3.4
 GIT_BRANCH=$VER
 BUILD_ID=1
@@ -55,12 +50,9 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
-        rm -f CMakeCache.txt *.o *.lib
-        ZLIB_ROOT="$LIBS_ROOT/zlib/"
-        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+        rm -f CMakeCache.txt *.o *.lib      
 
-        DEFS="
+        DEFINES="
         	-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -72,7 +64,7 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
      
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
         	-DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -96,9 +88,9 @@ function build() {
 	elif [ "$TYPE" == "osx" ] ; then
 		if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
-            EXTRA_CONFIG="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
+            DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
         else
-            EXTRA_CONFIG=" "
+            DEFINES=" "
         fi
 		# *nix build system
 
@@ -106,8 +98,6 @@ function build() {
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.o *.a
 
-		# OS X needs both arches specified to be universal
-		# for some reason it doesn't build if passed through EXTRA_CONFIG so have do break it up into a separate cmake call
 		cmake .. -DGLFW_BUILD_DOCS=OFF \
 				-DGLFW_BUILD_TESTS=OFF \
 				-DGLFW_BUILD_EXAMPLES=OFF \
@@ -132,25 +122,58 @@ function build() {
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DCMAKE_INSTALL_LIBDIR=lib \
-				$EXTRA_CONFIG
+				$DEFINES
 		cmake --build . --config Release --target install
 		cd ..
 
+	if [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+            DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include -DGLFW_BUILD_WAYLAND=OFF"
+        else
+            DEFINES="-DGLFW_BUILD_WAYLAND=OFF"
+        fi
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.o *.a
+
+		# OS X needs both arches specified to be universal
+		# for some reason it doesn't build if passed through EXTRA_CONFIG so have do break it up into a separate cmake call
+		cmake .. -DGLFW_BUILD_DOCS=OFF \
+				-DGLFW_BUILD_TESTS=OFF \
+				-DGLFW_BUILD_EXAMPLES=OFF \
+				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+				-DPLATFORM=$PLATFORM \
+				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+				-DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
+				-DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
+				-DCMAKE_C_FLAGS="-fPIC ${FLAG_RELEASE}" \
+				-DENABLE_VISIBILITY=OFF \
+				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+				-DBUILD_SHARED_LIBS=OFF \
+				-DCMAKE_BUILD_TYPE=Release \
+			    -DCMAKE_C_STANDARD=${C_STANDARD} \
+			    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			    -DCMAKE_CXX_EXTENSIONS=OFF \
+			    -DCMAKE_INSTALL_PREFIX=Release \
+				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+				-DCMAKE_INSTALL_INCLUDEDIR=include \
+				-DCMAKE_INSTALL_LIBDIR=lib \
+				$DEFINES
+		cmake --build . --config Release --target install
+		cd ..
 
 	else
         if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
-            EXTRA_CONFIG="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
+            DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
         else
-            EXTRA_CONFIG=" "
+            DEFINES=" "
         fi
-		# *nix build system
-
 		mkdir -p build
 		cd build
-
-		# OS X needs both arches specified to be universal
-		# for some reason it doesn't build if passed through EXTRA_CONFIG so have do break it up into a separate cmake call
 		cmake .. -DGLFW_BUILD_DOCS=OFF \
 				-DGLFW_BUILD_TESTS=OFF \
 				-DGLFW_BUILD_EXAMPLES=OFF \
@@ -160,8 +183,7 @@ function build() {
 			    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 			    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			    -DCMAKE_CXX_EXTENSIONS=OFF \
-				$EXTRA_CONFIG
-		
+				$DEFINES	
 
  		make clean
  		make -j${PARALLEL_MAKE}

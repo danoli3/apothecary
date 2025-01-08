@@ -8,10 +8,16 @@ set(CMAKE_SYSTEM_PROCESSOR aarch64)
 set(CMAKE_LIBRARY_ARCHITECTURE aarch64-linux-gnu)
 set(GCC_VERSION 14.2.0)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD 17)
+if(NOT DEFINED C_STANDARD)
+    set(C_STANDARD 17) # Default to C17
+endif()
+if(NOT DEFINED CPP_STANDARD)
+    set(CPP_STANDARD 17) # Default to C++17
+endif()
+set(CMAKE_C_STANDARD ${C_STANDARD})
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD ${CPP_STANDARD})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
 set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
@@ -44,6 +50,14 @@ SET(CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy CACHE STRING "Set the cross-compiler too
 set(CMAKE_OBJDUMP ${BIN_PREFIX}-objdump CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
 set(CMAKE_RANLIB ${BIN_PREFIX}-ranlib CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
 set(CMAKE_STRIP ${BIN_PREFIX}-strip CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+
+if(NOT EXISTS ${CMAKE_C_COMPILER})
+    message(FATAL_ERROR "C Compiler not found: ${CMAKE_C_COMPILER}")
+endif()
+
+if(NOT EXISTS ${CMAKE_CXX_COMPILER})
+    message(FATAL_ERROR "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
+endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
