@@ -55,7 +55,8 @@ jobs:
       - name: Build RootFS
         run: |
           cd $SYSROOT &&
-          sudo chmod +x ./build_rootfs_arm64.sh &&
+          sudo chmod +x ./build_rootfs_arm64.sh
+          ./build_rootfs_arm64.sh download
           ./build_rootfs_arm64.sh create
 
       - name: Script Install and Build
@@ -118,7 +119,8 @@ jobs:
       - name: Build RootFS
         run: |
           cd $SYSROOT &&
-          sudo chmod +x ./build_rootfs.sh &&
+          sudo chmod +x ./build_rootfs.sh
+          ./build_rootfs_arm64.sh download
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
@@ -183,7 +185,8 @@ jobs:
       - name: Build RootFS
         run: |
           cd $SYSROOT &&
-          sudo chmod +x ./build_rootfs.sh &&
+          sudo chmod +x ./build_rootfs.sh
+          ./build_rootfs_arm64.sh download
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
