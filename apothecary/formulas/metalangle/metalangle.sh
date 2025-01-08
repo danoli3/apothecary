@@ -23,6 +23,7 @@ BUILD_CMAKE=true
 BUILD_XCARCHIVE=false
 BUILD_STATIC=false
 FRAMEWORKS=""
+DEFINES="ANGLE_IS_64_BIT_CPU"
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -208,6 +209,40 @@ function copy() {
     # rm -rf $1/include/*
     cp -Rv include/* $1/include
 
+    echo "Copying src headers..."
+	mkdir -p "$1/include/src"
+	cp -Rv src/* "$1/include/src"
+
+	if [ -d "$1/include/src/tests" ]; then
+    	echo "Removing existing folder: $1/include/src/tests"
+    	rm -rf "$1/include/src/tests"
+	fi
+
+    echo "Copying third-party glslang headers..."
+	mkdir -p "$1/include/third_party/glslang/src"
+	cp -Rv third_party/glslang/src/* "$1/include/third_party/glslang/src/"
+
+	# echo "Copying third-party glslang headers..."
+	# mkdir -p "$1/include/third_party/glslang/src"
+	# cp -Rv third_party/glslang/src/* "$1/include/third_party/glslang/src/"
+
+	if [ -d "$1/include/third_party/glslang/src/Test" ]; then
+    	echo "Removing existing folder: $1/include/third_party/glslang/src/Test"
+    	rm -rf "$1/include/third_party/glslang/src/Test"
+	fi
+
+	echo "Copying third-party spirv-cross headers..."
+	mkdir -p "$1/include/third_party/spirv-cross/src"
+	cp -Rv third_party/spirv-cross/src/* "$1/include/third_party/spirv-cross/src/"
+
+	# echo "Copying third-party jsoncpp overrides..."
+	# mkdir -p "$1/include/third_party/jsoncpp/overrides/include"
+	# cp -Rv third_party/jsoncpp/overrides/include/* "$1/include/third_party/jsoncpp/overrides/include/"
+
+	echo "Copying third-party jsoncpp source..."
+	mkdir -p "$1/include/third_party/jsoncpp/source/include"
+	cp -Rv third_party/jsoncpp/source/include/* "$1/include/third_party/jsoncpp/source/include/"
+
     . "$SECURE_SCRIPT"
     mkdir -p $1/lib/$TYPE
 
@@ -241,7 +276,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "metalangle" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${PLATFORM} )
+    LOAD_RESULT=$(loadsave ${TYPE} "metalangle" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID} )
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1
