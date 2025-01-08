@@ -8,9 +8,9 @@ on:
     paths-ignore:
     - '**/README.md'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: false
 
 env:
   TARGET: "linux64"
@@ -30,7 +30,7 @@ jobs:
           - {target: linux64, opt: gcc12}
           - {target: linux64, opt: gcc13}
           - {target: linux64, opt: gcc14}
-          - {target: linux64, opt: gcc15}
+          # - {target: linux64, opt: gcc15}
     env:
       TARGET: ${{matrix.cfg.target}}
       OPT: ${{matrix.cfg.opt}}
