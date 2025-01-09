@@ -50,7 +50,7 @@ if [ "$OPT" == "gcc4" ]; then
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update -q
     sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev
-    sudo apt-get install gcc-4.9 g++-4.9
+    sudo apt-get install -y --allow-unauthenticated gcc-4.9 g++-4.9
     #needed because github actions defaults to gcc 5
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 60
@@ -103,7 +103,7 @@ elif [ "$OPT" == "gcc8" ]; then
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install gcc-8 g++-8 gcc-13 g++-13 -y
+    sudo apt install -y --allow-unauthenticated gcc-8 g++-8
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8 --slave /usr/bin/g++ g++ /usr/bin/g++-8
     sudo update-alternatives --config gcc
     gcc --version
@@ -114,7 +114,7 @@ elif [ "$OPT" == "gcc11" ]; then
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install gcc-11 gcc-12 g++-12 gcc-13 g++-13 -y
+    sudo apt install -y --allow-unauthenticated gcc-11 g++-11 -y
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11 --slave /usr/bin/g++ g++ /usr/bin/g++-11
     sudo update-alternatives --config gcc
     gcc --version
@@ -125,7 +125,7 @@ elif [ "$OPT" == "gcc12" ]; then
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install gcc-12 g++-12 -y
+    sudo apt install -y --allow-unauthenticated gcc-12 g++-12
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12
     sudo update-alternatives --config gcc
     gcc --version
@@ -136,7 +136,7 @@ elif [ "$OPT" == "gcc13" ]; then
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install gcc-13 g++-13 -y
+    sudo apt install -y --allow-unauthenticated gcc-13 g++-13
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 --slave /usr/bin/g++ g++ /usr/bin/g++-13
     sudo update-alternatives --config gcc
     gcc --version
@@ -148,7 +148,7 @@ elif [ "$OPT" == "gcc14" ]; then
     # Add the Ubuntu Toolchain PPA for newer GCC versions
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install -y gcc-14 g++-14 # Install GCC and G++ version 14
+    sudo apt install -y --allow-unauthenticated gcc-14 g++-14
     # Configure alternatives to set GCC 14 as default
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 14 \
                              --slave /usr/bin/g++ g++ /usr/bin/g++-14
@@ -170,7 +170,7 @@ elif [ "$OPT" == "gcc15" ]; then
 
     ../configure --prefix=/usr/local/gcc-15 --enable-languages=c,c++ --disable-multilib
 
-    make -j$(nproc)
+    make -j
     sudo make install
 
     echo "export PATH=/usr/local/gcc-15/bin:\$PATH" >> ~/.bashrc
