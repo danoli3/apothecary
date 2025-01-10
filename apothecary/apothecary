@@ -958,18 +958,6 @@ if [ "$TYPE" = "macos" ]; then
     PLATFORM="MAC"
 fi
 
-if [ "$TYPE" == "linux" ]; then
-    export FLAG_RELEASE="-O3"
-    if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
-        export GCC_VERSION=${BASH_REMATCH[1]}
-        echo "Extracted GCC_VERSION: $GCC_VERSION"
-    else
-        echo "Error: Unable to extract GCC version from variable '$GCC'"
-        export GCC_VERSION=14
-    fi  
-    export PLATFORM=${ABI}
-fi
-
 if [ "$TYPE" == "msys2" ]; then
     export FLAG_RELEASE="-O3"
     export ABI="x86_64"
@@ -2695,6 +2683,7 @@ CROSSCOMPILING=0
 
 
 if [ "$TYPE" == "linux" ]; then
+    export FLAG_RELEASE="-O3"
     if [[ "$ARCH" =~ ^("armv7l"|"aarch64"|"armv6l")$ ]]; then
         export PLATFORM="$ARCH"
         export ABI="${ARCH}"
@@ -2713,6 +2702,14 @@ if [ "$TYPE" == "linux" ]; then
     else
         echo "Unsupported architecture for Linux: $ARCH"
         exit 1
+    fi
+        
+    if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
+        export GCC_VERSION=${BASH_REMATCH[1]}
+        echo "Extracted GCC_VERSION: $GCC_VERSION"
+    else
+        echo "Error: Unable to extract GCC version from variable '$GCC'"
+        export GCC_VERSION=14
     fi
 
     if [[ "$ABI" =~ ^(armv7l|aarch64|armv6l)$ ]]; then
