@@ -140,8 +140,8 @@ function build() {
 		if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
-		mkdir -p build
-		cd build
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o
 		DEFINES="${DEFINES} \
 				-DRTAUDIO_API_PULSE=ON \
@@ -153,7 +153,7 @@ function build() {
 				-DRTAUDIO_API_WASAPI=OFF \
 				-DBUILD_TESTING=OFF"
 
-		cmake  ../build/cmake \
+		cmake  .. \
 	 		${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
@@ -175,8 +175,8 @@ function build() {
 		if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
-		mkdir -p build
-		cd build
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o
 		DEFINES="${DEFINES} \
 				-DRTAUDIO_API_PULSE=ON \
@@ -188,7 +188,7 @@ function build() {
 				-DRTAUDIO_API_WASAPI=OFF \
 				-DBUILD_TESTING=OFF"
 
-		cmake  ../build/cmake \
+		cmake  .. \
 	 		${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
@@ -257,7 +257,7 @@ function copy() {
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
     	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
     	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
-	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linuxx86|linuxx64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
     	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
@@ -277,15 +277,13 @@ function clean() {
 
 	if [ "$TYPE" == "vs" ] ; then
 		if [ -d "build_${TYPE}_${ARCH}" ]; then
-		    # Delete the folder and its contents
 		    rm -r build_${TYPE}_${ARCH}	    
 		fi
 	else
-		make clean
+		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+			rm -r build_${TYPE}_${PLATFORM}	
+		fi  
 	fi
-
-	# manually clean dependencies
-	#apothecaryDependencies clean
 }
 
 function load() {
