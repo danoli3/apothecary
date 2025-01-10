@@ -32,6 +32,13 @@ set(CMAKE_C_COMPILER "${GCC_PATH}/gcc-${GCC_VERSION}")
 set(CMAKE_CXX_COMPILER "${GCC_PATH}/g++-${GCC_VERSION}")
 set(TOOLCHAIN_ROOT "${GCC_PATH}")
 
+# Paths to system libraries and includes
+set(CMAKE_SYSROOT "/usr") # Base system path for includes and libraries
+set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT})
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 find_program(CMAKE_C_COMPILER ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
 find_program(CMAKE_CXX_COMPILER ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
@@ -55,10 +62,6 @@ if(NOT EXISTS ${CMAKE_CXX_COMPILER})
     message(WARNING "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
 endif()
 
-# Paths to system libraries and includes
-set(CMAKE_SYSROOT "/usr") # Base system path for includes and libraries
-set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT})
-
 set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
     -L${CMAKE_SYSROOT}/lib/ \
     -Wl,-rpath-link,${CMAKE_SYSROOT}/lib64/ \
@@ -67,8 +70,8 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
     -Wl,-rpath-link,${CMAKE_SYSROOT}/lib/x86_64-linux-gnu")
 
 # Compiler and linker flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS} -m64")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic ${EXTRA_LINKS} -m64")
 set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie ${EXTRA_LINKS}")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC")
 
@@ -77,3 +80,4 @@ message(STATUS "Using GCC Version: ${GCC_VERSION}")
 message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "System Root: ${CMAKE_SYSROOT}")
+
