@@ -128,8 +128,8 @@ function build() {
         fi
 
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
-        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
+        export LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        export LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
