@@ -23,7 +23,6 @@ env:
 
 jobs:
   build-vs2022:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: windows-2022
     strategy:
       matrix:
@@ -32,6 +31,12 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+    - name: Check if Workflow is disabled
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "Workflow is disabled. Exiting."
+          exit 0
+        fi
     - name: Setup msys2
       uses: msys2/setup-msys2@v2
       with:

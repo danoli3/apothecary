@@ -13,11 +13,10 @@ env:
 
 jobs:
   build-linux-aarch64:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxaarch64
-      ARCH: arm64
+      ARCH: arm64 
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
@@ -25,6 +24,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4.2.2
+
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
 
       - name: Determine Release
         id: vars
@@ -91,7 +97,6 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv6l-pi-1zero:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv6l
@@ -102,6 +107,13 @@ jobs:
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
+
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
 
       - name: Determine Release
         id: vars
@@ -171,7 +183,6 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv7-pi3ab45:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv7l
@@ -182,6 +193,13 @@ jobs:
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
+
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
 
       - name: Determine Release
         id: vars

@@ -21,7 +21,6 @@ env:
 
 jobs:  
   build-macos-platforms:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: macos-14
     strategy:
       matrix:
@@ -30,6 +29,12 @@ jobs:
       BUNDLE: ${{ matrix.bundle }}
       DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer"
     steps:
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
       - name: Determine Release
         id: vars
         shell: bash

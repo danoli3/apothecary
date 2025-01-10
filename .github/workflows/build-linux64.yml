@@ -21,7 +21,6 @@ env:
 
 jobs:
   build-linux64:
-    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     strategy:
         matrix:
@@ -35,9 +34,14 @@ jobs:
     env:
       TARGET: ${{matrix.cfg.target}}
       GCC: ${{matrix.cfg.gcc}}
-    steps:
+    steps:      
     - uses: actions/checkout@v4.2.2
-
+    - name: Check if Workflow is disabled
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "Workflow is disabled. Exiting."
+          exit 0
+        fi
     - name: Determine Release
       id: vars
       shell: bash
