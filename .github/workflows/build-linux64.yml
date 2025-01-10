@@ -115,7 +115,7 @@ jobs:
     - name: Scripts Calc Formula - ${{matrix.cfg.target}} - ${{matrix.cfg.gcc}}
       run: ./scripts/calculate_formulas.sh
     - name: Scripts Install
-      run: ./scripts/linuxarm64/install.sh
+      run: chmod +x ./scripts/linuxarm64/install.sh && ./scripts/linuxarm64/install.sh
       
     - name: Build Linuxarm64
       working-directory: ${{env.GITHUB_WORKSPACE}}

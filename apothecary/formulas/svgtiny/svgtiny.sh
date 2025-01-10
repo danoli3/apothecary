@@ -401,9 +401,9 @@ function copy() {
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
-		mkdir -p $1/lib/$TYPE/${ARCH}
-        cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
-        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
+		mkdir -p $1/lib/$TYPE/${PLATFORM}/
+        cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
+        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
 #    elif [ "$TYPE" == "msys2" ] ; then
 #		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
 #        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
