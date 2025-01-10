@@ -49,7 +49,7 @@ if [ "$GCC" == "gcc4" ]; then
     sudo add-apt-repository -y ppa:dns/gnu
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update -q
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo apt-get install -y --allow-unauthenticated gcc-4.9 g++-4.9
     #needed because github actions defaults to gcc 5
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 60
@@ -64,7 +64,7 @@ elif [ "$GCC" == "gcc5" ]; then
     sudo apt-get update -q
     sudo apt-get install -y --allow-unauthenticated gcc-5 g++-5
     sudo apt-get install -f
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo apt-get remove -y --purge g++-4.8
     sudo apt-get autoremove
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100
@@ -77,7 +77,7 @@ elif [ "$GCC" == "gcc6" ]; then
     sudo add-apt-repository -y "deb http://cz.archive.ubuntu.com/ubuntu bionic main universe"
     sudo apt-get update
     sudo apt-get install -y --allow-unauthenticated gcc-6 g++-6
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo apt-get autoremove
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 100
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 100
@@ -91,7 +91,7 @@ elif [ "$GCC" == "gcc7" ]; then
     sudo add-apt-repository -y "deb http://cz.archive.ubuntu.com/ubuntu focal main universe"
     sudo apt-get update
     sudo apt-get install -y --allow-unauthenticated gcc-7 g++-7
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo apt-get autoremove
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 100
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 100
@@ -105,6 +105,7 @@ elif [ "$GCC" == "gcc8" ]; then
     sudo apt update
     sudo apt install -y --allow-unauthenticated gcc-8 g++-8
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
@@ -116,6 +117,7 @@ elif [ "$GCC" == "gcc11" ]; then
     sudo apt update
     sudo apt install -y --allow-unauthenticated gcc-11 g++-11 -y
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11 --slave /usr/bin/g++ g++ /usr/bin/g++-11
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
@@ -127,6 +129,7 @@ elif [ "$GCC" == "gcc12" ]; then
     sudo apt update
     sudo apt install -y --allow-unauthenticated gcc-12 g++-12
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
@@ -138,6 +141,7 @@ elif [ "$GCC" == "gcc13" ]; then
     sudo apt update
     sudo apt install -y --allow-unauthenticated gcc-13 g++-13
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 --slave /usr/bin/g++ g++ /usr/bin/g++-13
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
@@ -160,6 +164,7 @@ elif [ "$GCC" == "gcc15" ]; then
 
     sudo apt update
     sudo apt install -y build-essential flex bison libgmp-dev libmpc-dev libmpfr-dev texinfo wget
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
 
     wget https://ftp.gnu.org/gnu/gcc/gcc-15.0.0/gcc-15.0.0.tar.gz
     tar -xvzf gcc-15.0.0.tar.gz
@@ -196,6 +201,10 @@ sudo apt-get -y install libasound-dev libjack-dev libpulse-dev oss4-dev #rtaudio
 
 sudo apt-get update && sudo apt-get install -y autoconf libtool automake dos2unix
 sudo apt-get update && sudo apt-get install -y cmake
+
+sudo apt build-dep cmake
+
+find /lib /usr/lib -name 'libc'
 
 # Download the installer script
 # CMAKE_VERSION=3.30.0

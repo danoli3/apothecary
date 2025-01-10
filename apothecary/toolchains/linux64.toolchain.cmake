@@ -51,10 +51,13 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
+    -L${CMAKE_SYSROOT}/usr/lib/")
+
 # Compiler and linker flags
-set(CMAKE_C_FLAGS "-fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic")
-set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic")
-set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie")
+set(CMAKE_C_FLAGS "-fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
+set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie ${EXTRA_LINKS}")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC")
 
 
