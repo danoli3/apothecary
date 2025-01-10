@@ -25,11 +25,11 @@ if [ -z "${MOVE_LIBRARIES+x}" ]; then
 fi
 
 if [ -z "${PLATFORM+x}" ]; then
-    PLATFORM=linux64
+    PLATFORM=linux
 fi
 
 if [ -z "${ARCH+x}" ]; then
-    ARCH=64
+    ARCH=x86_64
 fi
 
 if [ -z "${OVERWRITE+x}" ]; then

@@ -17,8 +17,8 @@ else
     export BUNDLE=$BUNDLE_NO
 fi
 
-export TARGET=osx
-export ARCH=arm64
+export TARGET=linux
+export ARCH=x86_64
 export NO_FORCE=ON
 
 echo "Target: $TARGET"
