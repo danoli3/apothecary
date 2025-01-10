@@ -45,7 +45,6 @@ function build() {
     cmake --build . --config Release --target install -j${PARALLEL_MAKE}
     cd ..
 
-    fi
 }
 
 function copy() {
