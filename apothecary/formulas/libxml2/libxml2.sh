@@ -142,7 +142,7 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
         cmake .. ${DEFS} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
@@ -161,7 +161,7 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
             
     elif [ "$TYPE" == "android" ]; then
@@ -197,7 +197,7 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
@@ -234,7 +234,7 @@ function build() {
             -DZLIB_ROOT="$LIBS_ROOT/zlib/" \
             -DZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include" \
             -DZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a" 
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
         find . -name "test*.c" | xargs -r rm
@@ -270,8 +270,8 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}"
-        # cmake --build . --config Release 
-        $EMSDK/upstream/emscripten/emmake make
+        # cmake --build . --config Release -j${PARALLEL_MAKE} 
+        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         $EMSDK/upstream/emscripten/emmake make install
         cd ..
     elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
@@ -286,6 +286,10 @@ function build() {
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_STANDARD=${C_STANDARD} \
                 -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+                -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+                -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+                -DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
+                -DGCC_VERSION=${GCC_VERSION} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -293,7 +297,7 @@ function build() {
                 -DCMAKE_SYSTEM_NAME=$TYPE \
                 -DCMAKE_SYSTEM_PROCESSOR=$ABI
                 
-            cmake --build . --config Release
+            cmake --build . --config Release -j${PARALLEL_MAKE}
             cd ..
     elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
@@ -314,6 +318,8 @@ function build() {
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -323,7 +329,7 @@ function build() {
             -DLIBXML2_WITH_LZMA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
     fi
 }

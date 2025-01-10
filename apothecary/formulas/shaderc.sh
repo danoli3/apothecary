@@ -96,7 +96,7 @@ function build() {
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}"
-        cmake --build . --config Release		
+        cmake --build . --config Release -j${PARALLEL_MAKE}		
 	else
         if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
@@ -110,8 +110,8 @@ function build() {
 		cd build
 
 		cmake .. -Dgtest_disable_pthreads=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_ENABLE_SHARED_CRT=ON
-		#cmake --build . --config Debug -- -j$PARALLEL_MAKE
-		cmake --build . --config Release -- -j$PARALLEL_MAKE
+		#cmake --build . --config Debug -j${PARALLEL_MAKE} -- -j$PARALLEL_MAKE
+		cmake --build . --config Release -j${PARALLEL_MAKE} -- -j$PARALLEL_MAKE
 
 	fi
 }

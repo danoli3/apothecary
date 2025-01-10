@@ -156,7 +156,7 @@ function build() {
 			-DENABLE_ARC=OFF \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
 			-DENABLE_VISIBILITY=OFF
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -210,7 +210,7 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
 
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
         cd ..
 	elif [ "$TYPE" == "android" ]; then

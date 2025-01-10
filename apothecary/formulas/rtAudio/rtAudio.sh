@@ -80,7 +80,7 @@ function build() {
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DCMAKE_INSTALL_LIBDIR=lib \
 				-DBUILD_TESTING=OFF
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -115,7 +115,7 @@ function build() {
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
 
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}"
 	    cmake .. ${DEFINES} \
 	    	-UCMAKE_CXX_FLAGS \
@@ -129,7 +129,7 @@ function build() {
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
 
-	    cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
 
 	    unset CXXFLAGS
 

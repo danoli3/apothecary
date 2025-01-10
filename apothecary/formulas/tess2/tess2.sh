@@ -88,7 +88,7 @@ function build() {
 			    -DCMAKE_INSTALL_PREFIX=Release \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -113,7 +113,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "android" ] ; then
  
@@ -182,7 +182,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="${FLAG_RELEASE} " \
 			-DCMAKE_C_FLAGS=" ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE}"
-    	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
+    	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}${PARALLEL_MAKE}
 	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
 	    mkdir -p build
 	    cd build
@@ -233,7 +233,7 @@ function build() {
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=TRUE
-	    cmake --build . --target install --config Release
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	else
 		mkdir -p build/$TYPE

@@ -76,7 +76,7 @@ function build() {
           -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
           -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" 
 
-      cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+      cmake --build . --config Release -j${PARALLEL_MAKE} --target install
      	cd ..      
       rm -f CMakeCache.txt
   elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -113,7 +113,7 @@ function build() {
         -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
         -DENABLE_VISIBILITY=OFF
 
-     cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+     cmake --build . --config Release -j${PARALLEL_MAKE} --target install
      cd ..
 	fi
 }

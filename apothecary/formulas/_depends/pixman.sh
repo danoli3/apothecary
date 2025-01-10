@@ -115,7 +115,7 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
             
-            cmake --build . --config Release --target install -j${PARALLEL_MAKE}     
+            cmake --build . --config Release -j${PARALLEL_MAKE} --target install    
 
         cd ..
 

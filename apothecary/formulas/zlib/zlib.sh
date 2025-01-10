@@ -67,7 +67,7 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 		    ${CMAKE_WIN_SDK} 
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -97,7 +97,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF 
 
-		 cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		 cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		 cd ..
     elif [ "$TYPE" == "android" ] ; then
 
@@ -134,7 +134,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_${TYPE}_${PLATFORM}
@@ -161,10 +161,10 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -G 'Unix Makefiles'
         #     -DCMAKE_INSTALL_INCLUDEDIR=include 
-        # $EMSDK/upstream/emscripten/emmake make
+        # $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         # $EMSDK/upstream/emscripten/emmake make install
-	 	# cmake --build . --config Release --target install -j${PARALLEL_MAKE}
-	 	$EMSDK/upstream/emscripten/emmake make -j
+	 	# cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+	 	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..
     elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
@@ -179,11 +179,13 @@ function build() {
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
-	        -DBUILD_SHARED_LIBS=OFF"         
+	        -DBUILD_SHARED_LIBS=OFF"
 	    cmake .. ${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
+	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
@@ -194,8 +196,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release
+            -DCMAKE_INSTALL_INCLUDEDIR=include
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
@@ -223,6 +225,7 @@ function build() {
 		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
 		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
 		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
@@ -237,8 +240,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release
+            -DCMAKE_INSTALL_INCLUDEDIR=include
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	fi
 }

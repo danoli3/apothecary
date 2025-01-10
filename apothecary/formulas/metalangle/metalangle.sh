@@ -102,7 +102,7 @@ function build() {
 					-DENABLE_VISIBILITY=OFF \
 					-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 					-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-			cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+			cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
 		fi
 

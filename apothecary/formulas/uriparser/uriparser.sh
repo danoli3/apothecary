@@ -73,7 +73,7 @@ function build() {
 			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 			-A "${PLATFORM}" \
 			-G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
 		echo "Android "
@@ -157,7 +157,7 @@ function build() {
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
 			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         rm -f CMakeCache.txt
         cd ..      
       
@@ -178,8 +178,8 @@ function build() {
 			-DENABLE_VISIBILITY=OFF \
 			-DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD}  ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}"
-		# cmake --build . --config Release 
-		$EMSDK/upstream/emscripten/emmake make
+		# cmake --build . --config Release -j${PARALLEL_MAKE} 
+		$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 		cd ..
 	fi
 }

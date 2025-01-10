@@ -104,7 +104,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..	
 	elif [ "$TYPE" == "vs" ] ; then
 		echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -146,7 +146,7 @@ function build() {
 		    -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=ON
 
-		cmake --build . --config Release  --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE}  --target install
 
 		cd ..	
 
@@ -197,7 +197,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
 
@@ -232,7 +232,7 @@ function build() {
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-		$EMSDK/upstream/emscripten/emmake make
+		$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 		$EMSDK/upstream/emscripten/emmake make install
 
 		$EMSDK/upstream/emscripten/emcmake cmake .. \
@@ -258,7 +258,7 @@ function build() {
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-	    cmake --build . --target install --config Release
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
 	    cd ..
 		

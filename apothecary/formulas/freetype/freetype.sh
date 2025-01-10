@@ -121,7 +121,7 @@ function build() {
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
 					
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..	
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -215,7 +215,7 @@ function build() {
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_ENC_LIB};${LIBBROTLI_DEC_LIB}"
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}   
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install  
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
         cmake .. ${DEFINES} \
@@ -244,7 +244,7 @@ function build() {
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_ENC_LIB};${LIBBROTLI_DEC_LIB}"
-        cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
         cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
@@ -280,7 +280,7 @@ function build() {
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release
+				cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "linuxaarch64" ]; then
       source ../../${TYPE}_configure.sh
@@ -308,7 +308,7 @@ function build() {
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release
+				cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "android" ] ; then
 
@@ -437,10 +437,10 @@ function build() {
         # cat CMakeCache.txt
         # cat Makefile
 
-        $EMSDK/upstream/emscripten/emmake make
+        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         $EMSDK/upstream/emscripten/emmake make install
 
-        # cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        # cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 	fi
 }

@@ -82,7 +82,7 @@ function build() {
 	        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 
 	fi
@@ -126,7 +126,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 	fi
 

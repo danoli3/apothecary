@@ -114,7 +114,7 @@ function build() {
 	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
-	    cmake --build . --config Release
+	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "vs" ] ; then
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
@@ -159,7 +159,7 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cmake .. ${DEFS} \
 			-UCMAKE_CXX_FLAGS \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -180,7 +180,7 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
+	    cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
         source ../../android_configure.sh $ABI cmake
@@ -224,7 +224,7 @@ function build() {
 			-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	  	cmake --build . --config Release 
+	  	cmake --build . --config Release -j${PARALLEL_MAKE} 
         cd ..
 
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -271,7 +271,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF 
 
-		 cmake --build . --config Release 
+		 cmake --build . --config Release -j${PARALLEL_MAKE} 
 
 		 cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
@@ -308,9 +308,9 @@ function build() {
             -DUSE_XML2=ON \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY
-	    $EMSDK/upstream/emscripten/emmake make
+	    $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         # $EMSDK/upstream/emscripten/emmake make install
-	  	# cmake --build . --config Release 
+	  	# cmake --build . --config Release -j${PARALLEL_MAKE} 
 	    cd ..
 	fi
 }

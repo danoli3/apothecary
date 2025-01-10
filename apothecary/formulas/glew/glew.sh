@@ -80,7 +80,7 @@ function build() {
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -110,7 +110,7 @@ function build() {
             ${CMAKE_WIN_SDK} \
 		    -A "${PLATFORM}" \
 		    -G "${GENERATOR_NAME}"
-		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
@@ -144,7 +144,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
@@ -186,7 +186,7 @@ function build() {
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=true
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
 	    cd ..
 	fi
 

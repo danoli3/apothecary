@@ -213,7 +213,7 @@ function build() {
 		    -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 		    -DENABLE_VISIBILITY=OFF \
 		    ${CMAKE_WIN_SDK}
-        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 	elif [ "$TYPE" == "osx" ] ; then
 
@@ -294,7 +294,7 @@ function build() {
             -DNO_FONTCONFIG=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} 
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cmake --install . --config Release
 	    cd ..
 	else

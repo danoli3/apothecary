@@ -68,7 +68,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
             
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
 
         cmake ../libs/videoInput ${DEFS} \
             -A "${PLATFORM}" \
@@ -82,7 +82,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Debug \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
             
-        cmake --build . --config Debug
+        cmake --build . --config Debug -j${PARALLEL_MAKE}
  
         cd ..
 
@@ -109,7 +109,7 @@ function build() {
             -DCMAKE_SYSTEM_NAME=MSYS \
             -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
         
-        cmake --build . --config Release 
+        cmake --build . --config Release -j${PARALLEL_MAKE} 
         cd ..
 	fi
 
