@@ -982,6 +982,8 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
             echo "Error: Unable to extract GCC version from variable '$GCC'"
             export GCC_VERSION=14
         fi
+    else
+        GCC_VERSION=14
     fi
     export PLATFORM=${ABI}
 fi

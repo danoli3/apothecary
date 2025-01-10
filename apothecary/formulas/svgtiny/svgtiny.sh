@@ -78,19 +78,13 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
-    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+	if [ "$TYPE" == "msys2" ]; then
 
-    if [ "$TYPE" == "msys2" ]; then
-		MINGW_PREFIX="${MINGW_PREFIX:-/mingw64}"  # Default to /mingw64 if MINGW_PREFIX is not set
-        LIBXML2_ROOT="$MINGW_PREFIX"  # Adjust for architecture
+		MINGW_PREFIX="${MINGW_PREFIX:-/mingw64}" 
+        LIBXML2_ROOT="$MINGW_PREFIX"
         LIBXML2_INCLUDE_DIR="$LIBXML2_ROOT/include/libxml2"
-        LIBXML2_LIBRARY="$LIBXML2_ROOT/lib/libxml2.a"  # Adjust path for MSYS2 system libraries
-    else
-        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
-        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
-    fi
-
+        LIBXML2_LIBRARY="$LIBXML2_ROOT/lib/libxml2.a"
+  
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -114,6 +108,43 @@ function build() {
 	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
+	    cmake --build . --config Release -j${PARALLEL_MAKE}
+	    cd ..
+    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ]; then
+
+    	if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+
+        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
+        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
+
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+	        -DCMAKE_INSTALL_INCLUDEDIR=include"         
+	    cmake .. ${DEFS} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DDO_XML_INSTALL=ON \
+	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
+	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
+	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
+	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "vs" ] ; then
@@ -346,7 +377,7 @@ function copy() {
         secure $1/lib/$TYPE/$PLATFORM/svgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
 		mkdir -p $1/lib/$TYPE/${ARCH}
-        cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
+        cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 #    elif [ "$TYPE" == "msys2" ] ; then
 #		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
