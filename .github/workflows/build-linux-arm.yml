@@ -103,7 +103,7 @@ jobs:
       ARCH: armv6
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
-      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi1zero"
+      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
@@ -134,24 +134,8 @@ jobs:
           sudo apt update && sudo apt dist-upgrade -y
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
-      - name: Cache raspbian folder
-        uses: actions/cache@v4.2.0
-        with:
-          path: /home/runner/work/apothecary/apothecary/raspbianpi1zero
-          key: raspbian-pi1zero-cache-2
-            
-      - name: Check if folder exists
-        id: folder-check
-        run: >
-          if [ -d $TOOLCHAIN_ROOT ]; then
-            echo "Raspbian folder already exists. Skipping download and extract."
-            echo "::set-output name=folder-exists::true"
-          else
-            echo "::set-output name=folder-exists::false"
-          fi
-          
       - name: Download and extract tar file
-        if: steps.folder-check.outputs.folder-exists == 'false'
+    
         run: >
           cd $WORKDIR &&
           wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0 raspbianpi1zero
@@ -189,7 +173,7 @@ jobs:
       ARCH: armv7
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianrootfs"
-      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi3ab45"
+      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
@@ -220,24 +204,24 @@ jobs:
           sudo apt update && sudo apt dist-upgrade -y
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
-      - name: Cache raspbian folder
-        uses: actions/cache@v4.2.0
-        with:
-          path: /home/runner/work/apothecary/apothecary/raspbianpi3ab45
-          key: raspbian-pi3ab45-cache-2
+      # - name: Cache raspbian folder
+      #   uses: actions/cache@v4.2.0
+      #   with:
+      #     path: /home/runner/work/apothecary/apothecary/raspbian
+      #     key: raspbian-pi3ab45-cache-2
             
-      - name: Check if folder exists
-        id: folder-check
-        run: >
-          if [ -d $TOOLCHAIN_ROOT ]; then
-            echo "Raspbian folder already exists. Skipping download and extract."
-            echo "::set-output name=folder-exists::true"
-          else
-            echo "::set-output name=folder-exists::false"
-          fi
+      # - name: Check if folder exists
+      #   id: folder-check
+      #   run: >
+      #     if [ -d $TOOLCHAIN_ROOT ]; then
+      #       echo "Raspbian folder already exists. Skipping download and extract."
+      #       echo "::set-output name=folder-exists::true"
+      #     else
+      #       echo "::set-output name=folder-exists::false"
+      #     fi
           
       - name: Download and extract tar file
-        if: steps.folder-check.outputs.folder-exists == 'false'
+        # if: steps.folder-check.outputs.folder-exists == 'false'
         run: >
           cd $WORKDIR &&
           wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3+.tar.gz && tar xf cross-gcc-14.2.0-pi_3+.tar.gz && rm cross-gcc-14.2.0-pi_3+.tar.gz && mv cross-pi-gcc-14.2.0-2 raspbianpi3ab45

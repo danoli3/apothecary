@@ -24,8 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
         matrix:
-          cfg:
-          - {target: linux64, gcc: gcc6}          
+          cfg:     
           - {target: linux64, gcc: gcc11}
           - {target: linux64, gcc: gcc12}
           - {target: linux64, gcc: gcc13}
