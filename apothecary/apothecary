@@ -2714,7 +2714,7 @@ if [ "$TARGET" == "linux" ]; then
         echo "Unsupported architecture for Linux: $ARCH"
         exit 1
     fi
-    esac
+
     if [[ "$ABI" =~ ^(armv7l|aarch64|armv6l)$ ]]; then
         CROSSCOMPILING=1
     fi
