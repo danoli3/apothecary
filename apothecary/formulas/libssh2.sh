@@ -3,7 +3,7 @@
 # libssh2
 
 # Define the version
-FORMULA_TYPES=( "vs" "osx" "ios" "android" )
+FORMULA_TYPES=( )
 
 FORMULA_DEPENDS=( "zlib" "openssl" )
 
