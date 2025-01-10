@@ -56,7 +56,7 @@ jobs:
       - name: Check if Workflow is disabled
         shell: bash
         run: |
-          if [ "${{ DISABLE_WORKFLOW }}" == "true" ]; then
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
             echo "Workflow is disabled. Exiting."
             exit 1
           fi

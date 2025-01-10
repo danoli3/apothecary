@@ -121,7 +121,7 @@ function build() {
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ]; then
+    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
 
     	if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
@@ -148,8 +148,8 @@ function build() {
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 	        -DCMAKE_INSTALL_INCLUDEDIR=include"         
 	    cmake .. ${DEFS} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE}" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DDO_XML_INSTALL=ON \
@@ -158,9 +158,9 @@ function build() {
 	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
     		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
-	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
-	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
-	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY \
+	        -DLIBXML2_ROOT=${LIBXML2_ROOT} \
+	        -DLIBXML2_INCLUDE_DIR=${LIBXML2_INCLUDE_DIR} \
+	        -DLIBXML2_LIBRARY=${LIBXML2_LIBRARY} \
 	        -DCMAKE_PREFIX_PATH="${ZLIB_ROOT} ${LIBXML2_ROOT}" \
 	        -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        -DBUILD_SHARED_LIBS=OFF
