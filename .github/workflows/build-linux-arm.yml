@@ -18,7 +18,21 @@ jobs:
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
       TOOLCHAIN_PREFIX: "aarch64-linux-gnu"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
 
       - name: Update and Upgrade System Packages
         run: |
@@ -80,7 +94,21 @@ jobs:
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi1zero"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
 
       - name: Update and Upgrade System Packages
         run: |
@@ -145,7 +173,21 @@ jobs:
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbianpi3ab45"
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
 
       - name: Update and Upgrade System Packages
         run: |

@@ -67,7 +67,7 @@ jobs:
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: scripts/build.sh
