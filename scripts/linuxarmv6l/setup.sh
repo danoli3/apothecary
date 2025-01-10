@@ -16,12 +16,12 @@ cd $SCRIPT_DIR
 
 CROSS_COMPILER=raspbian
 CROSS_SYSROOT=raspbianrootfs
-
-CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download" 
-CROSS_NAME=cross-gcc-14.2.0-pi_64
-CROSS_EXTRACT=cross-pi-gcc-14.2.0-64
+CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" 
+CROSS_NAME=cross-gcc-14.2.0-pi_0-1
+CROSS_EXTRACT=cross-pi-gcc-14.2.0-0
 
 wget "${CROSS_URL}" -O ${CROSS_NAME}.tar.gz && tar xf ${CROSS_NAME}.tar.gz && rm ${CROSS_NAME}.tar.gz && mv ${CROSS_EXTRACT} ${CROSS_COMPILER}
+
 
 mkdir -p $CROSS_SYSROOT
 cd $CROSS_SYSROOT
