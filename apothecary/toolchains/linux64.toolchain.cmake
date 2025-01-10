@@ -8,7 +8,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # GCC Version (Set this variable when invoking CMake)
 if(NOT DEFINED GCC_VERSION)
-    message(FATAL_ERROR "Please specify GCC_VERSION (e.g., -DGCC_VERSION=14)")
+    set(GCC_VERSION 14) # Default to GCC 11 if not specified
+    message(WARNING "GCC_VERSION not specified. Defaulting to GCC_VERSION=${GCC_VERSION}")
 endif()
 
 # Path to GCC 
@@ -31,12 +32,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_COMPILER "${GCC_PATH}/gcc-${GCC_VERSION}")
 set(CMAKE_CXX_COMPILER "${GCC_PATH}/g++-${GCC_VERSION}")
 
+message(STATUS "Using GCC Version: ${GCC_VERSION}")
+message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
+
 # Check for the existence of the specified GCC version
 if(NOT EXISTS ${CMAKE_C_COMPILER})
-    message(FATAL_ERROR "C Compiler not found: ${CMAKE_C_COMPILER}")
+    message(WARNING "C Compiler not found: ${CMAKE_C_COMPILER}")
 endif()
 if(NOT EXISTS ${CMAKE_CXX_COMPILER})
-    message(FATAL_ERROR "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
+    message(WARNING "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
 endif()
 
 # Paths to system libraries and includes
