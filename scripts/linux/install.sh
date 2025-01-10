@@ -43,9 +43,9 @@ echoDots(){
     done
 }
 
-echo "GCC Version: [$OPT]"
+echo "GCC Version: [$GCC]"
 
-if [ "$OPT" == "gcc4" ]; then
+if [ "$GCC" == "gcc4" ]; then
     sudo add-apt-repository -y ppa:dns/gnu
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update -q
@@ -58,7 +58,7 @@ if [ "$OPT" == "gcc4" ]; then
     sudo update-alternatives --set cc /usr/bin/gcc
     sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 60
     sudo update-alternatives --set c++ /usr/bin/g++
-elif [ "$OPT" == "gcc5" ]; then
+elif [ "$GCC" == "gcc5" ]; then
     sudo add-apt-repository -y ppa:dns/gnu
     sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     sudo apt-get update -q
@@ -70,7 +70,7 @@ elif [ "$OPT" == "gcc5" ]; then
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
     g++ -v
-elif [ "$OPT" == "gcc6" ]; then
+elif [ "$GCC" == "gcc6" ]; then
     
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
     sudo apt-get update
@@ -84,7 +84,7 @@ elif [ "$OPT" == "gcc6" ]; then
     sudo add-apt-repository -r "deb http://cz.archive.ubuntu.com/ubuntu bionic main universe"
 
     g++ -v
-elif [ "$OPT" == "gcc7" ]; then
+elif [ "$GCC" == "gcc7" ]; then
     #https://gcc.gnu.org/gcc-7/changes.html
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
     sudo apt-get update
@@ -97,7 +97,7 @@ elif [ "$OPT" == "gcc7" ]; then
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 100
     sudo add-apt-repository -r "deb http://cz.archive.ubuntu.com/ubuntu bionic main universe"
     g++ -v
-elif [ "$OPT" == "gcc8" ]; then
+elif [ "$GCC" == "gcc8" ]; then
     #https://gcc.gnu.org/gcc-8/changes.html
     sudo apt update
     sudo apt install software-properties-common
@@ -108,7 +108,7 @@ elif [ "$OPT" == "gcc8" ]; then
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
-elif [ "$OPT" == "gcc11" ]; then
+elif [ "$GCC" == "gcc11" ]; then
     # https://gcc.gnu.org/gcc-11/changes.html
     sudo apt update
     sudo apt install software-properties-common
@@ -119,7 +119,7 @@ elif [ "$OPT" == "gcc11" ]; then
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
-elif [ "$OPT" == "gcc12" ]; then
+elif [ "$GCC" == "gcc12" ]; then
     # https://gcc.gnu.org/gcc-12/changes.html
     sudo apt update
     sudo apt install software-properties-common
@@ -130,7 +130,7 @@ elif [ "$OPT" == "gcc12" ]; then
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
-elif [ "$OPT" == "gcc13" ]; then
+elif [ "$GCC" == "gcc13" ]; then
     # https://gcc.gnu.org/gcc-13/changes.html
     sudo apt update
     sudo apt install software-properties-common
@@ -141,7 +141,7 @@ elif [ "$OPT" == "gcc13" ]; then
     sudo update-alternatives --config gcc
     gcc --version
     g++ -v
-elif [ "$OPT" == "gcc14" ]; then
+elif [ "$GCC" == "gcc14" ]; then
     # https://gcc.gnu.org/gcc-14/changes.html
     sudo apt update
     sudo apt install -y software-properties-common
@@ -155,7 +155,7 @@ elif [ "$OPT" == "gcc14" ]; then
     sudo update-alternatives --config gcc  # GCC 14 as the default
     gcc --version
     g++ -v
-elif [ "$OPT" == "gcc15" ]; then
+elif [ "$GCC" == "gcc15" ]; then
     # https://gcc.gnu.org/gcc-15/changes.html
 
     sudo apt update

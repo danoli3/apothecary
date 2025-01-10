@@ -8,7 +8,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # GCC Version (Set this variable when invoking CMake)
 if(NOT DEFINED GCC_VERSION)
-    message(FATAL_ERROR "Please specify GCC_VERSION (e.g., -DGCC_VERSION=11)")
+    message(FATAL_ERROR "Please specify GCC_VERSION (e.g., -DGCC_VERSION=14)")
 endif()
 
 # Path to GCC 
@@ -48,7 +48,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 # Compiler and linker flags
 set(CMAKE_C_FLAGS "-fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic")
-set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wall -Wextra -std=c++17 -march=x86-64 -mtune=generic")
+set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic")
 set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC")
 

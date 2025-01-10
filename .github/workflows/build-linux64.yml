@@ -25,15 +25,15 @@ jobs:
     strategy:
         matrix:
           cfg:
-          - {target: linux64, opt: gcc6}          
-          - {target: linux64, opt: gcc11}
-          - {target: linux64, opt: gcc12}
-          - {target: linux64, opt: gcc13}
-          - {target: linux64, opt: gcc14}
-          # - {target: linux64, opt: gcc15}
+          - {target: linux64, gcc: gcc6}          
+          - {target: linux64, gcc: gcc11}
+          - {target: linux64, gcc: gcc12}
+          - {target: linux64, gcc: gcc13}
+          - {target: linux64, gcc: gcc14}
+          # - {target: linux64, gcc: gcc15}
     env:
       TARGET: ${{matrix.cfg.target}}
-      OPT: ${{matrix.cfg.opt}}
+      GCC: ${{matrix.cfg.gcc}}
     steps:
     - uses: actions/checkout@v4.2.2
 
@@ -51,21 +51,11 @@ jobs:
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
 
-    - name: Scripts Calc Formula - ${{matrix.cfg.target}} - ${{matrix.cfg.opt}}
+    - name: Scripts Calc Formula - ${{matrix.cfg.target}} - ${{matrix.cfg.gcc}}
       run: ./scripts/calculate_formulas.sh
     - name: Scripts Install
       run: ./scripts/linux/install.sh
-    - name: Determine Release
-      id: vars
-      shell: bash
-      run: |
-        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-          echo "RELEASE=nightly" >> $GITHUB_ENV
-        elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-          echo "RELEASE=bleeding" >> $GITHUB_ENV
-        else
-          echo "RELEASE=bleeding" >> $GITHUB_ENV
-        fi
+      
     - name: BuildLinux64
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: scripts/build.sh
@@ -84,5 +74,5 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ env.RELEASE }}
         draft: false
-        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}_{{ matrix.cfg.opt }}.tar.bz2
+        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}_{{ matrix.cfg.gcc }}.tar.bz2
       

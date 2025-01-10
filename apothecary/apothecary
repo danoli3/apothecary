@@ -213,6 +213,11 @@ fi
 if [ -z "${LOADSAVE_RESULT+x}" ]; then
     declare -a LOADSAVE_RESULT=0
 fi
+
+if [ -z "${GCC+x}" ]; then
+    GCC=gcc14 
+fi
+
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 
@@ -969,7 +974,17 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
         export ABI="armv6l"
     elif [ $TYPE == "msys2" ]; then
         export ABI="x86_64"
-    fi 
+    fi
+
+    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ]; then
+        if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
+            export GCC_VERSION=${BASH_REMATCH[1]}
+            echo "Extracted GCC_VERSION: $GCC_VERSION"
+        else
+            echo "Error: Unable to extract GCC version from variable '$GCC'"
+            export GCC_VERSION=14
+        fi
+    fi
     export PLATFORM=${ABI}
 fi
 
