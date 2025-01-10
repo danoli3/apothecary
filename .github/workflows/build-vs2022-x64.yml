@@ -22,18 +22,8 @@ env:
   DISABLE_WORKFLOW: "false"
 
 jobs:
-  check-enabled:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if Workflow is Enabled / Disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" = "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 0
-          fi
-
   build-vs2022:
-    needs: check-enabled
+    $GCCif: env.DISABLE_WORKFLOW != 'true'
     runs-on: windows-2022
     strategy:
       matrix:

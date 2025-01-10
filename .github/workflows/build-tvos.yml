@@ -20,18 +20,8 @@ env:
   DISABLE_WORKFLOW: "true"
 
 jobs:
-  check-enabled:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if Workflow is Enabled / Disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" = "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 0
-          fi
-
   build-macos-platforms:
-    needs: check-enabled
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: macos-14
     strategy:
       matrix:

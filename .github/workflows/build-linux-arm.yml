@@ -12,18 +12,8 @@ env:
   DISABLE_WORKFLOW: "false"
 
 jobs:
-  check-enabled:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if Workflow is Enabled / Disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" = "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 0
-          fi
-
   build-linux-aarch64:
-    needs: check-enabled
+    $GCCif: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxaarch64
@@ -101,7 +91,7 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv6l-pi-1zero:
-    needs: check-enabled
+    $GCCif: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv6l
@@ -181,7 +171,7 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv7-pi3ab45:
-    needs: check-enabled
+    $GCCif: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv7l
