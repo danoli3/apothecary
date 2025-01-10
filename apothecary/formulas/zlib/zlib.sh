@@ -167,7 +167,7 @@ function build() {
 	 	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+    elif [ "$TYPE" == "msys2" ]; then
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${ARCH}"
@@ -178,14 +178,12 @@ function build() {
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DCMAKE_CXX_EXTENSIONS=OFF \
 	        -DBUILD_SHARED_LIBS=OFF"
 	    cmake .. ${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DGCC_VERSION=${GCC_VERSION} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
@@ -199,7 +197,7 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include
 	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
-	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
@@ -213,29 +211,20 @@ function build() {
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF
-	        -DBUILD_SHARED_LIBS=OFF"         
+	        -DCMAKE_CXX_EXTENSIONS=OFF \
+	        -DBUILD_SHARED_LIBS=OFF"
 	    cmake .. ${DEFINES} \
-	        -DCMAKE_C_COMPILER=${CC} \
-		    -DCMAKE_CXX_COMPILER=${CXX} \
-		    -DCMAKE_AR=${AR} \
-		    -DCMAKE_RANLIB=${RANLIB} \
-		    -DCMAKE_SYSROOT=${SYSROOT} \
-		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE ${CFLAGS}}" \
+	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
+	        -DGCC_VERSION=${GCC_VERSION} \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
 	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
