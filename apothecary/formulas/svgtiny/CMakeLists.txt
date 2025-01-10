@@ -17,6 +17,8 @@ if(NOT LIBXML2_INCLUDE_DIR)
     endif()
 endif()
 
+get_filename_component(LIBXML2_INCLUDE_DIR ${LIBXML2_INCLUDE_DIR} ABSOLUTE)
+
 file(GLOB_RECURSE SRC_FILES
     src/*.c
     libdom/src/events/*.c
@@ -63,6 +65,7 @@ include_directories(
 
 add_library(svgtiny STATIC ${SRC_FILES})
 target_link_libraries(svgtiny dom wapcaplet expat m ${LIBXML2_LIBRARY})
+target_include_directories(svgtiny PUBLIC ${LIBXML2_INCLUDE_DIR})
 
 if(DO_XML_INSTALL)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlerror.h ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlparser.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
