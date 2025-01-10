@@ -162,6 +162,7 @@ function build() {
 	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_INSTALL_PREFIX=Release \
+	        -DBUILD_SHARED_LIBS=OFF \
     		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -198,6 +199,7 @@ function build() {
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_INSTALL_PREFIX=Release \
     		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DBUILD_SHARED_LIBS=OFF \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
