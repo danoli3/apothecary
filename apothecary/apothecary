@@ -221,11 +221,11 @@ fi
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 
-# if [ -z "${USE_CCACHE+x}" ]; then
-#     export CC="ccache gcc"
-#     export CXX="ccache g++"
-#     export CMAKE_DEFS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-# fi
+if [ -z "${USE_CCACHE+x}" ]; then
+    export CC="ccache gcc"
+    export CXX="ccache g++"
+    export CMAKE_DEFS="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+fi
 
 # nice, detailed help message
 HELP="usage: apothecary [options] <command> [<core|addons|libName|addonName>]
@@ -442,8 +442,6 @@ fi
 # If formula already exists force download
 if [ -z "${FORCE_DOWNLOAD+x}" ]; then
     export FORCE_DOWNLOAD=0
-else
-	echo "FORCE_DOWNLOAD is set: $FORCE_DOWNLOAD"
 fi
 
 if [ -z "${LIBS_DIR_REAL+x}" ]; then
@@ -2449,6 +2447,11 @@ function apothecaryDepend() {
     if [ $BUILD_DEPENDENCIES == 0 ] ; then
         echoInfo " ... skipping depend BUILD_DEPENDENCIES == 0 $depend"
         return
+    fi
+
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Error: Missing arguments. Usage: apothecaryDepend <command> <dependency>"
+        return 1
     fi
 
     local ROOT=$PWD

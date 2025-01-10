@@ -63,11 +63,10 @@ function prepare() {
         cp -fr $FORMULA_DIR/glob.h .
     fi
 
-    # apothecaryDependencies download
-    
-    # apothecaryDepend prepare zlib
-    # apothecaryDepend build zlib
-    # apothecaryDepend copy zlib
+    apothecaryDepend download zlib  
+    apothecaryDepend prepare zlib
+    apothecaryDepend build zlib
+    apothecaryDepend copy zlib
 
     rm -f ./CMakeLists.txt
     cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
