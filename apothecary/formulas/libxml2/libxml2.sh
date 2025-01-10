@@ -278,6 +278,11 @@ function build() {
             #./autogen.sh
             find . -name "test*.c" | xargs -r rm
             find . -name "run*.c" | xargs -r rm
+
+            ZLIB_ROOT="$LIBS_ROOT/zlib/"
+            ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+            ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
             mkdir -p build_$TYPE
             cd build_$TYPE
             rm -f CMakeCache.txt *.a *.o
@@ -290,6 +295,9 @@ function build() {
                 -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
                 -DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
                 -DGCC_VERSION=${GCC_VERSION} \
+                -DZLIB_ROOT=${ZLIB_ROOT} \
+                -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+                -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -303,6 +311,11 @@ function build() {
         if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
         fi
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+            
         export CFLAGS="$CFLAGS -DTRIO_FPCLASSIFY=fpclassify"
         sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c
         find . -name "test*.c" | xargs -r rm
@@ -322,6 +335,9 @@ function build() {
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_SYSTEM_NAME=$TYPE \
