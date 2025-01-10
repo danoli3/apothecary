@@ -49,18 +49,14 @@ echo "OUTPUT_FOLDER: $OUTPUT_FOLDER"
 
 
 build_libraries() {
-    for BUNDLE_NO in {1..4}
-    do
-        echo "Building $PLATFORM $ARCH bundle $BUNDLE_NO"
-        
-        ${SCRIPT_DIR}/./build_${PLATFORM}_${ARCH}.sh ${BUNDLE_NO}
+
+        ${SCRIPT_DIR}/./build_${PLATFORM}.sh
 
         # Check for successful completion
         if [ $? -ne 0 ]; then
-            echo "Error building bundle $BUNDLE_NO"
+            echo "Error building bundle"
             exit 1
         fi
-    done
 }
 
 # move built libraries to openFrameworks libs directory

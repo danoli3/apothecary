@@ -289,10 +289,10 @@ function build() {
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_STANDARD=${C_STANDARD} \
                 -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+                -DGCC_VERSION=${GCC_VERSION} \
                 -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
                 -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
                 -DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
-                -DGCC_VERSION=${GCC_VERSION} \
                 -DZLIB_ROOT=${ZLIB_ROOT} \
                 -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
                 -DZLIB_LIBRARY=${ZLIB_LIBRARY} \

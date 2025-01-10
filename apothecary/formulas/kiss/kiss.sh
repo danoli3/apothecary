@@ -32,7 +32,50 @@ function build() {
     if [ $CROSSCOMPILING -eq 1 ]; then
         source ../../${TYPE}_configure.sh
     fi
-    make  -j${PARALLEL_MAKE} TARGET_DIR=$TYPE
+
+    if [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+	    if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+		echo "building $TYPE | $PLATFORM"
+        echo "--------------------"
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+
+		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT --sysroot=${SYSROOT}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	 
+	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF"         
+	    cmake  ../build/cmake \
+	    	${DEFINES} \
+			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+			-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
+	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
+	        -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_VERBOSE_MAKEFILE=true
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+	    cd ..
+	else
+    	make  -j${PARALLEL_MAKE} TARGET_DIR=$TYPE
+	fi
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root

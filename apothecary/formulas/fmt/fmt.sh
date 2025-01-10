@@ -166,6 +166,10 @@ function build() {
 		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "linux64" ]; then
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o
@@ -179,6 +183,7 @@ function build() {
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+			-DGCC_VERSION=${GCC_VERSION} \
 			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -250,10 +255,10 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
-	elif [[ "$TYPE" =~ ^(linux64|ios|tvos|xros|catos|watchos)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
-		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/libfmt.a
+		secure $1/lib/$TYPE/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "android" ] ; then
 		mkdir -p $1/lib/$TYPE/$ABI/

@@ -833,6 +833,7 @@ if [ "$TYPE" = "msys2" ]; then
             esac
         fi
     fi
+    GCC_VERSION=14
     export PLATFORM=${ARCH}
 fi
 

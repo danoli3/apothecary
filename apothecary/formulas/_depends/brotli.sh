@@ -5,7 +5,7 @@
 # It is similar in speed with deflate but offers more dense compression.
 # https://github.com/google/brotli
 
-FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "linux64" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -115,7 +115,49 @@ function build() {
 
      cmake --build . --config Release -j${PARALLEL_MAKE} --target install
      cd ..
-	fi
+	elif [[ "$TYPE" =~ ^(linux64|)$ ]]; then
+    
+    if [ $CROSSCOMPILING -eq 1 ]; then
+        source ../../${TYPE}_configure.sh
+    fi
+
+    mkdir -p "build_${TYPE}_${PLATFORM}"
+    cd "build_${TYPE}_${PLATFORM}"    
+    rm -f CMakeCache.txt *.a *.o 
+    cmake .. \
+        -DCMAKE_INSTALL_PREFIX=Release \
+        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+        -DCMAKE_CXX_EXTENSIONS=OFF \
+        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
+        -DCMAKE_INSTALL_PREFIX=Release \
+        -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+        -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+        -DCMAKE_INSTALL_INCLUDEDIR=include \
+        -DCMAKE_INSTALL_LIBDIR=lib \
+        -DCMAKE_INSTALL_BINARY_DIR=lib \
+        -DCMAKE_INSTALL_FULL_LIBDIR=lib \
+        -DCMAKE_INSTALL_LIBDIR="lib" \
+        -DPLATFORM=$PLATFORM \
+        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+        -DGCC_VERSION=${GCC_VERSION} \
+        -DCMAKE_SYSTEM_NAME=$TYPE \
+        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+        -DBROTLI_DISABLE_TESTS=ON \
+        -DBROTLI_BUILD_TOOLS=OFF \
+        -DBROTLI_BUNDLED_MODE=OFF \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+        -DENABLE_VISIBILITY=OFF
+
+     cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+     cd ..
+  fi
 }
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
@@ -177,7 +219,34 @@ function copy() {
     sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
     sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
     sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
-	fi
+	elif [ "$TYPE" == "linux64" ] ; then
+    mkdir -p $1/lib/$TYPE/
+    cp -v -r c/include/* $1/include
+    cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/
+    secure $1/lib/$TYPE/libbrotlidec.a brotli.pkl
+
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlicommon.pc" $1/lib/$TYPE/libbrotlicommon.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlidec.pc" $1/lib/$TYPE/libbrotlidec.pc
+    cp -vR "build_${TYPE}_${PLATFORM}/libbrotlienc.pc" $1/lib/$TYPE/libbrotlienc.pc
+    
+    PKG_FILE="$1/lib/$TYPE/libbrotlicommon.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/libbrotlidec.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+
+    PKG_FILE="$1/lib/$TYPE/libbrotlienc.pc"
+    sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+    sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/|" "$PKG_FILE"
+    sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+  fi
 
   if [ -d "$1/license" ]; then
         rm -rf $1/license
@@ -192,7 +261,7 @@ function clean() {
     if [ -d "build_${TYPE}_${PLATFORM}" ]; then
         rm -r build_${TYPE}_${PLATFORM}     
     fi
-  elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+  elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux64)$ ]]; then
     if [ -d "build_${TYPE}_${PLATFORM}" ]; then
         rm -r build_${TYPE}_${PLATFORM}     
     fi

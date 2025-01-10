@@ -46,19 +46,20 @@ FORMULAS=(
 # Seperate in bundles on osx
 if [[ "$TARGET" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; then
     FORMULAS=(
-            # Dependencies for other formulas (cairo)
+            "pkg-config"
             "glm"
             "json"
             "utf8"
             "brotli"
-            # All formulas
+            "zlib"
             "glew"
-            "videoInput"
+            "glfw"
+            "libxml2"
+            "svgtiny"
             "tess2"
             "kiss"
+            "fmt"
             "uriparser"
-            # # Formulas with depenencies in the end
-            "cairo"
         )
 elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 if [ "$BUNDLE" == "1" ]; then
