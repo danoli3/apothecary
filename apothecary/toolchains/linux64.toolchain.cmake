@@ -7,13 +7,21 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # GCC Version (Set this variable when invoking CMake)
 if(NOT DEFINED GCC_VERSION)
-    set(GCC_VERSION 14) # Default to GCC 11 if not specified
-    message(WARNING "GCC_VERSION not specified. Defaulting to GCC_VERSION=${GCC_VERSION}")
+    if(DEFINED ENV{GCC_VERSION})
+        set(GCC_VERSION $ENV{GCC_VERSION})
+    else()
+        set(GCC_VERSION 14) # Default value
+        message(WARNING "GCC_VERSION not specified. Defaulting to GCC_VERSION=${GCC_VERSION}")
+    endif()
 endif()
 
 # Path to GCC 
 if(NOT DEFINED GCC_PATH)
-    set(GCC_PATH "/usr/bin") # Default GCC path
+    if(DEFINED ENV{GCC_PATH})
+        set(GCC_PATH $ENV{GCC_PATH}) # Use GCC_PATH from the env
+    else()
+        set(GCC_PATH "/usr/bin") # Default path
+    endif()
 endif()
 
 if(NOT DEFINED C_STANDARD)
