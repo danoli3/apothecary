@@ -8,7 +8,7 @@
 # use "make glew.lib" to build only the lib without demos/tests
 # the OPT flag is used for CFLAGS (& LDFLAGS I think?)
 
-FORMULA_TYPES=( "osx" "vs" "linux64" "linuxaarch64" "linuxarmv6l" "linuxarmv7l" )
+FORMULA_TYPES=( "osx" "vs" "linux64" "linuxarm64" "linuxaarch64" "linuxarmv6l" "linuxarmv7l" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -116,7 +116,7 @@ function build() {
 	elif [ "$TYPE" == "msys2" ] ; then
 		make clean
 		make -j8
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] ; then
+	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ]; then
 		echoVerbose "building $TYPE | $ARCH BUILD GCC: $GCC_VERSION"
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -203,7 +203,7 @@ function copy() {
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
 		. "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libGLEW.a glew.pkl
-    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l|linux64|linux)$ ]]; then
+    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l|linux64|linuxarm64|linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a

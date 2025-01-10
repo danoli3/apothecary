@@ -169,7 +169,7 @@ CON_YELLOW_GREEN="\033[33m"
 CON_GREEN="\033[32m"
 
 # used to filter out bad build types
-VALID_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
+VALID_TYPES=( "osx" "linux" "linux64" "linuxarm64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
 
 
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
@@ -248,7 +248,7 @@ commands:
 
 options:
   -t	specify libary type when building, detects type from OS by default
-	valid types: osx, linux, linux64, linuxarmv6l, linuxarmv7l, vs, msys2, ios, tvos, android
+	valid types: osx, linux, linux64, linuxarm64, linuxarmv6l, linuxarmv7l, vs, msys2, ios, tvos, android
 
   -a	specify architecture, either 32 or 64 (default is 32 bit)
 	note: not currently needed, reserved for future use
@@ -958,12 +958,14 @@ if [ "$TYPE" = "macos" ]; then
     PLATFORM="MAC"
 fi
 
-if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
     export FLAG_RELEASE="-O3"
     if [ $TYPE == "linux" ] ; then
         export ABI="x86"
     elif [ $TYPE == "linux64" ] ; then
         export ABI="x86_64"
+     elif [ $TYPE == "linuxarm64" ] ; then
+        export ABI="aarch64"
     elif [ $TYPE == "linuxaarch64" ]; then
         export ABI="aarch64"
     elif [ $TYPE == "linuxarmv7l" ]; then
@@ -974,7 +976,7 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
         export ABI="x86_64"
     fi
 
-    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ]; then
+    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ]; then
         if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
             export GCC_VERSION=${BASH_REMATCH[1]}
             echo "Extracted GCC_VERSION: $GCC_VERSION"
@@ -1053,7 +1055,7 @@ get_directory_path() {
         emscripten)
             final_path="${base_dir}/lib/${type}/"
             ;;
-        linux64|linux|msys2)
+        linux64|linuxarm64|linuxaarch64|linuxarmv6l|linuxarmv7l|linux|msys2)
             final_path="${base_dir}/lib/${type}/"
             ;;
         android)
