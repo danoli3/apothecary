@@ -19,8 +19,9 @@ env:
   USE_ARTIFACT: true
   DISABLE_WORKFLOW: "true"
 
-jobs:  build-for-ios-platform:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+jobs:  
+  build-for-ios-platform:
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: macos-14
     strategy:
       matrix:

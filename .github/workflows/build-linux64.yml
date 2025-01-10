@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-linux64:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     strategy:
         matrix:

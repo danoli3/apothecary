@@ -20,7 +20,7 @@ env:
 
 jobs:
   build-emscripten:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:

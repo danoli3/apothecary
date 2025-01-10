@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-linux-aarch64:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxaarch64
@@ -91,7 +91,7 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv6l-pi-1zero:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv6l
@@ -171,7 +171,7 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv7-pi3ab45:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: ubuntu-latest
     env:
       TARGET: linuxarmv7l

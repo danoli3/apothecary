@@ -23,7 +23,7 @@ env:
 
 jobs:
   build-vs2019:
-    $GCCif: env.DISABLE_WORKFLOW != 'true'
+    if: env.DISABLE_WORKFLOW != 'true'
     runs-on: windows-2019
     strategy:
       matrix:
