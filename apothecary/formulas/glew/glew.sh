@@ -116,7 +116,7 @@ function build() {
 	elif [ "$TYPE" == "msys2" ] ; then
 		make clean
 		make
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] ; then
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${ARCH}"
@@ -131,11 +131,11 @@ function build() {
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake  ../build/cmake \
 	 		${DEFINES} \
+	 		-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
-	        -DCMAKE_SYSTEM_NAME=$TYPE \
 	        -DCMAKE_INSTALL_PREFIX=Release \
     		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
     		-DCMAKE_INSTALL_PREFIX=Release \

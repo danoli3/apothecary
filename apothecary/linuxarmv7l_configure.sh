@@ -1,5 +1,5 @@
 # Set the root directory
-export RPI_ROOT=$SYSROOT
+export RPI_ROOT=$SYSROOT/rootfs
 # Set Raspbian toolchain directory
 RASP="$RPI_ROOT"
 
