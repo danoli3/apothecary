@@ -73,6 +73,17 @@ function prepare() {
 	cd ..
     cp -rf libdom/bindings libdom/include/dom/
 
+
+    apothecaryDepend download zlib
+	apothecaryDepend prepare zlib
+	apothecaryDepend build zlib
+	apothecaryDepend copy zlib
+
+	apothecaryDepend download libxml2
+	apothecaryDepend prepare libxml2
+	apothecaryDepend build libxml2
+	apothecaryDepend copy libxml2
+
 }
 
 # executed inside the lib src dir
@@ -406,7 +417,7 @@ function clean() {
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux64|linuxaarch64|linuxarmv7l|linuxarmv6l)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
