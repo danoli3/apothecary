@@ -16,11 +16,22 @@ env:
   TARGET: "linux64"
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-  USE_ARTIFACT: true
+  USE_ARTIFACT: true  
+  DISABLE_WORKFLOW: "false"
 
 jobs:
+  check-enabled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if Workflow is Enabled / Disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" = "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
 
   build-linux64:
+    needs: check-enabled
     runs-on: ubuntu-latest
     strategy:
         matrix:

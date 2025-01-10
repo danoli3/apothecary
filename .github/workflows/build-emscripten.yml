@@ -16,9 +16,21 @@ env:
   TARGET: "emscripten"
   EMSDK_VERSION: "3.1.74"
   USE_ARTIFACT: true
+  DISABLE_WORKFLOW: "false"
 
 jobs:
+  check-enabled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if Workflow is Enabled / Disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" = "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 0
+          fi
+
   build-emscripten:
+    needs: check-enabled
     runs-on: ubuntu-latest
     strategy:
       matrix:
