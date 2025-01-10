@@ -40,7 +40,7 @@ jobs:
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
-        uses: actions/cache@v2
+        uses: actions/cache@v4.2.0
         with:
           path: /home/runner/work/apothecary/apothecary/raspbian
           key: raspbian-cache-2
@@ -116,7 +116,7 @@ jobs:
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
-        uses: actions/cache@v2
+        uses: actions/cache@v4.2.0
         with:
           path: /home/runner/work/apothecary/apothecary/raspbianpi1zero
           key: raspbian-pi1zero-cache-2
@@ -195,7 +195,7 @@ jobs:
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
-        uses: actions/cache@v2
+        uses: actions/cache@v4.2.0
         with:
           path: /home/runner/work/apothecary/apothecary/raspbianpi3ab45
           key: raspbian-pi3ab45-cache-2
