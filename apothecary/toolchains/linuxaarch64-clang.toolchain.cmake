@@ -47,8 +47,8 @@ message(STATUS "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}")
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
 
 # NEON
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+fp+simd")
@@ -57,15 +57,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+fp+simd")
 ## Compiler Binary 
 set(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/")
 
-find_program(CMAKE_C_COMPILER aarch64-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_LINKER aarch64-linux-gnu-ld PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_AR aarch64-linux-gnu-ar PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_NM aarch64-linux-gnu-nm PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_RANLIB aarch64-linux-gnu-ranlib PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_STRIP aarch64-linux-gnu-strip PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_OBJCOPY aarch64-linux-gnu-objcopy PATHS ${TOOLCHAIN_ROOT}/bin/")
-find_program(CMAKE_OBJDUMP aarch64-linux-gnu-objdump PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_C_COMPILER ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_CXX_COMPILER ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_LINKER ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-ld PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_AR ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-ar PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_NM ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-nm PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_RANLIB ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-ranlib PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_STRIP ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-strip PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJCOPY ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-objcopy PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJDUMP ${CMAKE_SYSTEM_PROCESSOR}-linux-gnu-objdump PATHS "${TOOLCHAIN_ROOT}/bin/")
 
 # Check if critical tools exist
 if(NOT EXISTS ${CMAKE_C_COMPILER})
