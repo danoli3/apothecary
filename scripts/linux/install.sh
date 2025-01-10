@@ -141,6 +141,7 @@ elif [ "$GCC" == "gcc13" ]; then
     sudo apt update
     sudo apt install -y --allow-unauthenticated gcc-13 g++-13
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 --slave /usr/bin/g++ g++ /usr/bin/g++-13
+    sudo update-alternatives --set gcc /usr/bin/gcc-13
     sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version

@@ -51,7 +51,8 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
     -L${CMAKE_SYSROOT}/lib/ \
     -Wl,-rpath-link,${CMAKE_SYSROOT}/lib64/ \
     -L${CMAKE_SYSROOT}/lib64/ \
-    -L${CMAKE_SYSROOT}/usr/lib/x86_64-linux-gnu")
+    -L${CMAKE_SYSROOT}/lib/x86_64-linux-gnu \
+    -Wl,-rpath-link,${CMAKE_SYSROOT}/lib/x86_64-linux-gnu")
 
 # Compiler and linker flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
