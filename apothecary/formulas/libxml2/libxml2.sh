@@ -396,6 +396,12 @@ function copy() {
         secure $1/lib/$TYPE/libxml2.a
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+        cp -v "build_${TYPE}_${PLATFORM}/libxml-2.0.pc" $1/lib/$TYPE/$PLATFORM/libxml-2.0.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/libxml-2.0.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
     else
         echo "Unknown build TYPE: $TYPE"
         exit 1

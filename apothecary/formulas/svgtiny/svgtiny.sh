@@ -135,6 +135,8 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
 
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBXML2_ROOT}/lib/$TYPE/$PLATFORM"
+
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -394,6 +396,10 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM
         cp -f "build_${TYPE}_$PLATFORM/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/svgtiny.a        
         secure $1/lib/$TYPE/$PLATFORM/svgtiny.a svgtiny.pkl
+    elif [ "$TYPE" == "msys2" ] ; then
+		mkdir -p $1/lib/$TYPE/${ARCH}
+        cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
+        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
 		mkdir -p $1/lib/$TYPE/${ARCH}
         cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
