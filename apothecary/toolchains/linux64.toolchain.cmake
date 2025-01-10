@@ -3,7 +3,6 @@
 # Specify the system
 set(CMAKE_SYSTEM_NAME Linux)        # Cross-compilation target system
 set(CMAKE_SYSTEM_PROCESSOR x86_64) # Architecture (64-bit)
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # GCC Version (Set this variable when invoking CMake)
@@ -47,17 +46,16 @@ endif()
 # Paths to system libraries and includes
 set(CMAKE_SYSROOT "/usr") # Base system path for includes and libraries
 set(CMAKE_FIND_ROOT_PATH ${CMAKE_SYSROOT})
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/x86_64-linux-gnu \
-    -L${CMAKE_SYSROOT}/lib/x86_64-linux-gnu \
+set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
+    -L${CMAKE_SYSROOT}/lib/ \
+    -Wl,-rpath-link,${CMAKE_SYSROOT}/lib64/ \
+    -L${CMAKE_SYSROOT}/lib64/ \
     -L${CMAKE_SYSROOT}/usr/lib/x86_64-linux-gnu")
 
 # Compiler and linker flags
-set(CMAKE_C_FLAGS "-fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "-fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=x86-64 -mtune=generic ${EXTRA_LINKS}")
 set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie ${EXTRA_LINKS}")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC")
 

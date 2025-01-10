@@ -40,21 +40,25 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHIT
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
 # Update compiler flags for armv8-a
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv8-a -mfloat-abi=hard -mfpu=neon-fp-armv8 ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv8-a -mfloat-abi=hard -mfpu=neon-fp-armv8 ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
+
+# NEON
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon-fp-armv8")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon-fp-armv8")
 
 # Compiler Binary
-set(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE})
+set(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/")
 
-set(CMAKE_C_COMPILER ${BIN_PREFIX}-gcc)
-set(CMAKE_CXX_COMPILER ${BIN_PREFIX}-g++)
-set(CMAKE_LINKER ${BIN_PREFIX}-ld CACHE STRING "Set the cross-compiler tool LD" FORCE)
-set(CMAKE_AR ${BIN_PREFIX}-ar CACHE STRING "Set the cross-compiler tool AR" FORCE)
-set(CMAKE_NM ${BIN_PREFIX}-nm CACHE STRING "Set the cross-compiler tool NM" FORCE)
-set(CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
-set(CMAKE_OBJDUMP ${BIN_PREFIX}-objdump CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
-set(CMAKE_RANLIB ${BIN_PREFIX}-ranlib CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
-set(CMAKE_STRIP ${BIN_PREFIX}-strip CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+find_program(CMAKE_C_COMPILER aarch64-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_LINKER aarch64-linux-gnu-ld PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_AR aarch64-linux-gnu-ar PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_NM aarch64-linux-gnu-nm PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_RANLIB aarch64-linux-gnu-ranlib PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_STRIP aarch64-linux-gnu-strip PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJCOPY aarch64-linux-gnu-objcopy PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJDUMP aarch64-linux-gnu-objdump PATHS ${TOOLCHAIN_ROOT}/bin/")
 
 if(NOT EXISTS ${CMAKE_C_COMPILER})
     message(FATAL_ERROR "C Compiler not found: ${CMAKE_C_COMPILER}")

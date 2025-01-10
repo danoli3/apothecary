@@ -47,27 +47,25 @@ message(STATUS "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}")
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU} -march=armv8-a+fp+simd")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU} -march=armv8-a+fp+simd")
+# NEON
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+fp+simd")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+fp+simd")
 
 ## Compiler Binary 
-set(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE}")
-
-# Define compilers and tools with proper string interpolation
-#set(CMAKE_C_COMPILER "${BIN_PREFIX}-gcc" CACHE STRING "Set the cross-compiler tool GCC" FORCE)
-#set(CMAKE_CXX_COMPILER "${BIN_PREFIX}-g++" CACHE STRING "Set the cross-compiler tool G++" FORCE)
+set(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/")
 
 find_program(CMAKE_C_COMPILER aarch64-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
 find_program(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
-
-set(CMAKE_LINKER "${BIN_PREFIX}-ld" CACHE STRING "Set the cross-compiler tool LD" FORCE)
-set(CMAKE_AR "${BIN_PREFIX}-ar" CACHE STRING "Set the cross-compiler tool AR" FORCE)
-set(CMAKE_NM "${BIN_PREFIX}-nm" CACHE STRING "Set the cross-compiler tool NM" FORCE)
-set(CMAKE_OBJCOPY "${BIN_PREFIX}-objcopy" CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
-set(CMAKE_OBJDUMP "${BIN_PREFIX}-objdump" CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
-set(CMAKE_RANLIB "${BIN_PREFIX}-ranlib" CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
-set(CMAKE_STRIP "${BIN_PREFIX}-strip" CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+find_program(CMAKE_LINKER aarch64-linux-gnu-ld PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_AR aarch64-linux-gnu-ar PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_NM aarch64-linux-gnu-nm PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_RANLIB aarch64-linux-gnu-ranlib PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_STRIP aarch64-linux-gnu-strip PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJCOPY aarch64-linux-gnu-objcopy PATHS ${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_OBJDUMP aarch64-linux-gnu-objdump PATHS ${TOOLCHAIN_ROOT}/bin/")
 
 # Check if critical tools exist
 if(NOT EXISTS ${CMAKE_C_COMPILER})
