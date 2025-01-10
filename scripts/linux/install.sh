@@ -202,7 +202,7 @@ sudo apt-get -y install libasound-dev libjack-dev libpulse-dev oss4-dev #rtaudio
 
 sudo apt-get update && sudo apt-get install -y autoconf libtool automake dos2unix
 sudo apt-get update && sudo apt-get install -y cmake build-essential
-sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev
+sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev
 sudo apt-get install -y ccache
 
 # Download the installer script
