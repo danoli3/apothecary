@@ -76,7 +76,7 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
-    DEFS="  -DCMAKE_C_STANDARD=${C_STANDARD} \
+    DEFINES="  -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
@@ -101,7 +101,6 @@ function build() {
             -DLIBXML2_WITH_THREADS=ON \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF \
             -DLIBXML2_WITH_TESTS=OFF \
-            -DLIBXML2_WITH_DOC=OFF \
             -DLIBXML2_WITH_SCHEMATRON=OFF"
 
     if [ "$TYPE" == "vs" ] ; then 
@@ -123,7 +122,7 @@ function build() {
         EXTRA_DEFS="
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -142,7 +141,7 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
         cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -181,7 +180,7 @@ function build() {
         export LDFLAGS=""
         cmake .. -DCMAKE_TOOLCHAIN_FILE="${NDK_ROOT}/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=$ABI \
-            .. ${DEFS} \
+            .. ${DEFINES} \
             -DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_TOOLCHAIN=clang++ \
             -DCMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
@@ -211,7 +210,7 @@ function build() {
         cd "build_${TYPE}_$PLATFORM"
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
-             ${DEFS} \
+             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -248,7 +247,7 @@ function build() {
         cd build_${TYPE}_${PLATFORM}
         rm -f CMakeCache.txt *.a *.o *.a
         $EMSDK/upstream/emscripten/emcmake cmake .. \
-            ${DEFS} \
+            ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -B . \
@@ -282,11 +281,11 @@ function build() {
             ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
             ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
-            mkdir -p build_$TYPE
-            cd build_$TYPE
+            mkdir -p "build_${TYPE}_$PLATFORM"
+            cd "build_${TYPE}_$PLATFORM"
             rm -f CMakeCache.txt *.a *.o
             cmake .. \
-                ${DEFS} \
+                ${DEFINES} \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_STANDARD=${C_STANDARD} \
                 -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -320,11 +319,11 @@ function build() {
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
         rm -f *.o
-        mkdir -p build_$TYPE
-        cd build_$TYPE
+        mkdir -p "build_${TYPE}_$PLATFORM"
+        cd "build_${TYPE}_$PLATFORM"
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
-            ${DEFS} \
+            ${DEFINES} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
