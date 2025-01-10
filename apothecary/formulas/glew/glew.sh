@@ -144,7 +144,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
@@ -167,9 +167,6 @@ function build() {
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake  ../build/cmake \
 	    	${DEFINES} \
-	        -DCMAKE_C_COMPILER=${CC} \
-		    -DCMAKE_CXX_COMPILER=${CXX} \
-		    -DTOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} \
 			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
@@ -186,7 +183,7 @@ function build() {
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=true
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	fi
 

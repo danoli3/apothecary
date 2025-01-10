@@ -91,6 +91,7 @@ function build() {
     	# ./autogen.sh
 		# CFLAGS="-arch arm64 -arch x86_64 -mmacosx-version-min=${OSX_MIN_SDK_VER}" ./configure --disable-shared --enable-static
  		# make -j${PARALLEL_MAKE}
+ 		
 
  		GENERATOR_NAME="Xcode"
 	    mkdir -p "build_${TYPE}_${PLATFORM}"

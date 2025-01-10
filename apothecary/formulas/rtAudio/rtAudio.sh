@@ -169,7 +169,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
 	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
 		# Compile the program
@@ -205,7 +205,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE} 
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} 
 	elif [ "$TYPE" == "msys2" ] ; then
 		# Compile the program
 		mkdir -p build

@@ -279,7 +279,7 @@ function build() {
 
             ZLIB_ROOT="$LIBS_ROOT/zlib/"
             ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-            ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+            ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
 
             mkdir -p "build_${TYPE}_$PLATFORM"
             cd "build_${TYPE}_$PLATFORM"
@@ -315,7 +315,7 @@ function build() {
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
             
         export CFLAGS="$CFLAGS -DTRIO_FPCLASSIFY=fpclassify"
         sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c

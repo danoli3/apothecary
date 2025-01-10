@@ -208,7 +208,7 @@ function build() {
 				-DCMAKE_INSTALL_PREFIX=Release \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include
-		cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"

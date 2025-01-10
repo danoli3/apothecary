@@ -120,6 +120,10 @@ function build() {
         LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
 
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
+
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -138,13 +142,17 @@ function build() {
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DDO_XML_INSTALL=ON \
+	        -DSKIP_EXAMPLE=1 \
 	        -DGCC_VERSION=${GCC_VERSION} \
 	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
     		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
-	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY
+	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY \
+	        -DCMAKE_PREFIX_PATH="${ZLIB_ROOT} ${LIBXML2_ROOT}" \
+	        -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+	        -DBUILD_SHARED_LIBS=OFF
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "vs" ] ; then
