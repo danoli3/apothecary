@@ -219,7 +219,7 @@ function copy() {
     sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
     sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 	elif [ "$TYPE" == "linux" ] ; then
-    mkdir -p $1/lib/$TYPE/
+    mkdir -p $1/lib/$TYPE/${PLATFORM}/
     cp -v -r c/include/* $1/include
     cp -v "build_${TYPE}_${PLATFORM}/"*.a $1/lib/$TYPE/${PLATFORM}/
     secure $1/lib/$TYPE/${PLATFORM}/libbrotlidec.a brotli.pkl
