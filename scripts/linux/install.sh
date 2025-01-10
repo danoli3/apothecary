@@ -97,51 +97,14 @@ elif [ "$GCC" == "gcc7" ]; then
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 100
     sudo add-apt-repository -r "deb http://cz.archive.ubuntu.com/ubuntu bionic main universe"
     g++ -v
-elif [ "$GCC" == "gcc8" ]; then
-    #https://gcc.gnu.org/gcc-8/changes.html
+elif [[ "$GCC" =~ ^gcc(8|9|10|11|12|13)$ ]]; then
+    GCC_VERSION=${GCC:11}
     sudo apt update
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install -y --allow-unauthenticated gcc-8 g++-8
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8 --slave /usr/bin/g++ g++ /usr/bin/g++-8
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
-    sudo update-alternatives --config gcc
-    gcc --version
-    g++ -v
-elif [ "$GCC" == "gcc11" ]; then
-    # https://gcc.gnu.org/gcc-11/changes.html
-    sudo apt update
-    sudo apt install software-properties-common
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    sudo apt update
-    sudo apt install -y --allow-unauthenticated gcc-11 g++-11 -y
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 11 --slave /usr/bin/g++ g++ /usr/bin/g++-11
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
-    sudo update-alternatives --config gcc
-    gcc --version
-    g++ -v
-elif [ "$GCC" == "gcc12" ]; then
-    # https://gcc.gnu.org/gcc-12/changes.html
-    sudo apt update
-    sudo apt install software-properties-common
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    sudo apt update
-    sudo apt install -y --allow-unauthenticated gcc-12 g++-12
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12
-    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
-    sudo update-alternatives --config gcc
-    gcc --version
-    g++ -v
-elif [ "$GCC" == "gcc13" ]; then
-    # https://gcc.gnu.org/gcc-13/changes.html
-    sudo apt update
-    sudo apt install software-properties-common
-    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    sudo apt update
-    sudo apt install -y --allow-unauthenticated gcc-13 g++-13
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 13 --slave /usr/bin/g++ g++ /usr/bin/g++-13
-    sudo update-alternatives --set gcc /usr/bin/gcc-13
+    sudo apt install -y --allow-unauthenticated gcc-${GCC_VERSION} g++-${GCC_VERSION}
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} ${GCC_VERSION} --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION}
     sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
