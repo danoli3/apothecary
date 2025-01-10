@@ -26,6 +26,24 @@ if(NOT DEFINED M_CPU)
     set(M_CPU cortex-a53) # Default to cortex-a53 / cortex-A76
 endif()
 
+if(NOT DEFINED TOOLCHAIN_ROOT)
+    if(DEFINED ENV{TOOLCHAIN_ROOT})
+        set(TOOLCHAIN_ROOT $ENV{TOOLCHAIN_ROOT})
+    else()
+        set(TOOLCHAIN_ROOT rasbian) # Default value
+        message(WARNING "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=rasbian")
+    endif()
+endif()
+
+if(NOT DEFINED SYSROOT)
+    if(DEFINED ENV{SYSROOT})
+        set(SYSROOT $ENV{SYSROOT})
+    else()
+        set(SYSROOT raspbian_rootfs) # Default value
+        message(WARNING "SYSROOT not specified. Defaulting to SYSROOT=raspbian_rootfs")
+    endif()
+endif()
+
 set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
 set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
 
@@ -51,7 +69,7 @@ message(STATUS "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}")
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
-set(CFLAGS="--sysroot=${RPI_ROOT} \
+set(CFLAGS "--sysroot=${RPI_ROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \

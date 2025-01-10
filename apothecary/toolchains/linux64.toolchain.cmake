@@ -15,6 +15,24 @@ if(NOT DEFINED GCC_VERSION)
     endif()
 endif()
 
+if(NOT DEFINED TOOLCHAIN_ROOT)
+    if(DEFINED ENV{TOOLCHAIN_ROOT})
+        set(TOOLCHAIN_ROOT $ENV{TOOLCHAIN_ROOT})
+    else()
+        set(TOOLCHAIN_ROOT rasbian) # Default value
+        message(WARNING "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=rasbian")
+    endif()
+endif()
+
+if(NOT DEFINED SYSROOT)
+    if(DEFINED ENV{SYSROOT})
+        set(SYSROOT $ENV{SYSROOT})
+    else()
+        set(SYSROOT raspbian_rootfs) # Default value
+        message(WARNING "SYSROOT not specified. Defaulting to SYSROOT=raspbian_rootfs")
+    endif()
+endif()
+
 # Path to GCC 
 if(NOT DEFINED GCC_PATH)
     if(DEFINED ENV{GCC_PATH})
