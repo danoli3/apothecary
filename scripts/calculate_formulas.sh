@@ -17,7 +17,7 @@ FORMULAS=(
     "FreeImage"
     "libxml2"
     "freetype"
-    "fmod"
+    #"fmod"
     "glew"
     "glfw"
     "glm"
@@ -96,7 +96,7 @@ if [ "$BUNDLE" == "1" ]; then
                 "opencv"
                 "portaudio"
                 "libusb"
-                "fmod"
+               # "fmod"
             )
         else
             FORMULAS=(
@@ -168,7 +168,7 @@ elif [ "$TARGET" == "vs" ]; then
             # All formulas
             #"boost"
             "FreeImage"
-            "fmod"
+            #"fmod"
             "glew"
             "glfw"
             "glm"
