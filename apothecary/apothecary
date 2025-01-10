@@ -2694,7 +2694,7 @@ fi
 CROSSCOMPILING=0
 
 
-if [ "$TARGET" == "linux" ]; then
+if [ "$TYPE" == "linux" ]; then
     if [[ "$ARCH" =~ ^("armv7l"|"aarch64"|"armv6l")$ ]]; then
         export PLATFORM="$ARCH"
         export ABI="${ARCH}"
