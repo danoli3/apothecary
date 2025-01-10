@@ -20,6 +20,9 @@ echo $ROOT
 cd $ROOT
 export RASP="$ROOT/raspbian"
 
+export ARCH=aarch64
+export TYPE=linux
+
 PATH=$RASP/bin:$PATH
 LD_LIBRARY_PATH=$RASP/lib
 

@@ -16,6 +16,10 @@ sudo aptitude install -y gperf
 wget https://raw.githubusercontent.com/abhiTronix/raspberry-pi-cross-compilers/master/utils/SSymlinker
 
 ROOT=/home/runner/work/apothecary/apothecary
+
+export ARCH=armv6l
+export TYPE=linux
+
 echo $ROOT
 cd $ROOT
 export RASP="$ROOT/raspbian"

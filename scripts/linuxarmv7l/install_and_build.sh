@@ -19,8 +19,11 @@ wget https://raw.githubusercontent.com/abhiTronix/raspberry-pi-cross-compilers/m
 ROOT=/home/runner/work/apothecary/apothecary
 echo $ROOT
 cd $ROOT
-export RASP="$ROOT/raspbian"
 
+export ARCH=armv7l
+export TYPE=linux
+
+export RASP="$ROOT/raspbian"
 export PATH=$RASP/bin:$PATH
 
 export GCC_PREFIX=arm-linux-gnueabihf
