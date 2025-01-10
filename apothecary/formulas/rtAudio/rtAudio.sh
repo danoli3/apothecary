@@ -134,7 +134,8 @@ function build() {
 	    unset CXXFLAGS
 
 	    cd ..
-	elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+
+	elif [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
 		# Compile the program
 		if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
@@ -152,14 +153,57 @@ function build() {
 				-DRTAUDIO_API_WASAPI=OFF \
 				-DBUILD_TESTING=OFF"
 
-		cmake .. ${DEFINES} \
-			-G "Unix Makefiles" \
-			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
+		cmake  ../build/cmake \
+	 		${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE}
 
-		make
-		make install
-	
-	  # /inst   
+	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+		# Compile the program
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source ../../${TYPE}_configure.sh
+        fi
+		mkdir -p build
+		cd build
+		rm -f CMakeCache.txt *.a *.o
+		DEFINES="${DEFINES} \
+				-DRTAUDIO_API_PULSE=ON \
+				-DRTAUDIO_API_ALSA=ON \
+				-DRTAUDIO_API_JACK=ON \
+				-DRTAUDIO_API_OSS=ON \
+				-DRTAUDIO_API_DS=OFF \
+				-DRTAUDIO_API_ASIO=OFF \
+				-DRTAUDIO_API_WASAPI=OFF \
+				-DBUILD_TESTING=OFF"
+
+		cmake  ../build/cmake \
+	 		${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} -j${PARALLEL_MAKE} 
 	elif [ "$TYPE" == "msys2" ] ; then
 		# Compile the program
 		mkdir -p build
