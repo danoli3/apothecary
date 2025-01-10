@@ -119,8 +119,8 @@ function build() {
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] ; then
 		echoVerbose "building $TYPE | $ARCH BUILD GCC: $GCC_VERSION"
         echoVerbose "--------------------"
-	    mkdir -p "build_${TYPE}_${ARCH}"
-	    cd "build_${TYPE}_${ARCH}"
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+	    cd "build_${TYPE}_${PLATFORM}"
 	    rm -f CMakeCache.txt *.a *.o *.so
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
