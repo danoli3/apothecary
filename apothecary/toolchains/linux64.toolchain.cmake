@@ -51,8 +51,9 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/ \
-    -L${CMAKE_SYSROOT}/usr/lib/")
+set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/x86_64-linux-gnu \
+    -L${CMAKE_SYSROOT}/lib/x86_64-linux-gnu \
+    -L${CMAKE_SYSROOT}/usr/lib/x86_64-linux-gnu")
 
 # Compiler and linker flags
 set(CMAKE_C_FLAGS "-fPIC -O3 -Wall -Wextra -march=x86-64 -mtune=generic ${EXTRA_LINKS}")

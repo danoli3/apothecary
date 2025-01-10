@@ -53,6 +53,12 @@ export LDFLAGS="--sysroot=${RPI_ROOT} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 
+
+
+[ -d "${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" ] && ls -la "${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" || echo "Directory not found: ${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+[ -d "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" ] && ls -la "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" || echo "Directory not found: ${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64"
+[ -d "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" ] && ls -la "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" || echo "Directory not found: ${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
+
 # Host system for cross-compilation
 export HOST="${GCC_PREFIX}"
 
@@ -61,7 +67,7 @@ echo "--------------------"
 echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
-echo "Toolchain Path: $RASP"
+echo "SYSROOT Path: $RASP"
 echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"

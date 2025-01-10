@@ -117,7 +117,7 @@ function build() {
 		make clean
 		make
 	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] ; then
-		echoVerbose "building $TYPE | $ARCH "
+		echoVerbose "building $TYPE | $ARCH BUILD GCC: $GCC_VERSION"
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"

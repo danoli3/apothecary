@@ -41,6 +41,10 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHIT
     -L${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib64 \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/libc/usr/lib64")
 
+message(STATUS "CMAKE_SYSROOT: ${CMAKE_SYSROOT}")
+message(STATUS "CMAKE_LIBRARY_ARCHITECTURE: ${CMAKE_LIBRARY_ARCHITECTURE}")
+message(STATUS "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}")
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU} -march=armv8-a+fp+simd")
@@ -48,24 +52,34 @@ set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU} -march
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC ${EXTRA_LINKS} -mcpu=${M_CPU} -march=armv8-a+fp+simd")
 
 ## Compiler Binary 
-set(BIN_PREFIX ${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE})
+set(BIN_PREFIX "${TOOLCHAIN_ROOT}/bin/${CMAKE_LIBRARY_ARCHITECTURE}")
 
-set(CMAKE_C_COMPILER ${BIN_PREFIX}-gcc)
-set(CMAKE_CXX_COMPILER ${BIN_PREFIX}-g++ )
-set(CMAKE_LINKER ${BIN_PREFIX}-ld CACHE STRING "Set the cross-compiler tool LD" FORCE)
-set(CMAKE_AR ${BIN_PREFIX}-ar CACHE STRING "Set the cross-compiler tool AR" FORCE)
-set(CMAKE_NM {BIN_PREFIX}-nm CACHE STRING "Set the cross-compiler tool NM" FORCE)
-SET(CMAKE_OBJCOPY ${BIN_PREFIX}-objcopy CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
-set(CMAKE_OBJDUMP ${BIN_PREFIX}-objdump CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
-set(CMAKE_RANLIB ${BIN_PREFIX}-ranlib CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
-set(CMAKE_STRIP ${BIN_PREFIX}-strip CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+# Define compilers and tools with proper string interpolation
+#set(CMAKE_C_COMPILER "${BIN_PREFIX}-gcc" CACHE STRING "Set the cross-compiler tool GCC" FORCE)
+#set(CMAKE_CXX_COMPILER "${BIN_PREFIX}-g++" CACHE STRING "Set the cross-compiler tool G++" FORCE)
 
+find_program(CMAKE_C_COMPILER aarch64-linux-gnu-gcc PATHS "${TOOLCHAIN_ROOT}/bin/")
+find_program(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++ PATHS "${TOOLCHAIN_ROOT}/bin/")
+
+set(CMAKE_LINKER "${BIN_PREFIX}-ld" CACHE STRING "Set the cross-compiler tool LD" FORCE)
+set(CMAKE_AR "${BIN_PREFIX}-ar" CACHE STRING "Set the cross-compiler tool AR" FORCE)
+set(CMAKE_NM "${BIN_PREFIX}-nm" CACHE STRING "Set the cross-compiler tool NM" FORCE)
+set(CMAKE_OBJCOPY "${BIN_PREFIX}-objcopy" CACHE STRING "Set the cross-compiler tool OBJCOPY" FORCE)
+set(CMAKE_OBJDUMP "${BIN_PREFIX}-objdump" CACHE STRING "Set the cross-compiler tool OBJDUMP" FORCE)
+set(CMAKE_RANLIB "${BIN_PREFIX}-ranlib" CACHE STRING "Set the cross-compiler tool RANLIB" FORCE)
+set(CMAKE_STRIP "${BIN_PREFIX}-strip" CACHE STRING "Set the cross-compiler tool STRIP" FORCE)
+
+# Check if critical tools exist
 if(NOT EXISTS ${CMAKE_C_COMPILER})
     message(FATAL_ERROR "C Compiler not found: ${CMAKE_C_COMPILER}")
 endif()
 
 if(NOT EXISTS ${CMAKE_CXX_COMPILER})
     message(FATAL_ERROR "C++ Compiler not found: ${CMAKE_CXX_COMPILER}")
+endif()
+
+if(NOT EXISTS ${CMAKE_LINKER})
+    message(FATAL_ERROR "Linker not found: ${CMAKE_LINKER}")
 endif()
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
