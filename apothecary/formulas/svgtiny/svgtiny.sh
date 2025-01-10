@@ -127,8 +127,8 @@ function build() {
             source ../../${TYPE}_configure.sh
         fi
 
-        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        export LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
+        export LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
         export LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
@@ -148,8 +148,8 @@ function build() {
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 	        -DCMAKE_INSTALL_INCLUDEDIR=include"         
 	    cmake .. ${DEFS} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR}" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DDO_XML_INSTALL=ON \
@@ -161,7 +161,7 @@ function build() {
 	        -DLIBXML2_ROOT=${LIBXML2_ROOT} \
 	        -DLIBXML2_INCLUDE_DIR=${LIBXML2_INCLUDE_DIR} \
 	        -DLIBXML2_LIBRARY=${LIBXML2_LIBRARY} \
-	        -DCMAKE_PREFIX_PATH="${ZLIB_ROOT} ${LIBXML2_ROOT}" \
+	        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 	        -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        -DBUILD_SHARED_LIBS=OFF
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
@@ -215,8 +215,8 @@ function build() {
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
 	        -DDO_XML_INSTALL=ON \
-	        -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+	        -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
 	        -DCMAKE_BUILD_TYPE=Debug \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        ${CMAKE_WIN_SDK} \
@@ -235,8 +235,8 @@ function build() {
 	elif [ "$TYPE" == "android" ]; then
         source ../../android_configure.sh $ABI cmake
 
-        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
+        LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$ABI/libxml2.a"
 
         mkdir -p build_${TYPE}_${ABI}
@@ -279,8 +279,8 @@ function build() {
 
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-		LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+		LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
+        LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
@@ -308,8 +308,8 @@ function build() {
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DLIBXML2_ROOT=$LIBXML2_ROOT \
