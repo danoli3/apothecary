@@ -306,7 +306,7 @@ function build() {
                 -DCMAKE_SYSTEM_NAME=$TYPE \
                 -DCMAKE_SYSTEM_PROCESSOR=$ABI
                 
-            cmake --build . --config Release -j${PARALLEL_MAKE}
+            cmake --build . --config Release -j${PARALLEL_MAKE} --target install
             cd ..
     elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
@@ -348,7 +348,7 @@ function build() {
             -DLIBXML2_WITH_LZMA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF
-        cmake --build . --config Release -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     fi
 }

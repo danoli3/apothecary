@@ -986,6 +986,16 @@ if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarc
     export PLATFORM=${ABI}
 fi
 
+if [ "$PARALLEL_MAKE" -eq 1 ]; then
+    if command -v nproc &> /dev/null; then
+        export PARALLEL_MAKE=$(nproc)
+        echoVerbose "Using nproc: PARALLEL_MAKE is set to $PARALLEL_MAKE"
+    else
+        export PARALLEL_MAKE=1
+        echoVerbose "nproc not found: Defaulting PARALLEL_MAKE to $PARALLEL_MAKE"
+    fi
+fi
+
 # Check if PLATFORM is not set or is empty
 if [ -z "${PLATFORM+x}" ]; then
   PLATFORM="Unknown Platform"

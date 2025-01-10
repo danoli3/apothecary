@@ -202,10 +202,8 @@ sudo apt-get -y install libasound-dev libjack-dev libpulse-dev oss4-dev #rtaudio
 
 sudo apt-get update && sudo apt-get install -y autoconf libtool automake dos2unix
 sudo apt-get update && sudo apt-get install -y cmake build-essential
-
-# sudo apt build-dep cmake
-
-find /lib /usr/lib -name 'libc'
+sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev
+sudo apt-get install -y ccache
 
 # Download the installer script
 # CMAKE_VERSION=3.30.0
@@ -216,4 +214,4 @@ find /lib /usr/lib -name 'libc'
 
 # Verify the installation
 cmake --version
-sudo apt-get install -y ccache
+
