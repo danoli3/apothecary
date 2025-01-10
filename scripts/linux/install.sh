@@ -99,12 +99,14 @@ elif [ "$GCC" == "gcc7" ]; then
     g++ -v
 elif [[ "$GCC" =~ ^gcc(8|9|10|11|12|13)$ ]]; then
     GCC_VERSION=${GCC:11}
+    GCC_VERSION_NUM=$((GCC_VERSION + 0)) # Ensures GCC_VERSION is treated as a number
     sudo apt update
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
     sudo apt update
-    sudo apt install -y --allow-unauthenticated gcc-${GCC_VERSION} g++-${GCC_VERSION}
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} ${GCC_VERSION} --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION}
+    sudo apt install -y --allow-unauthenticated gcc-${GCC_VERSION_NUM} g++-${GCC_VERSION_NUM}
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION_NUM} ${GCC_VERSION_NUM} \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION_NUM}
     sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
     sudo update-alternatives --config gcc
     gcc --version
