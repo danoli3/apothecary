@@ -31,7 +31,7 @@ function download() {
 	# downloader ${URL}/rtaudio-${VER}.tar.gz 
 	downloader ${GIT_URL}/archive/refs/tags/$VER.tar.gz
 	tar -xf ${VER}.tar.gz
-	mv rtaudio-${VER} rtaudio
+	mv rtaudio-${VER} rtAudio
 	rm ${VER}.tar.gz
 
 	rm -f ./CMakeLists.txt
