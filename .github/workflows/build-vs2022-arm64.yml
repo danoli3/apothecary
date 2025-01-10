@@ -32,6 +32,7 @@ jobs:
         shell: msys2 {0}
     steps:
     - name: Check if Workflow is disabled
+      shell: bash
       run: |
         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
           echo "Workflow is disabled. Exiting."

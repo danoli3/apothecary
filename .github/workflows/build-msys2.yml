@@ -54,6 +54,7 @@ jobs:
             python3:p
             wget2:p
       - name: Check if Workflow is disabled
+        shell: bash
         run: |
           if [ "${{ DISABLE_WORKFLOW }}" == "true" ]; then
             echo "Workflow is disabled. Exiting."

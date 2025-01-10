@@ -9,7 +9,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=( "vs" "linux64")
+FORMULA_TYPES=( )
 
 # define the shaderc version by sha
 # Known good version is from: https://github.com/google/shaderc/blob/known-good/known_good.json
