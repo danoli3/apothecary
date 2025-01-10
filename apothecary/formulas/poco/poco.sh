@@ -244,7 +244,7 @@ function build() {
         rm -f lib/Linux/$(uname -m)/*d.a
     elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             export CROSS_COMPILE=$TOOLCHAIN_ROOT/bin/$TOOLCHAIN_PREFIX-
             export LIBRARY_PATH="$SYSROOT/usr/lib $SYSROOT/usr/lib/$TOOLCHAIN_PREFIX"
         fi

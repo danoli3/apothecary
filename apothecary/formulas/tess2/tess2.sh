@@ -9,7 +9,7 @@
 # on ios, use some build scripts adapted from the Assimp project
 
 # define the version
-FORMULA_TYPES=( "osx" "vs" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "android" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "msys2" )
+FORMULA_TYPES=( "osx" "vs" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "android" "linux" "msys2" )
 FORMULA_DEPENDS=(  ) 
 
 # define the version
@@ -118,7 +118,7 @@ function build() {
 	elif [ "$TYPE" == "android" ] ; then
  
         # setup android paths / variables
-	    source ../../android_configure.sh $ABI cmake
+	    source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
         
 		cp -v $FORMULA_DIR/CMakeLists.txt .
 
@@ -183,23 +183,23 @@ function build() {
 			-DCMAKE_C_FLAGS=" ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE}"
     	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}${PARALLEL_MAKE}
-	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "msys2" ]; then
 	    mkdir -p build
 	    cd build
 	    rm -f CMakeCache.txt *.a *.o 
 	    cp -v $FORMULA_DIR/Makefile .
 	    cp -v $FORMULA_DIR/tess2.make .
 	    make config=release tess2
-	elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
+	elif [ "$TYPE" == "linux" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
-	    echoVerbose "building $TYPE | $ARCH "
+	    echoVerbose "building $TYPE | $ARCH | $PLATFORM"
         echoVerbose "--------------------"
-	    mkdir -p "build_${TYPE}_${ARCH}"
-	    cd "build_${TYPE}_${ARCH}"
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+	    cd "build_${TYPE}_${PLATFORM}"
 	    rm -f CMakeCache.txt *.a *.o *.so
-	    DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
+	    DEFINES="-DLIBRARY_SUFFIX=${ABI} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -207,26 +207,18 @@ function build() {
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake .. ${DEFINES} \
-	    	-DCMAKE_C_COMPILER=${CC} \
-		    -DCMAKE_CXX_COMPILER=${CXX} \
-		    -DCMAKE_AR=${AR} \
-		    -DCMAKE_RANLIB=${RANLIB} \
-		    -DCMAKE_LD=${LD} \
-		    -DCMAKE_SYSROOT=${SYSROOT} \
-		    -DCMAKE_FIND_ROOT_PATH=${SYSROOT} \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-		    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} -L${LIBRARY_PATH} ${LDFLAGS}" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_EXE_LINKER_FLAGS="-L${LIBRARY_PATH}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
 	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
@@ -262,7 +254,7 @@ function copy() {
 		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/ 
     	cp -f "build_${TYPE}_${PLATFORM}/Release/lib/tess2.lib" $1/lib/$TYPE/$PLATFORM/tess2.lib
 		secure $1/lib/$TYPE/$PLATFORM/tess2.lib tess2
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linuxarmv6l|linuxarmv7l|linuxaarch64|linuxx86|linuxx64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libtess2.a" $1/lib/$TYPE/$PLATFORM/libtess2.a
 		secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
@@ -271,7 +263,7 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v build_${TYPE}_${PLATFORM}/libtess2.a $1/lib/$TYPE/$PLATFORM/libtess2.a
 		secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
-	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "msys2" ]; then
 		cp -v build/libtess2.a $1/lib/$TYPE/libtess2.a
 		secure $1/lib/$TYPE/libtess2.a tess2
 	elif [ "$TYPE" == "android" ]; then
@@ -303,7 +295,7 @@ function clean() {
 		if [ -d "build_${TYPE}_${ABI}" ]; then
 	        rm -r build_${TYPE}_${ABI}     
 	    fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
 	        rm -r build_${TYPE}_${PLATFORM}     
 	    fi

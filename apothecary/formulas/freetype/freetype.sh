@@ -258,7 +258,7 @@ function build() {
 		make clean;
 		make -j${PARALLEL_MAKE}
 
-	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "msys2" ]; then
 			mkdir -p build_$TYPE
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
@@ -282,37 +282,35 @@ function build() {
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
 				cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
-	elif [ "$TYPE" == "linuxaarch64" ]; then
-      source ../../${TYPE}_configure.sh
-      mkdir -p build_$TYPE
+	elif [ "$TYPE" == "linux" ]; then
+			mkdir -p build_$TYPE
 	    cd build_$TYPE
 	    rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFINES} \
-	    	-D FT_REQUIRE_ZLIB=ON \
+	    	-DCMAKE_SYSTEM_NAME=$TYPE \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-D FT_REQUIRE_ZLIB=ON \
         	-D FT_DISABLE_BZIP2=ON \
         	-D FT_REQUIRE_HARFBUZZ=OFF \
         	-D FT_DISABLE_HARFBUZZ=ON \
         	-D FT_DISABLE_PNG=OFF \
             -D FT_REQUIRE_PNG=ON \
-	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
-	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
-			-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "android" ] ; then
 
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
         rm -rf "build_${ABI}/"
         rm -rf "build_${ABI}/CMakeCache.txt"
 		mkdir -p "build_$ABI"

@@ -15,8 +15,8 @@ jobs:
   build-linux-aarch64:
     runs-on: ubuntu-latest
     env:
-      TARGET: linuxaarch64
-      ARCH: arm64 
+      TARGET: linux
+      ARCH: aarch64 
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
@@ -85,8 +85,10 @@ jobs:
           ./build_rootfs_arm64.sh download
           ./build_rootfs_arm64.sh create
 
+      - name: Ensure Script is Executable
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh    
       - name: Script Install and Build
-        run: ./scripts/$TARGET/install_and_build.sh
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
       - name: Update Release ARM64
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v2.1.0
@@ -99,7 +101,7 @@ jobs:
   build-linux-armv6l-pi-1zero:
     runs-on: ubuntu-latest
     env:
-      TARGET: linuxarmv6l
+      TARGET: linux
       ARCH: armv6
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
@@ -154,9 +156,9 @@ jobs:
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
-        run: chmod +x ./scripts/$TARGET/install_and_build.sh
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
       - name: Script Install and Build
-        run: ./scripts/$TARGET/install_and_build.sh
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
       - name: Update Release armv6l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v2.1.0
@@ -169,8 +171,8 @@ jobs:
   build-linux-armv7-pi3ab45:
     runs-on: ubuntu-latest
     env:
-      TARGET: linuxarmv7l
-      ARCH: armv7
+      TARGET: linux
+      ARCH: armv7l
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianrootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
@@ -240,9 +242,9 @@ jobs:
           ./build_rootfs.sh create
 
       - name: Ensure Script is Executable
-        run: chmod +x ./scripts/$TARGET/install_and_build.sh
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
       - name: Script Install and Build
-        run: ./scripts/$TARGET/install_and_build.sh
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
       - name: Update Release armv7l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v2.1.0

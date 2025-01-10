@@ -8,7 +8,7 @@
 # use "make glew.lib" to build only the lib without demos/tests
 # the OPT flag is used for CFLAGS (& LDFLAGS I think?)
 
-FORMULA_TYPES=( "osx" "vs" "linux64" "linuxarm64" "linuxaarch64" "linuxarmv6l" "linuxarmv7l" )
+FORMULA_TYPES=( "osx" "vs" "linux" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -116,9 +116,12 @@ function build() {
 	elif [ "$TYPE" == "msys2" ] ; then
 		make clean
 		make -j8
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ]; then
+	elif [ "$TYPE" == "linux" ]; then
 		echoVerbose "building $TYPE | $ARCH BUILD GCC: $GCC_VERSION"
         echoVerbose "--------------------"
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
 	    cd "build_${TYPE}_${PLATFORM}"
 	    rm -f CMakeCache.txt *.a *.o *.so
@@ -135,54 +138,15 @@ function build() {
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DGCC_VERSION=${GCC_VERSION} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
-	    cd ..
-	elif [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
-	    if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
-        fi
-		echo "building $TYPE | $PLATFORM"
-        echo "--------------------"
-		mkdir -p "build_${TYPE}_${PLATFORM}"
-		cd "build_${TYPE}_${PLATFORM}"
-
-		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT --sysroot=${SYSROOT}"
-	    rm -f CMakeCache.txt *.a *.o *.so
-	 
-	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
-	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF
-	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake  ../build/cmake \
-	    	${DEFINES} \
-			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
-	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
-	        -DCMAKE_SHARED_LINKER_FLAGS="${LDFLAGS}" \
-	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_INSTALL_LIBDIR="lib" \
-	        -DCMAKE_SYSTEM_NAME=$TYPE \
-	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
-    		-DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
-            -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
-            -DCMAKE_VERBOSE_MAKEFILE=true
 	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	fi
@@ -203,7 +167,7 @@ function copy() {
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a
 		. "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libGLEW.a glew.pkl
-    elif [[ "$TYPE" =~ ^(linuxaarch64|linuxarmv6l|linuxarmv7l|linux64|linuxarm64|linux)$ ]]; then
+    elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
 		cp -v -r build_${TYPE}_${PLATFORM}/Release/lib/libGLEW.a $1/lib/$TYPE/$PLATFORM/libGLEW.a

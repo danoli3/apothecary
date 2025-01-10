@@ -161,7 +161,7 @@ function build() {
         ANDROID_API=24
         ANDROID_PLATFORM=android-${ANDROID_API}
 
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 								
         #stuff to remove when we upgrade android

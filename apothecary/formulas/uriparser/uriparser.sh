@@ -77,7 +77,7 @@ function build() {
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
 		echo "Android "
-		source ../../android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 	    echo "Mkdir build"
 		mkdir -p build
 		echo "Mkdir build/${ABI}"

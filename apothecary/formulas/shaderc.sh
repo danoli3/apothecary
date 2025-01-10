@@ -99,7 +99,7 @@ function build() {
         cmake --build . --config Release -j${PARALLEL_MAKE}		
 	else
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             EXTRA_CONFIG=" "
         else
             EXTRA_CONFIG=" "
@@ -147,9 +147,8 @@ function copy() {
 function clean() {
 	if [ "$TYPE" == "vs" ] ; then
 		rm -f *.lib
-	elif [ "$TYPE" == "linux64" ]; then
-		#statements
-		
+	elif [ "$TYPE" == "linux" ]; then
+		#statements		
 		cmake --clean .
 	else
 		make clean

@@ -44,7 +44,7 @@ FORMULAS=(
 )
 
 # Seperate in bundles on osx
-if [[ "$TARGET" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; then
+if [[ "$TARGET" =~ ^(linux)$ ]]; then
     FORMULAS=(
             "pkg-config"
             "glm"
@@ -198,8 +198,6 @@ elif [ "$TARGET" == "vs" ]; then
         )
     fi
 fi
-
-
 
 array_contains () {
     local array="$1[@]"

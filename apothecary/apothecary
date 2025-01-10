@@ -169,7 +169,7 @@ CON_YELLOW_GREEN="\033[33m"
 CON_GREEN="\033[32m"
 
 # used to filter out bad build types
-VALID_TYPES=( "osx" "linux" "linux64" "linuxarm64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
+VALID_TYPES=( "osx" "linux" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
 
 
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
@@ -248,7 +248,7 @@ commands:
 
 options:
   -t	specify libary type when building, detects type from OS by default
-	valid types: osx, linux, linux64, linuxarm64, linuxarmv6l, linuxarmv7l, vs, msys2, ios, tvos, android
+	valid types: osx, linux, vs, msys2, ios, tvos, android
 
   -a	specify architecture, either 32 or 64 (default is 32 bit)
 	note: not currently needed, reserved for future use
@@ -958,36 +958,23 @@ if [ "$TYPE" = "macos" ]; then
     PLATFORM="MAC"
 fi
 
-if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+if [ "$TYPE" == "linux" ]; then
     export FLAG_RELEASE="-O3"
-    if [ $TYPE == "linux" ] ; then
-        export ABI="x86"
-    elif [ $TYPE == "linux64" ] ; then
-        export ABI="x86_64"
-     elif [ $TYPE == "linuxarm64" ] ; then
-        export ABI="aarch64"
-    elif [ $TYPE == "linuxaarch64" ]; then
-        export ABI="aarch64"
-    elif [ $TYPE == "linuxarmv7l" ]; then
-        export ABI="armv7l"
-    elif [ $TYPE == "linuxarmv6l" ]; then
-        export ABI="armv6l"
-    elif [ $TYPE == "msys2" ]; then
-        export ABI="x86_64"
-    fi
-
-    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxarm64" ]; then
-        if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
-            export GCC_VERSION=${BASH_REMATCH[1]}
-            echo "Extracted GCC_VERSION: $GCC_VERSION"
-        else
-            echo "Error: Unable to extract GCC version from variable '$GCC'"
-            export GCC_VERSION=14
-        fi
+    if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
+        export GCC_VERSION=${BASH_REMATCH[1]}
+        echo "Extracted GCC_VERSION: $GCC_VERSION"
     else
-        GCC_VERSION=14
-    fi
+        echo "Error: Unable to extract GCC version from variable '$GCC'"
+        export GCC_VERSION=14
+    fi  
     export PLATFORM=${ABI}
+fi
+
+if [ "$TYPE" == "msys2" ]; then
+    export FLAG_RELEASE="-O3"
+    export ABI="x86_64"
+    export PLATFORM=${ABI}
+    GCC_VERSION=14
 fi
 
 if [ "$PARALLEL_MAKE" -eq 1 ]; then
@@ -1055,8 +1042,8 @@ get_directory_path() {
         emscripten)
             final_path="${base_dir}/lib/${type}/"
             ;;
-        linux64|linuxarm64|linuxaarch64|linuxarmv6l|linuxarmv7l|linux|msys2)
-            final_path="${base_dir}/lib/${type}/"
+        linux|msys2)
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         android)
             final_path="${base_dir}/lib/${type}/${pAbi}/"
@@ -2705,14 +2692,38 @@ if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 fi
 
 CROSSCOMPILING=0
-if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv7l" ]; then
-    if [[ $(uname -m) != armv* ]]; then
+
+
+if [ "$TARGET" == "linux" ]; then
+    if [[ "$ARCH" =~ ^("armv7l"|"aarch64"|"armv6l")$ ]]; then
+        export PLATFORM="$ARCH"
+        export ABI="${ARCH}"
+    elif [[ "$ARCH" =~ ^("64"|"x86_64")$ ]]; then
+        export PLATFORM="64"
+        export ABI="x86_64"
+    elif [[ "$ARCH" =~ ^("32"|"x86")$ ]]; then
+        export PLATFORM="86"
+        export ABI="x86"
+    elif [[ "$ARCH" =~ ^(arm64)$ ]]; then
+        export PLATFORM="arm64"
+        export ABI="aarch64"
+    elif [[ "$ARCH" =~ ^("jetson")$ ]]; then
+        export PLATFORM="jetson"
+        export ABI="aarch64"
+    else
+        echo "Unsupported architecture for Linux: $ARCH"
+        exit 1
+    fi
+    esac
+    if [[ "$ABI" =~ ^(armv7l|aarch64|armv6l)$ ]]; then
         CROSSCOMPILING=1
+    fi
+
+    if [[ ${CROSSCOMPILING} == 1 } ]];  then
         if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
             export TOOLCHAIN_PREFIX=arm-linux-gnueabihf
         fi
-
-        if [[  -z ${SYSROOT+z} ]]; then
+        if [[ -z ${SYSROOT+z} ]]; then
             echoError "Trying to cross compile but SYSROOT environment variable is not set"
             echoError "Should be set to root of target OS image"
             exit 1
@@ -2724,6 +2735,7 @@ if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" ==
         fi
     fi
 fi
+
 
 
 # handle commands

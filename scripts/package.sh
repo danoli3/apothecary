@@ -201,31 +201,8 @@ if  type "ccache" > /dev/null; then
        export PATH="/usr/local/opt/ccache/libexec:$PATH";
        export SDKROOT="$DEVELOPER_DIR/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
     fi
-
-    # if [ "$TRAVIS" = true ] && [ "$TARGET" == "emscripten" ]; then
-    #     docker exec -it emscripten sh -c 'echo $HOME'
-    #     docker cp /home/travis/.ccache emscripten:$CCACHE_DOCKER
-    # fi
-
     ccache -z
     ccache -s
-    # if [ "$TRAVIS" = true ] && [ "$TARGET" == "emscripten" ]; then
-    #     run "ccache -z"
-    #     run "ccache -s"
-    # fi
-fi
-
-if [ "$TARGET" == "linux" ]; then
-    TARGET="linux64"
-    if [ "$OPT" == "gcc5" ]; then
-        export CC="gcc-5"
-        export CXX="g++-5 -std=c++11"
-        export COMPILER="g++5 -std=c++11"
-    elif [ "$OPT" == "gcc6" ]; then
-        export CC="gcc-6 -fPIE"
-        export CXX="g++-6 -std=c++14 -fPIE"
-        export COMPILER="g++6 -std=c++14 -fPIE"
-    fi
 fi
 
 function build(){
@@ -322,7 +299,7 @@ echo "Release: [$RELEASE]"
 echo "Current Branch: [$CUR_BRANCH]"
 
 
-TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET_$OPT$ARCH$BUNDLE.tar.bz2
+TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET$ARCH_$OPT$ARCH$BUNDLE.tar.bz2
 if [ "$TARGET" == "msys2" ]; then
     TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${MSYSTEM,,}.zip
     "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS

@@ -180,7 +180,7 @@ function build() {
 
 	elif [ "$TYPE" == "android" ]; then
 
-        source ../../android_configure.sh $ABI make
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
 
         export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH/openssl
         local BUILD_TO_DIR=$BUILD_DIR/curl/build/$TYPE/$ABI
@@ -366,7 +366,7 @@ function build() {
     else
         echo "building other for $TYPE"
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             export LDFLAGS=-L$SYSROOT/usr/lib
             export CFLAGS=-I$SYSROOT/usr/include
         fi

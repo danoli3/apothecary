@@ -86,14 +86,7 @@ function build() {
 
         cd ..
 	elif [ "$TYPE" == "osx" ] ; then
-		if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
-            DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
-        else
-            DEFINES=" "
-        fi
-		# *nix build system
-
+		
 		DEFINES="${DEFINES} -DGLFW_BUILD_DOCS=OFF \
 				-DGLFW_BUILD_TESTS=OFF \
 				-DGLFW_BUILD_EXAMPLES=OFF"
@@ -127,9 +120,9 @@ function build() {
 		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 
-	elif [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include -DGLFW_BUILD_WAYLAND=OFF"
         else
             DEFINES="-DGLFW_BUILD_WAYLAND=OFF"
@@ -138,8 +131,6 @@ function build() {
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.o *.a
 
-		# OS X needs both arches specified to be universal
-		# for some reason it doesn't build if passed through EXTRA_CONFIG so have do break it up into a separate cmake call
 		cmake .. -DGLFW_BUILD_DOCS=OFF \
 				-DGLFW_BUILD_TESTS=OFF \
 				-DGLFW_BUILD_EXAMPLES=OFF \
@@ -166,7 +157,7 @@ function build() {
 		cd ..
 	else
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             DEFINES="-DGLFW_USE_EGL=1 -DGLFW_CLIENT_LIBRARY=glesv2 -DCMAKE_LIBRARY_PATH=$SYSROOT/usr/lib -DCMAKE_INCLUDE_PATH=$SYSROOT/usr/include"
         else
             DEFINES=" "
@@ -191,29 +182,27 @@ function build() {
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
-	# prepare headers directory if needed
 	mkdir -p $1/include/GLFW
-	# prepare libs directory if needed
 	mkdir -p $1/lib/$TYPE
-
 	if [ "$TYPE" == "vs" ] ; then
-		mkdir -p $1/include    
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/ 
-        cp -v "build_${TYPE}_${ARCH}/Release/lib/glfw3.lib" $1/lib/$TYPE/$PLATFORM/glfw3.lib   
+        cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/
+        cp -v "build_${TYPE}_${ARCH}/Release/lib/glfw3.lib" $1/lib/$TYPE/$PLATFORM/glfw3.lib
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/glfw3.lib glfw3.pkl
-	elif [ "$TYPE" == "osx" ]; then
-		# Standard *nix style copy.
-		# copy headers
-		mkdir -p $1/include    
+	elif [ "$TYPE" == "osx" ]; then 
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include 
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libglfw3.a" $1/lib/$TYPE/$PLATFORM/libglfw3.a
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/libglfw3.a glfw3.pkl
+    elif [ "$TYPE" == "linux" ]; then 
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libglfw3.a" $1/lib/$TYPE/$PLATFORM/libglfw3.a
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libglfw3.a glfw3.pkl
 	fi
-
 	# copy license file
 	if [ -d "$1/license" ]; then
         rm -rf $1/license

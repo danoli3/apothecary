@@ -219,7 +219,7 @@ function build() {
 	    	echo "Build Already exists at $LIBS_DIR/openssl/$TYPE/ skipping"
 	    	return
 		fi
-		source ../../android_configure.sh $ABI make
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
 		#wget -nv https://wiki.openssl.org/images/7/70/Setenv-android.sh
 		# source ./setenv-android.sh
 		echo "NDK_ROOT: $NDK_ROOT"

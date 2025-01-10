@@ -6,7 +6,7 @@
 #
 # uses a makeifle build system
 
-FORMULA_TYPES=( "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "msys2" )
+FORMULA_TYPES=( "linux" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "msys2" )
 FORMULA_DEPENDS=( "zlib" "libxml2" )
 
 # define the version by sha
@@ -121,19 +121,19 @@ function build() {
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+    elif [ "$TYPE" == "linux" ]; then
 
     	if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 
         LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
         export LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
-        export LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
+        export LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBXML2_ROOT}/lib/$TYPE/$PLATFORM"
 
@@ -157,7 +157,7 @@ function build() {
 	        -DDO_XML_INSTALL=ON \
 	        -DSKIP_EXAMPLE=1 \
 	        -DGCC_VERSION=${GCC_VERSION} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
     		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 	        -DLIBXML2_ROOT=${LIBXML2_ROOT} \
@@ -235,7 +235,7 @@ function build() {
 	    cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
         LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
         LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
@@ -400,13 +400,11 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/${ARCH}
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
-		mkdir -p $1/lib/$TYPE/${PLATFORM}/
+	elif [ "$TYPE" == "linux" ]  ; then
+		cp -Rv "build_${TYPE}_${PLATFORM}/include/" $1/
+		mkdir -p $1/lib/$TYPE/${PLATFORM}/		
         cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
         secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
-#    elif [ "$TYPE" == "msys2" ] ; then
-#		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
-#        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	fi
 
 	# copy license file
@@ -423,7 +421,7 @@ function clean() {
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux64|linuxaarch64|linuxarmv7l|linuxarmv6l)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi

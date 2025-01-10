@@ -386,7 +386,7 @@ function build() {
 			local BUILD_FOLDER="build_android_x86"
 			local BUILD_SCRIPT="cmake_android_x86.sh"
 		fi
-		source ../../android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		rm -rf $BUILD_FOLDER
 		mkdir $BUILD_FOLDER

@@ -3,7 +3,7 @@
 # A Massively Spiffy Yet Delicately Unobtrusive Compression Library
 # http://zlib.net/
 
-FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64"  )
+FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "linux" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -101,7 +101,7 @@ function build() {
 		 cd ..
     elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
@@ -197,9 +197,9 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include
 	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+	elif [ "$TYPE" == "linux" ]; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
@@ -214,17 +214,16 @@ function build() {
 	        -DCMAKE_CXX_EXTENSIONS=OFF \
 	        -DBUILD_SHARED_LIBS=OFF"
 	    cmake .. ${DEFINES} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
 		    -DSKIP_EXAMPLE=ON \
-	        -DCMAKE_SYSTEM_NAME=$TYPE \
-	        -DCMAKE_INSTALL_PREFIX=Release \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
@@ -287,7 +286,21 @@ function copy() {
 		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "linux" ]; then
+		mkdir -p $1/include    
+	    mkdir -p $1/lib/$TYPE/$PLATFORM
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/ > /dev/null 2>&1
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a > /dev/null 2>&1
+        secure $1/lib/$TYPE/$PLATFORM/zlib.a
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
+		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
+
+    elif [ "$TYPE" == "msys2" ]; then
 		mkdir -p $1/include    
 	    mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
@@ -307,7 +320,7 @@ function copy() {
 
 # executed inside the lib src dir
 function clean() {
-	if [[ "$TYPE" =~ ^(vs|osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+	if [[ "$TYPE" =~ ^(vs|osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
@@ -315,9 +328,9 @@ function clean() {
 		if [ -d "build_${TYPE}_${ABI}" ]; then
 			rm -r build_${TYPE}_${ABI}     
 		fi
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+    elif [ "$TYPE" == "msys2" ]; then
 		if [ -d "build_${TYPE}_${ARCH}" ]; then
-			rm -r build_${TYPE}_${ARCH}     
+			rm -r build_${TYPE}_${ARCH}
 		fi
 	else
 		make uninstall

@@ -3,7 +3,7 @@
 # {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
 # https://github.com/fmtlib/fmt
 
-FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux64" "linuxaarch64" )
+FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux" )
 FORMULA_DEPENDS=(  )
 
 # define the version
@@ -115,7 +115,7 @@ function build() {
 
 	elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
@@ -165,9 +165,9 @@ function build() {
 			-DCMAKE_INSTALL_INCLUDEDIR=include
 		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
-	elif [ "$TYPE" == "linux64" ]; then
+	elif [ "$TYPE" == "linux" ]; then
 		if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -176,44 +176,19 @@ function build() {
 	    cmake .. \
 	    	${DEFINES} \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        	-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+        	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+			-DGCC_VERSION=${GCC_VERSION} \
+			-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF \
-			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-			-DGCC_VERSION=${GCC_VERSION} \
 			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 			-DCMAKE_INSTALL_INCLUDEDIR=include
 		cmake --build . --target install --config Release -j${PARALLEL_MAKE} --parallel $(nproc)
-	    cd ..
-	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
-      	if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
-        fi
-		mkdir -p "build_${TYPE}_${PLATFORM}"
-		cd "build_${TYPE}_${PLATFORM}"
-		rm -f CMakeCache.txt *.a *.o
-	    cmake .. \
-	    	${DEFINES} \
-	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
-				-DCMAKE_C_STANDARD=${C_STANDARD} \
-				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_CXX_EXTENSIONS=OFF \
-				-DBUILD_SHARED_LIBS=OFF \
-				-DCMAKE_INSTALL_PREFIX=Release \
-				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-				-DCMAKE_INSTALL_INCLUDEDIR=include
-		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -255,10 +230,10 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
-	elif [[ "$TYPE" =~ ^(linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
-		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/libfmt.a
-		secure $1/lib/$TYPE/libfmt.a fmt.pkl
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
+		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "android" ] ; then
 		mkdir -p $1/lib/$TYPE/$ABI/

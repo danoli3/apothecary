@@ -4,7 +4,7 @@
 # "Keep It Simple, Stupid" Fast Fourier Transform
 # http://sourceforge.net/projects/kissfft/
 
-FORMULA_TYPES=( "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "msys2")
+FORMULA_TYPES=( "linux" "msys2")
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -29,13 +29,10 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
-    if [ $CROSSCOMPILING -eq 1 ]; then
-        source ../../${TYPE}_configure.sh
-    fi
-
-    if [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ; then
+    
+    if [ "$TYPE" == "linux" ]; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 		echo "building $TYPE | $PLATFORM"
         echo "--------------------"
@@ -54,8 +51,9 @@ function build() {
 	        -DBUILD_SHARED_LIBS=OFF"         
 	    cmake  ../build/cmake \
 	    	${DEFINES} \
-			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 			-DGCC_VERSION=${GCC_VERSION} \
+			-DCMAKE_SYSTEM_PROCESSOR=$ABI \
 	        -DCMAKE_CXX_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_C_FLAGS="--sysroot=${SYSROOT} -DUSE_PTHREADS=1 ${FLAG_RELEASE} ${CFLAGS}" \
 	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
@@ -64,8 +62,6 @@ function build() {
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_SYSTEM_NAME=$TYPE \
 	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
-    		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
@@ -74,6 +70,9 @@ function build() {
 	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	else
+		if [ $CROSSCOMPILING -eq 1 ]; then
+        	source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+    	fi
     	make  -j${PARALLEL_MAKE} TARGET_DIR=$TYPE
 	fi
 }
@@ -99,7 +98,7 @@ function copy() {
 # executed inside the lib src dir
 function clean() {
 	
-	if [ "$TYPE" == "linux" -o "$TYPE" == "linux64" ] ; then
+	if [ "$TYPE" == "linux" ] ; then
 		make clean
 		rm -f *.a
 	fi

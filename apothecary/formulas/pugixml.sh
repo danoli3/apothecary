@@ -117,7 +117,7 @@ function build() {
          cd ..
 
 	elif [ "$TYPE" == "android" ]; then
-        source ../../android_configure.sh $ABI make
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
         #export CFLAGS="$CFLAGS -I${NDK_ROOT}/sysroot/usr/include/${ANDROID_PREFIX} -I${NDK_ROOT}/sysroot/usr/include/"
 		# Compile the program
 		$CXX -Oz $CPPFLAGS $CXXFLAGS \

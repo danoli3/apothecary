@@ -6,7 +6,7 @@
 #
 # uses an autotools build system
 
-FORMULA_TYPES=( "osx" "vs" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" )
+FORMULA_TYPES=( "osx" "vs" "linux" )
 
 #FORMULA_DEPENDS=( "pkg-config" )
 
@@ -135,10 +135,10 @@ function build() {
 
 	    cd ..
 
-	elif [[ "$TYPE" =~ ^(linux|linux64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		# Compile the program
 		if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
@@ -158,12 +158,12 @@ function build() {
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
-	        -DGCC_VERSION=${GCC_VERSION} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+	        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_INSTALL_PREFIX=Release \
 	        -DBUILD_SHARED_LIBS=OFF \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
     		-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
@@ -171,41 +171,6 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include 
 	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
-	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
-		# Compile the program
-		if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
-        fi
-		mkdir -p "build_${TYPE}_${PLATFORM}"
-		cd "build_${TYPE}_${PLATFORM}"
-		rm -f CMakeCache.txt *.a *.o
-		DEFINES="${DEFINES} \
-				-DRTAUDIO_API_PULSE=ON \
-				-DRTAUDIO_API_ALSA=ON \
-				-DRTAUDIO_API_JACK=ON \
-				-DRTAUDIO_API_OSS=ON \
-				-DRTAUDIO_API_DS=OFF \
-				-DRTAUDIO_API_ASIO=OFF \
-				-DRTAUDIO_API_WASAPI=OFF \
-				-DBUILD_TESTING=OFF"
-
-		cmake  .. \
-	 		${DEFINES} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_BUILD_TYPE=Release \
-	        -DGCC_VERSION=${GCC_VERSION} \
-	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
-	        -DCMAKE_INSTALL_LIBDIR="lib" \
-	        -DCMAKE_INSTALL_PREFIX=Release \
-    		-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
-    		-DBUILD_SHARED_LIBS=OFF \
-    		-DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
-            -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release -j${PARALLEL_MAKE} 
 	elif [ "$TYPE" == "msys2" ] ; then
 		# Compile the program
 		mkdir -p build
@@ -259,7 +224,7 @@ function copy() {
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
     	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
     	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
-	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64|linux|linux64)$ ]]; then
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
     	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
