@@ -110,7 +110,7 @@ function build() {
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
 	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
-    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ]; then
+    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] ]; then
 
     	if [ $CROSSCOMPILING -eq 1 ]; then
             source ../../${TYPE}_configure.sh
