@@ -199,7 +199,7 @@ function build() {
 	    cd ..
 	elif [ "$TYPE" == "linux" ]; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
-            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
         fi
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
@@ -216,7 +216,6 @@ function build() {
 	    cmake .. ${DEFINES} \
 	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-	        -DCMAKE_EXE_LINKER_FLAGS="--sysroot=${SYSROOT} ${LDFLAGS}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
     		-DGCC_VERSION=${GCC_VERSION} \
