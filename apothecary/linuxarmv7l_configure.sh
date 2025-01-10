@@ -28,10 +28,10 @@ export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
 # Compiler flags for ARMv7
-export CFLAGS="--sysroot=${SYSROOT} \
+export CFLAGS="--sysroot=${RPI_ROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -march=armv7-a -mfpu=vfp -mfloat-abi=hard \
+    -march=armv7-a -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard \
     -fPIC -ftree-vectorize -Wno-psabi -pipe \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS \
@@ -39,10 +39,11 @@ export CFLAGS="--sysroot=${SYSROOT} \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM"
 
 # Linker flags for ARMv7
-export LDFLAGS="--sysroot=${SYSROOT} \
+export LDFLAGS="--sysroot=${RPI_ROOT} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib \
     -L${TOOLCHAIN_ROOT}/lib \
-    -L/usr/lib \
+    -Wl,-rpath-link,${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib"
 

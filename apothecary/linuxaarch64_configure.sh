@@ -32,7 +32,7 @@ export RANLIBFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
 # GStreamer version for dependencies
 export GST_VERSION="1.0"
 # Compiler flags for ARM64
-export CFLAGS="--sysroot=${SYSROOT} \
+export CFLAGS="--sysroot=${RPI_ROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
@@ -40,10 +40,13 @@ export CFLAGS="--sysroot=${SYSROOT} \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
 # Linker flags for ARM64
-export LDFLAGS="--sysroot=${SYSROOT} \
+export LDFLAGS="--sysroot=${RPI_ROOT} \
+    -Wl,-rpath-link,${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -Wl,-rpath-link,${RPI_ROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${RPI_ROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
-    -L/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
