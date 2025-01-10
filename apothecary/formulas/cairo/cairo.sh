@@ -213,7 +213,7 @@ function build() {
 		    -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 		    -DENABLE_VISIBILITY=OFF \
 		    ${CMAKE_WIN_SDK}
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 	elif [ "$TYPE" == "osx" ] ; then
 

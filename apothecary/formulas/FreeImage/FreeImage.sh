@@ -107,7 +107,7 @@ function build() {
 	        -GXcode \
 			-DPLATFORM=$PLATFORM 
 			 
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 	elif [ "$TYPE" == "android" ] ; then
         

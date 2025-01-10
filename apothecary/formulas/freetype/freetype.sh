@@ -121,7 +121,7 @@ function build() {
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
 					
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..	
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -215,7 +215,7 @@ function build() {
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_ENC_LIB};${LIBBROTLI_DEC_LIB}"
-        cmake --build . --config Release --target install   
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}   
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
         cmake .. ${DEFINES} \
@@ -244,7 +244,7 @@ function build() {
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_ENC_LIB};${LIBBROTLI_DEC_LIB}"
-        cmake --build . --config Debug --target install
+        cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
         cd ..
 
 	elif [ "$TYPE" == "msys2" ] ; then
@@ -440,7 +440,7 @@ function build() {
         $EMSDK/upstream/emscripten/emmake make
         $EMSDK/upstream/emscripten/emmake make install
 
-        # cmake --build . --config Release --target install
+        # cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 	fi
 }

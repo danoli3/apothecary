@@ -67,9 +67,9 @@ function build() {
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DCMAKE_INSTALL_LIBDIR=lib \
             	-G 'Unix Makefiles'
-		$EMSDK/upstream/emscripten/emmake make
+		$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         $EMSDK/upstream/emscripten/emmake make install
-		# cmake --build . --config Release --target install
+		# cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		echo "building glfw $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -97,7 +97,7 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 
         cmake .. ${DEFS} \
         	-DLIBRARY_SUFFIX=${ARCH} \
@@ -112,7 +112,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Debug \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-         cmake --build . --config Debug --target install
+         cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
 
          cd ..
 
@@ -151,7 +151,7 @@ function build() {
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DCMAKE_INSTALL_LIBDIR=lib 
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 	fi
 }

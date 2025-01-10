@@ -159,7 +159,7 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cmake .. ${DEFS} \
 			-UCMAKE_CXX_FLAGS \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -180,7 +180,7 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Debug --target install
+	    cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
         source ../../android_configure.sh $ABI cmake

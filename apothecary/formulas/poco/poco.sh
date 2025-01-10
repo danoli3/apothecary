@@ -158,7 +158,7 @@ function build() {
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DOPENSSL_USE_STATIC_LIBS=YES 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 
 
@@ -222,7 +222,7 @@ function build() {
             -DOPENSSL_LIBRARIES="$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libcrypto.lib;$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libssl.lib;" \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 
         rm ${OPENSSL_PATH}/lib/libssl.lib

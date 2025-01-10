@@ -142,7 +142,7 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Debug --target install
+        cmake --build . --config Debug --target install -j${PARALLEL_MAKE}
         cmake .. ${DEFS} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
@@ -161,7 +161,7 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
             
     elif [ "$TYPE" == "android" ]; then
@@ -234,7 +234,7 @@ function build() {
             -DZLIB_ROOT="$LIBS_ROOT/zlib/" \
             -DZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include" \
             -DZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a" 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
         find . -name "test*.c" | xargs -r rm

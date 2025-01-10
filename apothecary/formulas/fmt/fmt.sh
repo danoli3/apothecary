@@ -82,7 +82,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -144,7 +144,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 	elif [ "$TYPE" == "msys2" ]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -162,8 +162,8 @@ function build() {
 			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-			-DCMAKE_INSTALL_INCLUDEDIR=include \
-			cmake --build . --target install --config Release
+			-DCMAKE_INSTALL_INCLUDEDIR=include
+		cmake --build . --target install --config Release
 	    cd ..
 	elif [ "$TYPE" == "linux64" ]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -182,8 +182,8 @@ function build() {
 			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_INSTALL_PREFIX=Release \
 			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-			-DCMAKE_INSTALL_INCLUDEDIR=include \
-			cmake --build . --target install --config Release
+			-DCMAKE_INSTALL_INCLUDEDIR=include
+		cmake --build . --target install --config Release --parallel $(nproc)
 	    cd ..
 	elif [[ "$TYPE" =~ ^(linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
       	if [ $CROSSCOMPILING -eq 1 ]; then
@@ -207,8 +207,8 @@ function build() {
 				-DBUILD_SHARED_LIBS=OFF \
 				-DCMAKE_INSTALL_PREFIX=Release \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-				-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release
+				-DCMAKE_INSTALL_INCLUDEDIR=include
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"

@@ -88,7 +88,7 @@ function build() {
 			    -DCMAKE_INSTALL_PREFIX=Release \
 				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
 				-DCMAKE_INSTALL_INCLUDEDIR=include
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -113,7 +113,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "android" ] ; then
  

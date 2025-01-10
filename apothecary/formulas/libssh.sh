@@ -42,7 +42,7 @@ function build() {
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=Release 
 
-    cmake --build . --config Release --target install
+    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
     cd ..
 
     fi

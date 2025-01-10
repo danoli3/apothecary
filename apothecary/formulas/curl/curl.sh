@@ -172,7 +172,7 @@ function build() {
             -DOPENSSL_LIBRARIES="$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libcrypto.lib;$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libssl.lib;" \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 
         rm ${OPENSSL_PATH}/lib/libssl.lib
@@ -360,7 +360,7 @@ function build() {
             -DENABLE_VERBOSE=ON \
             -DENABLE_THREADED_RESOLVER=ON \
             -DENABLE_IPV6=ON
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 
     else

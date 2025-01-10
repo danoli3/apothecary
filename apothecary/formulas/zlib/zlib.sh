@@ -67,7 +67,7 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 		    ${CMAKE_WIN_SDK} 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release --target install -j${PARALLEL_MAKE}
         cd ..
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -97,7 +97,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF 
 
-		 cmake --build . --config Release --target install
+		 cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		 cd ..
     elif [ "$TYPE" == "android" ] ; then
 
@@ -134,7 +134,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_${TYPE}_${PLATFORM}
@@ -163,7 +163,7 @@ function build() {
         #     -DCMAKE_INSTALL_INCLUDEDIR=include 
         # $EMSDK/upstream/emscripten/emmake make
         # $EMSDK/upstream/emscripten/emmake make install
-	 	# cmake --build . --config Release --target install
+	 	# cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 	 	$EMSDK/upstream/emscripten/emmake make -j
 	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..

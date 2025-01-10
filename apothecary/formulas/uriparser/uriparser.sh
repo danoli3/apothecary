@@ -73,7 +73,7 @@ function build() {
 			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 			-A "${PLATFORM}" \
 			-G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release --target install -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
 		echo "Android "
