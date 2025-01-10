@@ -134,7 +134,7 @@ function build() {
 		cmake .. -DGLFW_BUILD_DOCS=OFF \
 				-DGLFW_BUILD_TESTS=OFF \
 				-DGLFW_BUILD_EXAMPLES=OFF \
-				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.toolchain.cmake \
+				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 				-DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
 				-DGCC_VERSION=${GCC_VERSION} \
