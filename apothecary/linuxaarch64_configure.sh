@@ -9,6 +9,8 @@ RASP="$RPI_ROOT"
 export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0" # Adjust as needed
 
+CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
+
 # Update PATH and library paths
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib

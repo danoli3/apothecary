@@ -7,6 +7,7 @@ RASP="$RPI_ROOT"
 # Set GCC cross-compilation variables
 export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
+CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
 
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib

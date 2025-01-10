@@ -202,7 +202,7 @@ sudo apt-get -y install libasound-dev libjack-dev libpulse-dev oss4-dev #rtaudio
 sudo apt-get update && sudo apt-get install -y autoconf libtool automake dos2unix
 sudo apt-get update && sudo apt-get install -y cmake
 
-sudo apt build-dep cmake
+# sudo apt build-dep cmake
 
 find /lib /usr/lib -name 'libc'
 
