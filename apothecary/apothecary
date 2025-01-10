@@ -2719,7 +2719,7 @@ if [ "$TARGET" == "linux" ]; then
         CROSSCOMPILING=1
     fi
 
-    if [[ ${CROSSCOMPILING} == 1 } ]];  then
+    if [[ ${CROSSCOMPILING} == 1 ]];  then
         if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
             export TOOLCHAIN_PREFIX=arm-linux-gnueabihf
         fi
