@@ -52,8 +52,20 @@ sudo apt-get install -y qemu-user-static binfmt-support
 if  command -v docker &> /dev/null; then
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 fi
-
-if [ "$GCC" == "gcc14" ]; then
+if [[ "$GCC" =~ ^gcc(8|9|10|11|12|13)$ ]]; then
+    GCC_VERSION=${BASH_REMATCH[1]}
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt update
+    sudo apt install -y --allow-unauthenticated gcc-${GCC_VERSION} g++-${GCC_VERSION}
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} ${GCC_VERSION} \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION}
+    sudo apt-get install -y gperf coreutils libxrandr-dev libxinerama-dev libx11-dev libxcursor-dev libxi-dev libc6-dev
+    sudo update-alternatives --config gcc
+    gcc --version
+    g++ -v
+elif [ "$GCC" == "gcc14" ]; then
     # https://gcc.gnu.org/gcc-14/changes.html
     sudo apt update
     sudo apt install -y software-properties-common
@@ -114,8 +126,6 @@ sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev 
 sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev cmake unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils libtool dos2unix
 sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev ccache
 sudo aptitude install -y gperf
-
-sudo apt-get install -y ccache
 
 dpkg -L gcc-aarch64-linux-gnu
 

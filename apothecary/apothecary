@@ -215,7 +215,7 @@ if [ -z "${LOADSAVE_RESULT+x}" ]; then
 fi
 
 if [ -z "${GCC+x}" ]; then
-    GCC=gcc14 
+    GCC=gcc14
 fi
 
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
@@ -2696,6 +2696,7 @@ if [ "$TYPE" == "linux" ]; then
     elif [[ "$ARCH" =~ ^(arm64)$ ]]; then
         export PLATFORM="arm64"
         export ABI="aarch64"
+    	export GCC=gcc13
     elif [[ "$ARCH" =~ ^("jetson")$ ]]; then
         export PLATFORM="jetson"
         export ABI="aarch64"
