@@ -32,14 +32,14 @@ function build() {
     
     if [ "$TYPE" == "linux" ]; then
 	    if [ $CROSSCOMPILING -eq 1 ]; then
-            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
         fi
 		echo "building $TYPE | $PLATFORM"
         echo "--------------------"
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 
-		echo "TOOLCHAIN_ROOT is set to: $TOOLCHAIN_ROOT --sysroot=${SYSROOT}"
+		echo "TOOLCHAIN_ROOT is set to: ${TOOLCHAIN_ROOT}"
 	    rm -f CMakeCache.txt *.a *.o *.so
 	 
 	    DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
