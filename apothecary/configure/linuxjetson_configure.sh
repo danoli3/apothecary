@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 export CROSS_ROOT=${SYSROOT}/rootfs
+export TOOLCHAIN_ROOT=${SYSROOT}/crosscompiler
+
 export GCC_PREFIX="aarch64-linux-gnu"
 export GCC_VERSION="14.2.0"
 
