@@ -9,7 +9,7 @@ on:
 
 env:
   USE_ARTIFACT: false
-  DISABLE_WORKFLOW: "true"
+  DISABLE_WORKFLOW: "false"
 
 jobs:
   build-linux-aarch64:
