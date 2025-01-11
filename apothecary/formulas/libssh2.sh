@@ -3,18 +3,19 @@
 # libssh2
 
 # Define the version
-FORMULA_TYPES=( "vs" "osx" "ios" "android" )
+FORMULA_TYPES=( )
 
 FORMULA_DEPENDS=( "zlib" "openssl" )
 
 VER=1.11.0-dev
 GIT_URL=https://github.com/libssh2/libssh2.git
 
-DEFS=""
+DEFINES=""
+BUILD_ID=1
 
 function download() {
     . "$DOWNLOADER_SCRIPT"
-    FILE_NAME=libssh2-$VER
+    FILE_NAME=libssh2
 
     if [ -d $FILE_NAME ]; then
         echo "Directory $FILE_NAME already exists. Pulling latest changes."
@@ -38,14 +39,13 @@ function build() {
     cd "build_${TYPE}_${PLATFORM}"
 
     cmake .. \
-        -DCMAKE_C_FLAGS="${DEFS}" \
+        -DCMAKE_C_FLAGS="${DEFINES}" \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX=Release 
 
-    cmake --build . --config Release --target install
+    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
     cd ..
 
-    fi
 }
 
 function copy() {

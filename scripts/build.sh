@@ -222,16 +222,7 @@ if  type "ccache" > /dev/null; then
 fi
 
 if [ "$TARGET" == "linux" ]; then
-    export TARGET="linux64"
-    if [ "$OPT" == "gcc5" ]; then
-        export CC="gcc-5"
-        export CXX="g++-5 -std=c++11"
-        export COMPILER="g++5 -std=c++11"
-    elif [ "$OPT" == "gcc6" ]; then
-        export CC="gcc-6 -fPIE"
-        export CXX="g++-6 -std=c++14 -fPIE"
-        export COMPILER="g++6 -std=c++14 -fPIE"
-    elif [ "$OPT" == "gcc14" ]; then
+    if [ "$OPT" == "gcc14" ]; then
         export CC="gcc-14 -fPIE"
         export CXX="g++-14 -std=c++23 -fPIE"
         export COMPILER="g++14 -std=c++23 -fPIE"

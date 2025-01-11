@@ -156,7 +156,7 @@ function build() {
 			-DENABLE_ARC=OFF \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
 			-DENABLE_VISIBILITY=OFF
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -210,7 +210,7 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
         cd ..
 	elif [ "$TYPE" == "android" ]; then
@@ -219,7 +219,7 @@ function build() {
 	    	echo "Build Already exists at $LIBS_DIR/openssl/$TYPE/ skipping"
 	    	return
 		fi
-		source ../../android_configure.sh $ABI make
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
 		#wget -nv https://wiki.openssl.org/images/7/70/Setenv-android.sh
 		# source ./setenv-android.sh
 		echo "NDK_ROOT: $NDK_ROOT"

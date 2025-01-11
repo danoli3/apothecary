@@ -169,7 +169,7 @@ CON_YELLOW_GREEN="\033[33m"
 CON_GREEN="\033[32m"
 
 # used to filter out bad build types
-VALID_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
+VALID_TYPES=( "osx" "linux" "vs" "msys2" "ios" "tvos" "xros" "watchos" "catos" "android" "emscripten" "macos" )
 
 
 PKG_CONFIG_PATH=${PKG_CONFIG_PATH:-}
@@ -213,8 +213,12 @@ fi
 if [ -z "${LOADSAVE_RESULT+x}" ]; then
     declare -a LOADSAVE_RESULT=0
 fi
-WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
+if [ -z "${GCC+x}" ]; then
+    GCC=gcc14 
+fi
+
+WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 # if [ -z "${USE_CCACHE+x}" ]; then
 #     export CC="ccache gcc"
@@ -244,7 +248,7 @@ commands:
 
 options:
   -t	specify libary type when building, detects type from OS by default
-	valid types: osx, linux, linux64, linuxarmv6l, linuxarmv7l, vs, msys2, ios, tvos, android
+	valid types: osx, linux, vs, msys2, ios, tvos, android
 
   -a	specify architecture, either 32 or 64 (default is 32 bit)
 	note: not currently needed, reserved for future use
@@ -437,8 +441,6 @@ fi
 # If formula already exists force download
 if [ -z "${FORCE_DOWNLOAD+x}" ]; then
     export FORCE_DOWNLOAD=0
-else
-	echo "FORCE_DOWNLOAD is set: $FORCE_DOWNLOAD"
 fi
 
 if [ -z "${LIBS_DIR_REAL+x}" ]; then
@@ -640,6 +642,7 @@ if [ "$TYPE" = "vs" ]; then
         export EXCEPTION_FLAGS=""
         export FLAGS_RELEASE="-O3 -DUNICODE -D_UNICODE"
         export FLAGS_DEBUG="-O0 -DUNICODE -D_UNICODE"
+        export EXE_FLAGS=""
     else
         if [ $ARCH == "arm64ec" ]; then              
             export VS_C_FLAGS="/Gy /GL- /guard:cf"
@@ -649,6 +652,7 @@ if [ "$TYPE" = "vs" ]; then
         export FLAGS_RELEASE="${MT_TYPE} ${CALLING_CONVENTION} /O2 /DNDEBUG -DUNICODE -D_UNICODE"
         export FLAGS_DEBUG="${MT_TYPE}d ${CALLING_CONVENTION} /Od /DDEBUG -DUNICODE -D_UNICODE"
         export EXCEPTION_FLAGS="/EHsc"
+        export EXE_FLAGS="/NODEFAULTLIB:libvcruntime.lib /DEFAULTLIB:ucrt.lib /DEFAULTLIB:msvcrt.lib"
     fi
 
     VS_BAT="vcvarsall.bat"
@@ -829,6 +833,7 @@ if [ "$TYPE" = "msys2" ]; then
             esac
         fi
     fi
+    GCC_VERSION=14
     export PLATFORM=${ARCH}
 fi
 
@@ -953,22 +958,21 @@ if [ "$TYPE" = "macos" ]; then
     PLATFORM="MAC"
 fi
 
-if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+if [ "$TYPE" == "msys2" ]; then
     export FLAG_RELEASE="-O3"
-    if [ $TYPE == "linux" ] ; then
-        export ABI="x86"
-    elif [ $TYPE == "linux64" ] ; then
-        export ABI="x86_64"
-    elif [ $TYPE == "linuxaarch64" ]; then
-        export ABI="aarch64"
-    elif [ $TYPE == "linuxarmv7l" ]; then
-        export ABI="armv7l"
-    elif [ $TYPE == "linuxarmv6l" ]; then
-        export ABI="armv6l"
-    elif [ $TYPE == "msys2" ]; then
-        export ABI="x86_64"
-    fi 
+    export ABI="x86_64"
     export PLATFORM=${ABI}
+    GCC_VERSION=14
+fi
+
+if [ "$PARALLEL_MAKE" -eq 1 ]; then
+    if command -v nproc &> /dev/null; then
+        export PARALLEL_MAKE=$(nproc)
+        echoVerbose "Using nproc: PARALLEL_MAKE is set to $PARALLEL_MAKE"
+    else
+        export PARALLEL_MAKE=1
+        echoVerbose "nproc not found: Defaulting PARALLEL_MAKE to $PARALLEL_MAKE"
+    fi
 fi
 
 # Check if PLATFORM is not set or is empty
@@ -1026,8 +1030,8 @@ get_directory_path() {
         emscripten)
             final_path="${base_dir}/lib/${type}/"
             ;;
-        linux64|linux|msys2)
-            final_path="${base_dir}/lib/${type}/"
+        linux|msys2)
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         android)
             final_path="${base_dir}/lib/${type}/${pAbi}/"
@@ -2434,6 +2438,11 @@ function apothecaryDepend() {
         return
     fi
 
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Error: Missing arguments. Usage: apothecaryDepend <command> <dependency>"
+        return 1
+    fi
+
     local ROOT=$PWD
     local depend="${2%.*}" # removes extension
 
@@ -2671,25 +2680,80 @@ if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 fi
 
 CROSSCOMPILING=0
-if [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv7l" ]; then
-    if [[ $(uname -m) != armv* ]]; then
-        CROSSCOMPILING=1
-        if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
-            export TOOLCHAIN_PREFIX=arm-linux-gnueabihf
-        fi
 
-        if [[  -z ${SYSROOT+z} ]]; then
-            echoError "Trying to cross compile but SYSROOT environment variable is not set"
-            echoError "Should be set to root of target OS image"
-            exit 1
-        fi
-        if [[  -z ${TOOLCHAIN_ROOT+z} ]];  then
+
+if [ "$TYPE" == "linux" ]; then
+    export FLAG_RELEASE="-O3"
+    if [[ "$ARCH" =~ ^("armv7l"|"aarch64"|"armv6l")$ ]]; then
+        export PLATFORM="$ARCH"
+        export ABI="${ARCH}"
+    elif [[ "$ARCH" =~ ^("64"|"x86_64")$ ]]; then
+        export PLATFORM="64"
+        export ABI="x86_64"
+    elif [[ "$ARCH" =~ ^("32"|"x86")$ ]]; then
+        export PLATFORM="86"
+        export ABI="x86"
+    elif [[ "$ARCH" =~ ^(arm64)$ ]]; then
+        export PLATFORM="arm64"
+        export ABI="aarch64"
+    elif [[ "$ARCH" =~ ^("jetson")$ ]]; then
+        export PLATFORM="jetson"
+        export ABI="aarch64"
+    else
+        echo "Unsupported architecture for Linux: $ARCH"
+        exit 1
+    fi
+        
+    if [[ $GCC =~ [a-zA-Z]+([0-9]+) ]]; then
+        export GCC_VERSION=${BASH_REMATCH[1]}
+        echo "Extracted GCC_VERSION: $GCC_VERSION"
+    else
+        echo "Error: Unable to extract GCC version from variable '$GCC'"
+        export GCC_VERSION=14
+    fi
+
+    if [[ "$GCC_VERSION" =~ ^(10|11|12)$ ]]; then
+        export C_STANDARD=17
+        export CPP_STANDARD=20
+    elif [[ "$GCC_VERSION" =~ ^(13|14)$ ]]; then
+        export C_STANDARD=17
+        export CPP_STANDARD=23
+    else
+        export C_STANDARD=17
+        export CPP_STANDARD=17
+    fi
+
+    if [[ "$ABI" =~ ^(armv7l|aarch64|armv6l)$ ]]; then
+        CROSSCOMPILING=1
+    fi
+
+    if [[ ${CROSSCOMPILING} == 1 ]];  then
+        if [[ -z ${TOOLCHAIN_ROOT+z} ]];  then
             echoWarning "Trying to cross compile but TOOLCHAIN_ROOT not set"
             echoWarning "Trying to continue in case PATH is set to correct toolchain"
             echoWarning "If compiling fails try setting TOOLCHAIN_ROOT to root of cross compiler toolchain"
+            if [[ -z ${TOOLCHAIN_PREFIX+z} ]]; then
+                export TOOLCHAIN_PREFIX="aarch64-linux-gnu"
+            fi
+        fi
+        if [[ -z ${SYSROOT+z} ]]; then
+            echoError "Trying to cross compile but SYSROOT environment variable is not set"
+            echoError "Should be set to root of target OS image"
+            export SYSROOT="/"
+        fi        
+    else
+        if [[ -z ${TOOLCHAIN_ROOT+z} ]];  then
+            export TOOLCHAIN_ROOT=""
+        fi
+        if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
+            export TOOLCHAIN_PREFIX=""
+        fi
+        if [[ -z ${SYSROOT+z} ]];  then
+            export SYSROOT="/"
         fi
     fi
 fi
+
 
 
 # handle commands

@@ -6,7 +6,7 @@
 #
 # uses an autotools build system
 
-FORMULA_TYPES=( "osx" "vs" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" )
+FORMULA_TYPES=( "osx" "vs" "linux" )
 
 #FORMULA_DEPENDS=( "pkg-config" )
 
@@ -31,7 +31,7 @@ function download() {
 	# downloader ${URL}/rtaudio-${VER}.tar.gz 
 	downloader ${GIT_URL}/archive/refs/tags/$VER.tar.gz
 	tar -xf ${VER}.tar.gz
-	mv rtaudio-${VER} rtaudio
+	mv rtaudio-${VER} rtAudio
 	rm ${VER}.tar.gz
 
 	rm -f ./CMakeLists.txt
@@ -80,7 +80,7 @@ function build() {
 				-DCMAKE_INSTALL_INCLUDEDIR=include \
 				-DCMAKE_INSTALL_LIBDIR=lib \
 				-DBUILD_TESTING=OFF
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 
 	elif [ "$TYPE" == "vs" ] ; then
@@ -115,7 +115,7 @@ function build() {
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
 
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}"
 	    cmake .. ${DEFINES} \
 	    	-UCMAKE_CXX_FLAGS \
@@ -129,15 +129,19 @@ function build() {
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
 
-	    cmake --build . --config Debug --target install
+	    cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
 
 	    unset CXXFLAGS
 
 	    cd ..
-	elif [[ "$TYPE" =~ ^(linux|linux64|linuxarmv6l|linuxarmv7l|linuxaarch64)$ ]]; then
+
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 		# Compile the program
-		mkdir -p build
-		cd build
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o
 		DEFINES="${DEFINES} \
 				-DRTAUDIO_API_PULSE=ON \
@@ -149,14 +153,24 @@ function build() {
 				-DRTAUDIO_API_WASAPI=OFF \
 				-DBUILD_TESTING=OFF"
 
-		cmake .. ${DEFINES} \
-			-G "Unix Makefiles" \
-			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
+		cmake  .. \
+	 		${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+	        -DBUILD_SHARED_LIBS=OFF \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include 
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
-		make
-		make install
-	
-	  # /inst   
 	elif [ "$TYPE" == "msys2" ] ; then
 		# Compile the program
 		mkdir -p build
@@ -208,8 +222,13 @@ function copy() {
 	elif [ "$TYPE" == "osx" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM/
 		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
-    cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
-		secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
+    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+    	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -Rv build_${TYPE}_${PLATFORM}/Release/include/rtaudio/* $1/include/
+    	cp -vf "build_${TYPE}_${PLATFORM}/Release/lib/librtaudio.a" $1/lib/$TYPE/$PLATFORM/librtaudio.a
+    	secure $1/lib/$TYPE/$PLATFORM/librtaudio.a rtaudio
 	fi
 
 	# copy license file
@@ -225,15 +244,13 @@ function clean() {
 
 	if [ "$TYPE" == "vs" ] ; then
 		if [ -d "build_${TYPE}_${ARCH}" ]; then
-		    # Delete the folder and its contents
 		    rm -r build_${TYPE}_${ARCH}	    
 		fi
 	else
-		make clean
+		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+			rm -r build_${TYPE}_${PLATFORM}	
+		fi  
 	fi
-
-	# manually clean dependencies
-	#apothecaryDependencies clean
 }
 
 function load() {

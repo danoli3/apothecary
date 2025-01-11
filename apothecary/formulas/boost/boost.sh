@@ -59,7 +59,7 @@ function prepare() {
 	if [ "$TYPE" == "osx" ]; then    
 		./bootstrap.sh --with-toolset=clang --with-libraries=filesystem
     elif [ "$TYPE" == "android" ]; then
-        source ../../android_configure.sh $ABI
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI
 		./bootstrap.sh --with-toolset=clang --with-libraries=filesystem
     elif [ "$TYPE" == "emscripten" ]; then
 		./bootstrap.sh --with-libraries=filesystem
@@ -287,7 +287,7 @@ EOF
 	elif [ "$TYPE" == "android" ]; then
 	    rm -rf stage stage_$ARCH
 
-        source ../../android_configure.sh $ABI
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI
         ./b2 -j${PARALLEL_MAKE} toolset=clang cxxflags="-std=c++${CPP_STANDARD} $CFLAGS" cflags="$CFLAGS" threading=multi threadapi=pthread target-os=android variant=release --build-dir=build_$ARCH link=static stage
 
 		# Run ranlib on binaries (not called corectly by b2)

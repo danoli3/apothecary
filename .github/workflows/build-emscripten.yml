@@ -14,8 +14,9 @@ concurrency:
 
 env:
   TARGET: "emscripten"
-  EMSDK_VERSION: "3.1.73"
+  EMSDK_VERSION: "3.1.74"
   USE_ARTIFACT: true
+  DISABLE_WORKFLOW: "false"
 
 jobs:
   build-emscripten:
@@ -25,7 +26,13 @@ jobs:
         ARCH: [32, 64]
         PTHREADS: [0, 1]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 1
+          fi
       - name: Docker Step
         run: docker run -di --name emscripten -v $PWD:/src emscripten/emsdk:${{ env.EMSDK_VERSION }} bash
       - name: Scripts Calc Formula
@@ -41,6 +48,8 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
             echo "RELEASE=nightly" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
       - name: Download previous artifacts
@@ -142,6 +151,41 @@ jobs:
           ARCH: ${{ matrix.ARCH }}
           PTHREADS_ENABLED: ${{ matrix.PTHREADS }}
 
+    
+      - name: Package Binaries for Artifact
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: |
+          ARCH_SUFFIX=""
+          if [[ "${{ matrix.ARCH }}" == "64" ]]; then
+            ARCH_SUFFIX="_memory64"
+          fi
+          PTHREADS_SUFFIX=""
+          if [[ "${{ matrix.PTHREADS }}" == "1" ]]; then
+            PTHREADS_SUFFIX="_pthreads"
+          fi
+          FILENAME="openFrameworksLibs_${{ env.RELEASE }}_emscripten${ARCH_SUFFIX}${PTHREADS_SUFFIX}.tar.bz2"
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV
+          scripts/artifact/artifact.sh
+        env:
+          BUNDLE: ${{ matrix.bundle }}
+
+      - name: Upload Artifact
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        uses: actions/upload-artifact@v4
+        with:
+          name: libs-${{ env.RELEASE }}-emscripten-${{ matrix.ARCH }}-${{ matrix.PTHREADS }}
+          path: out/${{ env.FILENAME }}
+          retention-days: 31
+
+      - name: Remove .tar.bz2 files
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        run: |
+          echo "Removing .tar.bz2 files from out/ directory..."
+          rm -f out/*.tar.bz2
+          rm -f xout/*.tar.bz2
+          echo "Cleanup complete."
+
       - name: Package
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
@@ -161,14 +205,6 @@ jobs:
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
           ARCH: ${{ matrix.ARCH }}
           PTHREADS_ENABLED: ${{ matrix.PTHREADS }}
-
-      - name: Upload Artifact
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
-        uses: actions/upload-artifact@v4
-        with:
-          name: libs-${{ env.RELEASE }}-emscripten-${{ matrix.ARCH }}-${{ matrix.PTHREADS }}
-          path: out/${{ env.FILENAME }}
-          retention-days: 31
 
       - name: Update Release emscripten
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')

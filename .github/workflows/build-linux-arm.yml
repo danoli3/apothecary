@@ -6,18 +6,53 @@ on:
   pull_request:
     paths-ignore:
       - "**/README.md"
+
+env:
+  USE_ARTIFACT: false
+  DISABLE_WORKFLOW: "false"
+
 jobs:
   build-linux-aarch64:
     runs-on: ubuntu-latest
     env:
-      TARGET: linuxaarch64
+      TARGET: linux
+      ARCH: aarch64 
       WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
+      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
+      TOOLCHAIN_PREFIX: "aarch64-linux-gnu"
+
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
+
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 1
+          fi
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Cache raspbian folder
-        uses: actions/cache@v2
+        uses: actions/cache@v4.2.0
         with:
           path: /home/runner/work/apothecary/apothecary/raspbian
           key: raspbian-cache-2
@@ -25,7 +60,7 @@ jobs:
       - name: Check if folder exists
         id: folder-check
         run: >
-          if [ -d $SYSROOT ]; then
+          if [ -d $TOOLCHAIN_ROOT ]; then
             echo "Raspbian folder already exists. Skipping download and extract."
             echo "::set-output name=folder-exists::true"
           else
@@ -35,76 +70,186 @@ jobs:
       - name: Download and extract tar file
         if: steps.folder-check.outputs.folder-exists == 'false'
         run: >
-          cd $WORKDIR &&
-          wget  https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bullseye/GCC%2010.3.0/cross-gcc-10.3.0-pi_64.tar.gz
-          --no-check-certificate &&
-          tar xf cross-gcc-10.3.0-pi_64.tar.gz &&
-          rm cross-gcc-10.3.0-pi_64.tar.gz &&
-          mv cross-pi-gcc-10.3.0-64 raspbian
+          cd $WORKDIR && wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download" -O cross-gcc-14.2.0-pi_64.tar.gz && tar xf cross-gcc-14.2.0-pi_64.tar.gz &&rm cross-gcc-14.2.0-pi_64.tar.gz &&mv cross-pi-gcc-14.2.0-64 raspbian
                     
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs_arm64.sh
+          ./build_rootfs_arm64.sh download
+          ./build_rootfs_arm64.sh create
+
+      - name: Ensure Script is Executable
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh    
       - name: Script Install and Build
-        run: ./scripts/$TARGET/install_and_build.sh
-      - name: Update Release
-        uses: johnwbyrd/update-release@v1.0.0
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Update Release ARM64
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        uses: softprops/action-gh-release@v2.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: nightly
-          release: nightly
-          prerelease: false
-          files: out/openFrameworksLibs_master_linuxaarch64.tar.bz2
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+          tag_name: ${{ env.RELEASE }}
+          draft: false
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
-  build-linux-arm6:
-        runs-on: ubuntu-latest
-        env:
-         TARGET: "linuxarmv6l"
-         SYSROOT: "/home/runner/work/apothecary/apothecary/scripts/linuxarmv6l/raspbian"
-         TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/scripts/linuxarmv6l/rpi_toolchain"
-         TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
-        steps:
-        - uses: actions/checkout@v2
-        - name: Scripts Calc Formula
-          run: ./scripts/calculate_formulas.sh
-        - name: Scripts Install
-          run: ./scripts/$TARGET/install.sh
-        - name: build
-          run: ./scripts/build.sh
-          env:
-            GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-        - name: Update Release
-          uses: johnwbyrd/update-release@v1.0.0
-          with:
-            token: ${{ secrets.GITHUB_TOKEN }}
-            tag: nightly
-            release: nightly
-            prerelease: false
-            files: out/openFrameworksLibs_master_linuxarmv6l.tar.bz2
-          if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+  build-linux-armv6l-pi-1zero:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: linux
+      ARCH: armv6
+      WORKDIR: "/home/runner/work/apothecary/apothecary"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
+      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
+      TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
+    steps:
+      - uses: actions/checkout@v4.2.2
 
-#  build-linux-arm7:
-#        runs-on: ubuntu-latest
-#        environment: CI
-#        env:
-#         TARGET: "linuxarmv7l"
-#         SYSROOT: "/home/runner/archlinux"
-#         TOOLCHAIN_ROOT: "/home/runner/rpi2_toolchain"
-#         TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
-#        steps:
-#        - uses: actions/checkout@v2
-#        - name: Scripts Calc Formula
-#          run: ./scripts/calculate_formulas.sh
-#        - name: Scripts Install
-#          run: ./scripts/$TARGET/install.sh
-#        - name: build
-#          run: ./scripts/build.sh
-#          env:
-#            GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-#        - name: Update Release
-#          uses: johnwbyrd/update-release@v1.0.0
-#          with:
-#            token: ${{ secrets.GITHUB_TOKEN }}
-#            tag: nightly
-#            release: nightly
-#            prerelease: false
-#            files: out/openFrameworksLibs_master_linuxarmv7l.tar.bz2
-#          if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 1
+          fi
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
+      
+      - name: Download and extract tar file
+    
+        run: >
+          cd $WORKDIR &&
+          wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" -O cross-gcc-14.2.0-pi_0-1.tar.gz && tar xf cross-gcc-14.2.0-pi_0-1.tar.gz && rm cross-gcc-14.2.0-pi_0-1.tar.gz && mv cross-pi-gcc-14.2.0-0 raspbianpi1zero
+      
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs.sh
+          ./build_rootfs.sh download
+          ./build_rootfs.sh create
+
+      - name: Ensure Script is Executable
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Script Install and Build
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Update Release armv6l
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE }}
+          draft: false
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
+
+  build-linux-armv7-pi3ab45:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: linux
+      ARCH: armv7l
+      WORKDIR: "/home/runner/work/apothecary/apothecary"
+      SYSROOT: "/home/runner/work/apothecary/apothecary/raspbianrootfs"
+      TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
+      TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Check if Workflow is disabled
+        run: |
+          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+            echo "Workflow is disabled. Exiting."
+            exit 1
+          fi
+
+      - name: Determine Release
+        id: vars
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          fi
+
+      - name: Update and Upgrade System Packages
+        run: |
+          sudo apt update && sudo apt dist-upgrade -y
+          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
+      
+      # - name: Cache raspbian folder
+      #   uses: actions/cache@v4.2.0
+      #   with:
+      #     path: /home/runner/work/apothecary/apothecary/raspbian
+      #     key: raspbian-pi3ab45-cache-2
+            
+      # - name: Check if folder exists
+      #   id: folder-check
+      #   run: >
+      #     if [ -d $TOOLCHAIN_ROOT ]; then
+      #       echo "Raspbian folder already exists. Skipping download and extract."
+      #       echo "::set-output name=folder-exists::true"
+      #     else
+      #       echo "::set-output name=folder-exists::false"
+      #     fi
+          
+      - name: Download and extract tar file
+        # if: steps.folder-check.outputs.folder-exists == 'false'
+        run: >
+          cd $WORKDIR &&
+          wget "https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download" -O cross-gcc-14.2.0-pi_3+.tar.gz && tar xf cross-gcc-14.2.0-pi_3+.tar.gz && rm cross-gcc-14.2.0-pi_3+.tar.gz && mv cross-pi-gcc-14.2.0-2 raspbianpi3ab45
+
+      - name: Clone rpi_rootfs Repository
+        run: |
+          mkdir -p $SYSROOT
+          cd $SYSROOT
+          git clone https://github.com/danoli3/rpi_rootfs.git $SYSROOT
+
+      - name: Build RootFS
+        run: |
+          cd $SYSROOT &&
+          sudo chmod +x ./build_rootfs.sh
+          ./build_rootfs.sh download
+          ./build_rootfs.sh create
+
+      - name: Ensure Script is Executable
+        run: chmod +x ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Script Install and Build
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Update Release armv7l
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        uses: softprops/action-gh-release@v2.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE }}
+          draft: false
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2

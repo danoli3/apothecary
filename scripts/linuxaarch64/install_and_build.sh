@@ -11,28 +11,57 @@ trapError() {
 	exit 1
 }
 
-sudo apt-get install -y aptitude
+sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev cmake unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils
 sudo aptitude install -y gperf
+wget https://raw.githubusercontent.com/abhiTronix/raspberry-pi-cross-compilers/master/utils/SSymlinker
 
 ROOT=/home/runner/work/apothecary/apothecary
 echo $ROOT
 cd $ROOT
-RASP="$ROOT/raspbian"
+export RASP="$ROOT/raspbian"
+
+export ARCH=aarch64
+export TYPE=linux
 
 PATH=$RASP/bin:$PATH
-LD_LIBRARY_PATH=$RASP/lib:$LD_LIBRARY_PATH
+LD_LIBRARY_PATH=$RASP/lib
 
-export AR="aarch64-linux-gnu-gcc-ar"
-export CC="aarch64-linux-gnu-gcc"
-export CXX="aarch64-linux-gnu-g++"
-export CPP="aarch64-linux-gnu-cpp"
-export FC="aarch64-linux-gnu-gfortran"
-export RANLIB="aarch64-linux-gnu-gcc-ranlib"
-export LD="$CXX"
+export GCC_PREFIX=aarch64-linux-gnu
+export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/
 
-GCCPATH="$RASP/libexec/gcc/aarch64-linux-gnu/10.3.1"
+export AR="${GCC_PREFIX}-gcc-ar"
+export CC="${GCC_PREFIX}-gcc"
+export CXX="${GCC_PREFIX}-g++"
+export CPP="${GCC_PREFIX}-cpp"
+export FC="${GCC_PREFIX}-gfortran"
+export RANLIB="${GCC_PREFIX}-ranlib"
+export LD="${GCC_PREFIX}-ld"
+
+GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
+
+export LIBC_USR=${RASP}/${GCC_PREFIX}/libc/usr/
+export CRT=${LIBC_USR}/lib64
+
+sudo chmod +x SSymlinker
+./SSymlinker -s ${LIBC_USR}/include/asm -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/gnu -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/bits -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/sys -d /usr/include
+# ./SSymlinker -s ${LIBC_USR}/include/sound -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include/video -d /usr/include
+./SSymlinker -s ${LIBC_USR}/include -d /usr/include
+./SSymlinker -s ${CRT}/crtn.o -d /usr/lib64/crtn.o
+./SSymlinker -s ${CRT}/crt1.o -d /usr/lib64/crt1.o
+./SSymlinker -s ${CRT}/crti.o -d /usr/lib64/crti.o
+./SSymlinker -s ${LIBC_USR}/lib/crtn.o -d /usr/lib/crtn.o
+./SSymlinker -s ${LIBC_USR}/lib/crt1.o -d /usr/lib/crt1.o
+./SSymlinker -s ${LIBC_USR}/lib/crti.o -d /usr/lib/crti.o
+
+echo 'export PATH=$PATH' >> .bashrc
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> .bashrc
+source .bashrc
 
 #echo "ROOT dir "
 #ls -la $ROOT

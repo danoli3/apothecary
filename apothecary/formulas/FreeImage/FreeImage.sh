@@ -107,11 +107,11 @@ function build() {
 	        -GXcode \
 			-DPLATFORM=$PLATFORM 
 			 
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 	elif [ "$TYPE" == "android" ] ; then
         
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
         local BUILD_TO_DIR=$BUILD_DIR/FreeImage/build/$TYPE/$ABI
         
 
@@ -122,7 +122,7 @@ function build() {
 		export CXXFLAGS="$CFLAGS $EXTRA_LINK_FLAGS -DNDEBUG -ffast-math -DPNG_ARM_NEON_OPT=0 -DDISABLE_PERF_MEASUREMENT -frtti -std=c++${CPP_STANDARD}"
 		export LDFLAGS="$LDFLAGS $EXTRA_LINK_FLAGS -shared"
 
-		source ../../android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
         rm -rf "build_${ABI}/"
         rm -rf "build_${ABI}/CMakeCache.txt"
 		mkdir -p "build_$ABI"
@@ -229,7 +229,7 @@ function build() {
 			${CMAKE_WIN_SDK} \
 			-A "${PLATFORM}" \
 			-G "${GENERATOR_NAME}"
-        cmake --build . --target install --config Release
+        cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
 		cmake  .. ${DEFS} \
@@ -290,7 +290,7 @@ function build() {
 		    -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include
-        #$EMSDK/upstream/emscripten/emmake make -j
+        #$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         #$EMSDK/upstream/emscripten/emmake make install
 	    cmake --build build --target install --config Release
 	    cd ..

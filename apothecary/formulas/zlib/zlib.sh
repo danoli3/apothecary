@@ -3,7 +3,7 @@
 # A Massively Spiffy Yet Delicately Unobtrusive Compression Library
 # http://zlib.net/
 
-FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64"  )
+FORMULA_TYPES=( "vs" "osx" "emscripten" "ios" "watchos" "catos" "xros" "tvos" "linux" )
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -67,7 +67,7 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
 		    ${CMAKE_WIN_SDK} 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 		mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -97,11 +97,11 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF 
 
-		 cmake --build . --config Release --target install
+		 cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		 cd ..
     elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
@@ -134,7 +134,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p build_${TYPE}_${PLATFORM}
@@ -161,29 +161,28 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -G 'Unix Makefiles'
         #     -DCMAKE_INSTALL_INCLUDEDIR=include 
-        # $EMSDK/upstream/emscripten/emmake make
+        # $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         # $EMSDK/upstream/emscripten/emmake make install
-	 	# cmake --build . --config Release --target install
-	 	$EMSDK/upstream/emscripten/emmake make -j
+	 	# cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+	 	$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 	 	$EMSDK/upstream/emscripten/emmake make install
 	    cd ..
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
-	    
+    elif [ "$TYPE" == "msys2" ]; then
 		echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
 	    rm -f CMakeCache.txt *.a *.o *.so
-	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+	    DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF
-	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake .. ${DEFS} \
-	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
-	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude" \
+	        -DCMAKE_CXX_EXTENSIONS=OFF \
+	        -DBUILD_SHARED_LIBS=OFF"
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 		    -DZLIB_BUILD_EXAMPLES=OFF \
@@ -195,8 +194,41 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_INSTALL_INCLUDEDIR=include 
-	    cmake --build . --target install --config Release
+            -DCMAKE_INSTALL_INCLUDEDIR=include
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+	    cd ..
+	elif [ "$TYPE" == "linux" ]; then
+	    if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+        fi
+		echoVerbose "building $TYPE | $ARCH "
+        echoVerbose "--------------------"
+	    mkdir -p "build_${TYPE}_${ARCH}"
+	    cd "build_${TYPE}_${ARCH}"
+	    rm -f CMakeCache.txt *.a *.o *.so
+	    DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF \
+	        -DBUILD_SHARED_LIBS=OFF"
+	    cmake .. ${DEFINES} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+    		-DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+		    -DZLIB_BUILD_EXAMPLES=OFF \
+		    -DSKIP_EXAMPLE=ON \
+    		-DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	fi
 }
@@ -253,7 +285,22 @@ function copy() {
 		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+	elif [ "$TYPE" == "linux" ]; then
+		mkdir -p $1/include    
+	    mkdir -p $1/lib/$TYPE/$PLATFORM
+		cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/ > /dev/null 2>&1
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a > /dev/null 2>&1
+        secure $1/lib/$TYPE/$PLATFORM/zlib.a
+         cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
+		sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+		sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+		sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
+
+    elif [ "$TYPE" == "msys2" ]; then
 		mkdir -p $1/include    
 	    mkdir -p $1/lib/$TYPE/$PLATFORM
 		cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ > /dev/null 2>&1
@@ -273,7 +320,7 @@ function copy() {
 
 # executed inside the lib src dir
 function clean() {
-	if [[ "$TYPE" =~ ^(vs|osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+	if [[ "$TYPE" =~ ^(vs|osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
@@ -281,9 +328,9 @@ function clean() {
 		if [ -d "build_${TYPE}_${ABI}" ]; then
 			rm -r build_${TYPE}_${ABI}     
 		fi
-    elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+    elif [ "$TYPE" == "msys2" ]; then
 		if [ -d "build_${TYPE}_${ARCH}" ]; then
-			rm -r build_${TYPE}_${ARCH}     
+			rm -r build_${TYPE}_${ARCH}
 		fi
 	else
 		make uninstall

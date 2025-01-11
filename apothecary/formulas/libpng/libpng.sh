@@ -64,7 +64,7 @@ function prepare() {
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
 
-	DEFS="
+	DEFINES="
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
 		    -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 		    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -86,7 +86,7 @@ function build() {
 		ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
 		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"		
 
-		cmake .. ${DEFS} \
+		cmake .. ${DEFINES} \
 				-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
 				-DZLIB_ROOT=${ZLIB_ROOT} \
@@ -104,7 +104,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..	
 	elif [ "$TYPE" == "vs" ] ; then
 		echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -127,7 +127,7 @@ function build() {
 
   		env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
   		env CFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
-		cmake .. ${DEFS} \
+		cmake .. ${DEFINES} \
 			-B . \
 			-DZLIB_ROOT=${ZLIB_ROOT} \
 	    	-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
@@ -146,13 +146,13 @@ function build() {
 		    -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=ON
 
-		cmake --build . --config Release  --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE}  --target install
 
 		cd ..	
 
 	elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
@@ -167,7 +167,7 @@ function build() {
 		ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
 		ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$ABI/zlib.a"	
 
-			cmake .. ${DEFS} \
+			cmake .. ${DEFINES} \
 				-DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
 				-DPLATFORM=$PLATFORM \
 				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
@@ -197,7 +197,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
 
@@ -211,7 +211,7 @@ function build() {
 
 		export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$ZLIB_ROOT/lib/$TYPE/$PLATFORM"
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 	    	-DEMSCRIPTEN=ON \
@@ -232,11 +232,11 @@ function build() {
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-		$EMSDK/upstream/emscripten/emmake make
+		$EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 		$EMSDK/upstream/emscripten/emmake make install
 
 		$EMSDK/upstream/emscripten/emcmake cmake .. \
-	    	${DEFS} \
+	    	${DEFINES} \
 	    	-DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
 	    	-DCMAKE_C_STANDARD=${C_STANDARD} \
 	    	-DEMSCRIPTEN=ON \
@@ -258,7 +258,7 @@ function build() {
 			-DBUILD_SHARED_LIBS=ON \
 			-DPNG_EXECUTABLES=OFF \
 			-DPNG_BUILD_ZLIB=OFF
-	    cmake --build . --target install --config Release
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
 	    cd ..
 		

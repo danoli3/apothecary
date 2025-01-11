@@ -6,7 +6,7 @@
 #
 # uses an automake build system
 
-FORMULA_TYPES=( "osx" "linux" "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" )
+FORMULA_TYPES=( "osx" "linux" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" )
 FORMULA_DEPENDS=( "zlib" )
 
 # define the version by sha
@@ -63,11 +63,10 @@ function prepare() {
         cp -fr $FORMULA_DIR/glob.h .
     fi
 
-    # apothecaryDependencies download
-    
-    # apothecaryDepend prepare zlib
-    # apothecaryDepend build zlib
-    # apothecaryDepend copy zlib
+    apothecaryDepend download zlib  
+    apothecaryDepend prepare zlib
+    apothecaryDepend build zlib
+    apothecaryDepend copy zlib
 
     rm -f ./CMakeLists.txt
     cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
@@ -77,7 +76,7 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
-    DEFS="  -DCMAKE_C_STANDARD=${C_STANDARD} \
+    DEFINES="  -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
@@ -102,7 +101,6 @@ function build() {
             -DLIBXML2_WITH_THREADS=ON \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF \
             -DLIBXML2_WITH_TESTS=OFF \
-            -DLIBXML2_WITH_DOC=OFF \
             -DLIBXML2_WITH_SCHEMATRON=OFF"
 
     if [ "$TYPE" == "vs" ] ; then 
@@ -124,7 +122,7 @@ function build() {
         EXTRA_DEFS="
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"         
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -142,8 +140,8 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Debug --target install
-        cmake .. ${DEFS} \
+        cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
+        cmake .. ${DEFINES} \
             ${EXTRA_DEFS} \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
@@ -161,7 +159,7 @@ function build() {
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
             
     elif [ "$TYPE" == "android" ]; then
@@ -171,7 +169,7 @@ function build() {
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
         
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
         mkdir -p build_${TYPE}_${ABI}
         cd build_${TYPE}_${ABI}
@@ -182,7 +180,7 @@ function build() {
         export LDFLAGS=""
         cmake .. -DCMAKE_TOOLCHAIN_FILE="${NDK_ROOT}/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=$ABI \
-            .. ${DEFS} \
+            .. ${DEFINES} \
             -DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_TOOLCHAIN=clang++ \
             -DCMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
@@ -197,7 +195,7 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
@@ -212,7 +210,7 @@ function build() {
         cd "build_${TYPE}_$PLATFORM"
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
-             ${DEFS} \
+             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -234,7 +232,7 @@ function build() {
             -DZLIB_ROOT="$LIBS_ROOT/zlib/" \
             -DZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include" \
             -DZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a" 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
         find . -name "test*.c" | xargs -r rm
@@ -249,7 +247,7 @@ function build() {
         cd build_${TYPE}_${PLATFORM}
         rm -f CMakeCache.txt *.a *.o *.a
         $EMSDK/upstream/emscripten/emcmake cmake .. \
-            ${DEFS} \
+            ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -B . \
@@ -270,57 +268,88 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}"
-        # cmake --build . --config Release 
-        $EMSDK/upstream/emscripten/emmake make
+        # cmake --build . --config Release -j${PARALLEL_MAKE} 
+        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         $EMSDK/upstream/emscripten/emmake make install
         cd ..
-    elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
+    elif [ "$TYPE" == "msys2" ]; then
             #./autogen.sh
             find . -name "test*.c" | xargs -r rm
             find . -name "run*.c" | xargs -r rm
-            mkdir -p build_$TYPE
-            cd build_$TYPE
+
+            ZLIB_ROOT="$LIBS_ROOT/zlib/"
+            ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+            ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/zlib.a"
+
+            mkdir -p "build_${TYPE}_$PLATFORM"
+            cd "build_${TYPE}_$PLATFORM"
             rm -f CMakeCache.txt *.a *.o
             cmake .. \
-                ${DEFS} \
+                ${DEFINES} \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_C_STANDARD=${C_STANDARD} \
                 -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+                -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+                -DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
+                -DGCC_VERSION=${GCC_VERSION} \
+                -DZLIB_ROOT=${ZLIB_ROOT} \
+                -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+                -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=Release \
+                -DCMAKE_INSTALL_LIBDIR="lib" \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
                 -DCMAKE_INSTALL_INCLUDEDIR=include \
                 -DCMAKE_SYSTEM_NAME=$TYPE \
                 -DCMAKE_SYSTEM_PROCESSOR=$ABI
                 
-            cmake --build . --config Release
+            cmake --build . --config Release -j${PARALLEL_MAKE} --target install
             cd ..
-    elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "linuxaarch64" ]; then
-        source ../../${TYPE}_configure.sh
-        export CFLAGS="$CFLAGS -DTRIO_FPCLASSIFY=fpclassify"
+    elif [ "$TYPE" == "linux" ]; then
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+            
+        export CFLAGS="-DTRIO_FPCLASSIFY=fpclassify"
         sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
         rm -f *.o
-        mkdir -p build_$TYPE
-        cd build_$TYPE
+        mkdir -p "build_${TYPE}_$PLATFORM"
+        cd "build_${TYPE}_$PLATFORM"
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
-            ${DEFS} \
+            ${DEFINES} \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DGCC_VERSION=${GCC_VERSION} \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DTRIO_FPCLASSIFY=fpclassify \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_SYSTEM_NAME=$TYPE \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DLIBXML2_WITH_LZMA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
             -DLIBXML2_WITH_THREAD_ALLOC=OFF
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     fi
 }
@@ -329,11 +358,8 @@ function build() {
 function copy() {
     # prepare headers directory if needed
     mkdir -p $1/include/libxml
-    
-    # create a common lib directory path
     mkdir -p $1/lib/$TYPE
     . "$SECURE_SCRIPT"
-    # copy files specific to each build TYPE
     if [ "$TYPE" == "vs" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/"* $1/include/
@@ -366,11 +392,25 @@ function copy() {
         secure $1/lib/$TYPE/$PLATFORM/libxml2.a
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
-    elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linux" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
-        cp -v "build_${TYPE}/libxml2.a" $1/lib/$TYPE/libxml2.a
-        secure $1/lib/$TYPE/libxml2.a
-        cp -Rv build_${TYPE}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
-        cp -Rv include/libxml/* $1/include/libxml/
+
+    elif [ "$TYPE" == "msys2" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -v "build_${TYPE}_${ARCH}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
+        secure $1/lib/$TYPE/$PLATFORM/libxml2.a
+    elif [ "$TYPE" == "linux" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
+        secure $1/lib/$TYPE/$PLATFORM/libxml2.a
+
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include
+        cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+        cp -v "build_${TYPE}_${PLATFORM}/libxml-2.0.pc" $1/lib/$TYPE/$PLATFORM/libxml-2.0.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/libxml-2.0.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
     else
         echo "Unknown build TYPE: $TYPE"
         exit 1
@@ -391,7 +431,7 @@ function clean() {
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi
-    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}     
         fi

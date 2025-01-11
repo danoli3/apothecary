@@ -3,7 +3,7 @@
 # {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
 # https://github.com/fmtlib/fmt
 
-FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux64" "linuxaarch64" )
+FORMULA_TYPES=( "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux" )
 FORMULA_DEPENDS=(  )
 
 # define the version
@@ -82,7 +82,7 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
 	elif [ "$TYPE" == "vs" ] ; then
 		echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -109,13 +109,13 @@ function build() {
 		    -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 		    -D BUILD_SHARED_LIBS=OFF
 
-		cmake --build . --config Release  --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE}  --target install
 
 		cd ..
 
 	elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
@@ -144,51 +144,55 @@ function build() {
 				-DENABLE_VISIBILITY=OFF \
 				-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 				-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
-		cmake --build . --config Release --target install
+		cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cd ..
-	elif [ "$TYPE" == "linux64" ] || [ "$TYPE" == "msys2" ]; then
-			mkdir -p build_$TYPE
-	    cd build_$TYPE
-	    rm -f CMakeCache.txt *.a *.o
+	elif [ "$TYPE" == "msys2" ]; then
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFINES} \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        	-DCMAKE_SYSTEM_PROCESSOR=$ABI \
-				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_CXX_EXTENSIONS=OFF \
-				-DBUILD_SHARED_LIBS=OFF \
-				-DCMAKE_INSTALL_PREFIX=Release \
-				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-				-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release
+        	-DCMAKE_SYSTEM_PROCESSOR=$ARCH \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_EXTENSIONS=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+			-DCMAKE_INSTALL_PREFIX=Release \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
-	elif [ "$TYPE" == "linuxaarch64" ]; then
-      source ../../${TYPE}_configure.sh
-      mkdir -p build_$TYPE
-	    cd build_$TYPE
-	    rm -f CMakeCache.txt *.a *.o
+	elif [ "$TYPE" == "linux" ]; then
+		if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
+
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+		rm -f CMakeCache.txt *.a *.o
 	    cmake .. \
 	    	${DEFINES} \
-	    	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/aarch64-linux-gnu.toolchain.cmake \
 	    	-DCMAKE_SYSTEM_NAME=$TYPE \
-        		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
-				-DCMAKE_C_STANDARD=${C_STANDARD} \
-				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-				-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-				-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-				-DCMAKE_CXX_EXTENSIONS=OFF \
-				-DBUILD_SHARED_LIBS=OFF \
-				-DCMAKE_INSTALL_PREFIX=Release \
-				-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-				-DCMAKE_INSTALL_INCLUDEDIR=include \
-				cmake --build . --target install --config Release
+        	-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+			-DGCC_VERSION=${GCC_VERSION} \
+			-DCMAKE_SYSTEM_PROCESSOR=$ABI \
+			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+			-DCMAKE_CXX_EXTENSIONS=OFF \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+			-DCMAKE_INSTALL_PREFIX=Release \
+			-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+			-DCMAKE_INSTALL_INCLUDEDIR=include
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE} --parallel $(nproc)
 	    cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
-		mkdir -p build_$TYPE
-	    cd build_$TYPE
+		mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
 	    rm -f CMakeCache.txt *.a *.o *.a
 	    $EMSDK/upstream/emscripten/emcmake cmake .. \
 	    	${DEFINES} \
@@ -206,7 +210,7 @@ function build() {
 			# -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=. \
 			# -DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE=. \
 			# -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=.
-	    cmake --build . --target install --config Release
+	    cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	fi
 
@@ -226,6 +230,11 @@ function copy() {
 		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
+	elif [[ "$TYPE" =~ ^(linux)$ ]]; then
+		mkdir -p $1/lib/$TYPE/$PLATFORM/
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
+		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
+		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 	elif [ "$TYPE" == "android" ] ; then
 		mkdir -p $1/lib/$TYPE/$ABI/
 		cp -v "build_${TYPE}_${ABI}/Release/lib/libfmt.lib" $1/lib/$TYPE/$ABI/libfmt.a
@@ -233,8 +242,8 @@ function copy() {
 		cp -R "build_${TYPE}_${ABI}/Release/include/" $1/include
 	elif [ "$TYPE" == "emscripten" ] ; then
 		mkdir -p $1/lib/$TYPE/$PLATFORM
-		cp -v "build_${TYPE}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
-		cp -R "build_${TYPE}/Release/include/" $1/include
+		cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfmt.a" $1/lib/$TYPE/$PLATFORM/libfmt.a
+		cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
 		secure $1/lib/$TYPE/$PLATFORM/libfmt.a fmt.pkl
 	else
 		mkdir -p $1/lib/$TYPE/$PLATFORM/

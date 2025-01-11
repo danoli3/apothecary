@@ -82,7 +82,7 @@ function build() {
 	        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 
 	fi
@@ -91,6 +91,7 @@ function build() {
     	# ./autogen.sh
 		# CFLAGS="-arch arm64 -arch x86_64 -mmacosx-version-min=${OSX_MIN_SDK_VER}" ./configure --disable-shared --enable-static
  		# make -j${PARALLEL_MAKE}
+ 		
 
  		GENERATOR_NAME="Xcode"
 	    mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -126,7 +127,7 @@ function build() {
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 	fi
 

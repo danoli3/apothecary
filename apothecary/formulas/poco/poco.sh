@@ -158,7 +158,7 @@ function build() {
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DOPENSSL_USE_STATIC_LIBS=YES 
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
 
@@ -222,7 +222,7 @@ function build() {
             -DOPENSSL_LIBRARIES="$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libcrypto.lib;$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libssl.lib;" \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
-        cmake --build . --config Release --target install
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
         rm ${OPENSSL_PATH}/lib/libssl.lib
@@ -244,7 +244,7 @@ function build() {
         rm -f lib/Linux/$(uname -m)/*d.a
     elif [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
-            source ../../${TYPE}_configure.sh
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
             export CROSS_COMPILE=$TOOLCHAIN_ROOT/bin/$TOOLCHAIN_PREFIX-
             export LIBRARY_PATH="$SYSROOT/usr/lib $SYSROOT/usr/lib/$TOOLCHAIN_PREFIX"
         fi

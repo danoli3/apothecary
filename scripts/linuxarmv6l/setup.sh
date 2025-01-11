@@ -4,99 +4,30 @@ set -o pipefail
 # trap any script errors and exit
 trap "trapError" ERR
 
-SILENT_ARGS=""
-
-CRIPT_DIR="${BASH_SOURCE%/*}"
-if [[ ! -d "$SCRIPT_DIR" ]]; then SCRIPT_DIR="$PWD"; fi
-. "$SCRIPT_DIR/../downloader.sh"
-
 trapError() {
-	echo 
+	echo
 	echo " ^ Received error ^"
 	cat formula.log
 	exit 1
 }
 
-installPackages(){
-    echo "install"
-    # IS_UBUNTU=`uname -a | grep Ubuntu > /dev/null; echo $?`
-    # UBUNTU_VERSION=`lsb_release -r | awk '{ print $2 }'`
-    # if [ $IS_UBUNTU -eq 0 ] && [ "$UBUNTU_VERSION" == "14.04" ]; then
-    #     echo "installing ppa"
-    #     #sudo add-apt-repository ppa:dns/gnu -y
-    # else
-    #     echo "$UBUNTU_VERSION doesn\'t need ppa"
-    # fi
-    # sudo apt-get update -q
-    # sudo apt-get -y install multistrap unzip coreutils gperf build-essential
-    # sudo apt-get install -y autoconf automake pkgconf rsync
-    # #workaround for https://bugs.launchpad.net/ubuntu/+source/multistrap/+bug/1313787
-    # if [ $IS_UBUNTU -eq 0 ] && [ "$UBUNTU_VERSION"=="14.04" ]; then
-    #     sudo sed -i s/\$forceyes//g /usr/sbin/multistrap
-    # fi
-}
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
 
-createRaspbianImg(){
-    echo " createRaspbianImg "
-    #needed since Ubuntu 18.04 - allow non https repositories
-    mkdir -p raspbian/etc/apt/apt.conf.d/
-	echo 'Acquire::AllowInsecureRepositories "true";' | sudo tee raspbian/etc/apt/apt.conf.d/90insecure
-    multistrap -a armhf -d raspbian -f multistrap.conf
-}
+CROSS_COMPILER=raspbian
+CROSS_SYSROOT=raspbianrootfs
+CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/Raspberry%20Pi%201%2C%20Zero/cross-gcc-14.2.0-pi_0-1.tar.gz/download" 
+CROSS_NAME=cross-gcc-14.2.0-pi_0-1
+CROSS_EXTRACT=cross-pi-gcc-14.2.0-0
 
-downloadToolchain(){
-    echo " downloadToolchain "
-    downloader http://ci.openframeworks.cc/rpi_toolchain_gcc6.tar.bz2 $SILENT_ARGS
-    tar xjf rpi_toolchain_gcc6.tar.bz2
-    rm rpi_toolchain_gcc6.tar.bz2
-}
+wget "${CROSS_URL}" -O ${CROSS_NAME}.tar.gz && tar xf ${CROSS_NAME}.tar.gz && rm ${CROSS_NAME}.tar.gz && mv ${CROSS_EXTRACT} ${CROSS_COMPILER}
 
-downloadFirmware(){
-    echo " downloadFirmware "
-    downloader https://github.com/raspberrypi/firmware/archive/master.zip
-    unzip master.zip
-    cp -r firmware-master/opt raspbian/
-    rm -r firmware-master
-    rm master.zip
-}
 
-relativeSoftLinks(){
-    for link in $(ls -la | grep "\-> /" | sed "s/.* \([^ ]*\) \-> \/\(.*\)/\1->\/\2/g"); do
-        lib=$(echo $link | sed "s/\(.*\)\->\(.*\)/\1/g");
-        link=$(echo $link | sed "s/\(.*\)\->\(.*\)/\2/g");
-        rm $lib
-        ln -s ../../..$link $lib
-    done
+mkdir -p $CROSS_SYSROOT
+cd $CROSS_SYSROOT
+git clone https://github.com/danoli3/rpi_rootfs.git $CROSS_SYSROOT
+sudo chmod +x ./build_rootfs_arm64.sh
+./build_rootfs_arm64.sh download
+./build_rootfs_arm64.sh create
 
-    for f in *; do
-        error=$(grep " \/lib/" $f > /dev/null 2>&1; echo $?)
-        if [ $error -eq 0 ]; then
-            sed -i "s/ \/lib/ ..\/..\/..\/lib/g" $f
-            sed -i "s/ \/usr/ ..\/..\/..\/usr/g" $f
-        fi
-    done
-}
-
-if [[ $(uname -m) != armv* ]]; then
-
-	ROOT=$( cd "$(dirname "$0")" ; pwd -P )
-	echo $ROOT
-	cd $ROOT
-	#installPackages
-	#createRaspbianImg
-	downloadToolchain
-	downloadFirmware
-
-	cd $ROOT/raspbian/usr/lib
-	relativeSoftLinks
-	cd $ROOT/raspbian/usr/lib/arm-linux-gnueabihf
-	relativeSoftLinks
-	cd $ROOT/raspbian/usr/lib/gcc/arm-linux-gnueabihf/4.9
-
-	cd $ROOT/rpi_toolchain/arm-linux-gnueabihf/lib
-	#sed -i "s|/home/arturo/Code/openFrameworks/apothecary/scripts/linuxarm/rpi_toolchain/arm-linux-gnueabihf/lib|$ROOT/rpi_toolchain/arm-linux-gnueabihf/lib|g" libc.so
-	# for f in *.so; do
-	#     sed -i "s|/home/arturo/Code/openFrameworks/apothecary/scripts/linuxarm/rpi_toolchain/arm-linux-gnueabihf/lib|$ROOT/rpi_toolchain/arm-linux-gnueabihf/lib|g" $f
-	# done
-	
-fi
+echo "setup complete"

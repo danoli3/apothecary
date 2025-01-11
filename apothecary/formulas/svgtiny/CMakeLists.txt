@@ -8,7 +8,16 @@ if(NOT LIBXML2_INCLUDE_DIR OR NOT LIBXML2_LIBRARY)
     message(FATAL_ERROR "Please specify the LIBXML2_ROOT variable to the root directory of libxml2 installation.")
 endif()
 
-include_directories(${LIBXML2_INCLUDE_DIR})
+if(NOT LIBXML2_INCLUDE_DIR)
+    # Try to get the value from the environment variable
+    if(DEFINED ENV{LIBXML2_INCLUDE_DIR})
+        set(LIBXML2_INCLUDE_DIR $ENV{LIBXML2_INCLUDE_DIR})
+    else()
+        message(FATAL_ERROR "LIBXML2_INCLUDE_DIR is not set and cannot be found in the environment variables.")
+    endif()
+endif()
+
+get_filename_component(LIBXML2_INCLUDE_DIR ${LIBXML2_INCLUDE_DIR} ABSOLUTE)
 
 file(GLOB_RECURSE SRC_FILES
     src/*.c
@@ -56,6 +65,7 @@ include_directories(
 
 add_library(svgtiny STATIC ${SRC_FILES})
 target_link_libraries(svgtiny dom wapcaplet expat m ${LIBXML2_LIBRARY})
+target_include_directories(svgtiny PUBLIC ${LIBXML2_INCLUDE_DIR})
 
 if(DO_XML_INSTALL)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlerror.h ${CMAKE_CURRENT_SOURCE_DIR}/libdom/bindings/xml/xmlparser.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

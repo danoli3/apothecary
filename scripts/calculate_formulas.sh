@@ -17,7 +17,7 @@ FORMULAS=(
     "FreeImage"
     "libxml2"
     "freetype"
-    "fmod"
+    #"fmod"
     "glew"
     "glfw"
     "glm"
@@ -38,14 +38,30 @@ FORMULAS=(
     "curl"
     # "poco"
     "svgtiny"
-    #"uri"
     "cairo"
     "fmt"
     "metalangle"
 )
 
 # Seperate in bundles on osx
-if [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
+if [[ "$TARGET" =~ ^(linux)$ ]]; then
+    FORMULAS=(
+            "pkg-config"
+            "glm"
+            "json"
+            "utf8"
+            "brotli"
+            "zlib"
+            "glew"
+            "glfw"
+            "libxml2"
+            "svgtiny"
+            "tess2"
+            "kiss"
+            "fmt"
+            "uriparser"
+        )
+elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 if [ "$BUNDLE" == "1" ]; then
 
         FORMULAS=(
@@ -81,7 +97,7 @@ if [ "$BUNDLE" == "1" ]; then
                 "opencv"
                 "portaudio"
                 "libusb"
-                "fmod"
+               # "fmod"
             )
         else
             FORMULAS=(
@@ -153,7 +169,7 @@ elif [ "$TARGET" == "vs" ]; then
             # All formulas
             #"boost"
             "FreeImage"
-            "fmod"
+            #"fmod"
             "glew"
             "glfw"
             "glm"
@@ -182,8 +198,6 @@ elif [ "$TARGET" == "vs" ]; then
         )
     fi
 fi
-
-
 
 array_contains () {
     local array="$1[@]"

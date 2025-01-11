@@ -83,7 +83,7 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} 
 
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..      
         #cleanup to not fail if the other platform is called
         rm -f CMakeCache.txt
@@ -129,7 +129,7 @@ function build() {
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY}
-        cmake --build . --config Release
+        cmake --build . --config Release -j${PARALLEL_MAKE}
 
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
@@ -147,7 +147,7 @@ function build() {
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY}
-        cmake --build . --config Debug 
+        cmake --build . --config Debug -j${PARALLEL_MAKE} 
         rm -f CMakeCache.txt || true
         cd .. 
         echo "--------------------"
@@ -161,7 +161,7 @@ function build() {
         ANDROID_API=24
         ANDROID_PLATFORM=android-${ANDROID_API}
 
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 								
         #stuff to remove when we upgrade android
@@ -344,9 +344,9 @@ function build() {
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -G 'Unix Makefiles'
-        $EMSDK/upstream/emscripten/emmake make -j
+        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         $EMSDK/upstream/emscripten/emmake make install
-        # cmake --build . --config Release
+        # cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
 
     fi

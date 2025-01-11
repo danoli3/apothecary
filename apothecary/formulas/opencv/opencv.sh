@@ -195,7 +195,7 @@ function build() {
 			-DENABLE_STRICT_TRY_COMPILE=ON \
 			-DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
 
-		cmake --build . --config Release
+		cmake --build . --config Release -j${PARALLEL_MAKE}
 		cmake --install . --config Release
 
 		cd ..
@@ -368,7 +368,7 @@ function build() {
 				-DPNG_LIBRARY=${LIBPNG_LIBRARY} \
 				-DBUILD_WITH_STATIC_CRT=OFF \
 				${CMAKE_WIN_SDK}
-		cmake --build . --target install --config Release
+		cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 		cd ..
 
 	elif [ "$TYPE" == "android" ]; then
@@ -386,7 +386,7 @@ function build() {
 			local BUILD_FOLDER="build_android_x86"
 			local BUILD_SCRIPT="cmake_android_x86.sh"
 		fi
-		source ../../android_configure.sh $ABI cmake
+		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		rm -rf $BUILD_FOLDER
 		mkdir $BUILD_FOLDER
@@ -656,7 +656,7 @@ function build() {
 			# -G 'Unix Makefiles'
 
 		cmake --build build --target install --config Release
-		# $EMSDK/upstream/emscripten/emmake make
+		# $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
 		# $EMSDK/upstream/emscripten/emmake make install
 	fi
 

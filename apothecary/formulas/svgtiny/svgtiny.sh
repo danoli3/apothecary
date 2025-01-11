@@ -6,7 +6,7 @@
 #
 # uses a makeifle build system
 
-FORMULA_TYPES=( "linux64" "linuxarmv6l" "linuxarmv7l" "linuxaarch64" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "msys2" )
+FORMULA_TYPES=( "linux" "osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "msys2" )
 FORMULA_DEPENDS=( "zlib" "libxml2" )
 
 # define the version by sha
@@ -73,24 +73,29 @@ function prepare() {
 	cd ..
     cp -rf libdom/bindings libdom/include/dom/
 
+
+    apothecaryDepend download zlib
+	apothecaryDepend prepare zlib
+	apothecaryDepend build zlib
+	apothecaryDepend copy zlib
+
+	apothecaryDepend download libxml2
+	apothecaryDepend prepare libxml2
+	apothecaryDepend build libxml2
+	apothecaryDepend copy libxml2
+
 }
 
 # executed inside the lib src dir
 function build() {
 	LIBS_ROOT=$(realpath $LIBS_DIR)
-    if [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ]; then
+	if [ "$TYPE" == "msys2" ]; then
 
-    if [ "$TYPE" == "msys2" ]; then
-		MINGW_PREFIX="${MINGW_PREFIX:-/mingw64}"  # Default to /mingw64 if MINGW_PREFIX is not set
-        LIBXML2_ROOT="$MINGW_PREFIX"  # Adjust for architecture
+		MINGW_PREFIX="${MINGW_PREFIX:-/mingw64}" 
+        LIBXML2_ROOT="$MINGW_PREFIX"
         LIBXML2_INCLUDE_DIR="$LIBXML2_ROOT/include/libxml2"
-        LIBXML2_LIBRARY="$LIBXML2_ROOT/lib/libxml2.a"  # Adjust path for MSYS2 system libraries
-    else
-        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
-        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/libxml2.a"
-    fi
-
+        LIBXML2_LIBRARY="$LIBXML2_ROOT/lib/libxml2.a"
+  
 	    mkdir -p "build_${TYPE}_${ARCH}"
 	    cd "build_${TYPE}_${ARCH}"
 	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -114,7 +119,54 @@ function build() {
 	        -DLIBXML2_ROOT=$LIBXML2_ROOT \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY 
-	    cmake --build . --config Release
+	    cmake --build . --config Release -j${PARALLEL_MAKE}
+	    cd ..
+    elif [ "$TYPE" == "linux" ]; then
+
+    	if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
+
+        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
+        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBXML2_ROOT}/lib/$TYPE/$PLATFORM"
+
+	    mkdir -p "build_${TYPE}_${PLATFORM}"
+		cd "build_${TYPE}_${PLATFORM}"
+	    DEFS="-DLIBRARY_SUFFIX=${ARCH} \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_C_STANDARD=${C_STANDARD} \
+	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+	        -DCMAKE_CXX_EXTENSIONS=OFF
+	        -DBUILD_SHARED_LIBS=OFF \
+	        -DCMAKE_INSTALL_PREFIX=Release \
+	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+	        -DCMAKE_INSTALL_INCLUDEDIR=include"         
+	    cmake .. ${DEFS} \
+	        -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude -Wno-implicit-function-declaration ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+	        -DCMAKE_BUILD_TYPE=Release \
+	        -DCMAKE_INSTALL_LIBDIR="lib" \
+	        -DDO_XML_INSTALL=ON \
+	        -DSKIP_EXAMPLE=1 \
+	        -DGCC_VERSION=${GCC_VERSION} \
+	        -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+	        -DCMAKE_SYSTEM_NAME=$TYPE \
+    		-DCMAKE_SYSTEM_PROCESSOR=$ABI \
+	        -DLIBXML2_ROOT=${LIBXML2_ROOT} \
+	        -DLIBXML2_INCLUDE_DIR=${LIBXML2_INCLUDE_DIR} \
+	        -DLIBXML2_LIBRARY=${LIBXML2_LIBRARY} \
+	        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+	        -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+	        -DBUILD_SHARED_LIBS=OFF
+	    cmake --build . --config Release -j${PARALLEL_MAKE}
 	    cd ..
 	elif [ "$TYPE" == "vs" ] ; then
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
@@ -159,14 +211,14 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Release --target install
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 		cmake .. ${DEFS} \
 			-UCMAKE_CXX_FLAGS \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 " \
 	        -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
 	        -DDO_XML_INSTALL=ON \
-	        -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+	        -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
 	        -DCMAKE_BUILD_TYPE=Debug \
 	        -DCMAKE_INSTALL_LIBDIR="lib" \
 	        ${CMAKE_WIN_SDK} \
@@ -180,13 +232,13 @@ function build() {
 	        -DCMAKE_INSTALL_PREFIX=. \
 	        -A "${PLATFORM}" \
 	        -G "${GENERATOR_NAME}"
-	    cmake --build . --config Debug --target install
+	    cmake --build . --config Debug -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "android" ]; then
-        source ../../android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
-        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
+        LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$ABI/libxml2.a"
 
         mkdir -p build_${TYPE}_${ABI}
@@ -224,13 +276,13 @@ function build() {
 			-DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include 
-	  	cmake --build . --config Release 
+	  	cmake --build . --config Release -j${PARALLEL_MAKE} 
         cd ..
 
 	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-		LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
-        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+		LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
+        LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
         LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
@@ -258,8 +310,8 @@ function build() {
             -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE} -I${LIBXML2_INCLUDE_DIR} -I${ZLIB_INCLUDE_DIR}" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DLIBXML2_ROOT=$LIBXML2_ROOT \
@@ -271,7 +323,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF 
 
-		 cmake --build . --config Release 
+		 cmake --build . --config Release -j${PARALLEL_MAKE} 
 
 		 cd ..
 	elif [ "$TYPE" == "emscripten" ]; then
@@ -308,9 +360,9 @@ function build() {
             -DUSE_XML2=ON \
 	        -DLIBXML2_INCLUDE_DIR=$LIBXML2_INCLUDE_DIR \
 	        -DLIBXML2_LIBRARY=$LIBXML2_LIBRARY
-	    $EMSDK/upstream/emscripten/emmake make
+	    $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
         # $EMSDK/upstream/emscripten/emmake make install
-	  	# cmake --build . --config Release 
+	  	# cmake --build . --config Release -j${PARALLEL_MAKE} 
 	    cd ..
 	fi
 }
@@ -344,13 +396,14 @@ function copy() {
 		mkdir -p $1/lib/$TYPE/$PLATFORM
         cp -f "build_${TYPE}_$PLATFORM/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/svgtiny.a        
         secure $1/lib/$TYPE/$PLATFORM/svgtiny.a svgtiny.pkl
-	elif [ "$TYPE" == "linux" ] || [ "$TYPE" == "linux64" ] || [ "$TYPE" == "linuxaarch64" ] || [ "$TYPE" == "linuxarmv6l" ] || [ "$TYPE" == "linuxarmv7l" ] || [ "$TYPE" == "msys2" ] ; then
+    elif [ "$TYPE" == "msys2" ] ; then
 		mkdir -p $1/lib/$TYPE/${ARCH}
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
-#    elif [ "$TYPE" == "msys2" ] ; then
-#		cp -Rv libsvgtiny.a $1/lib/$TYPE/libsvgtiny.a
-#        secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
+	elif [ "$TYPE" == "linux" ]  ; then
+		mkdir -p $1/lib/$TYPE/${PLATFORM}/		
+        cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
+        secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
 	fi
 
 	# copy license file
@@ -367,7 +420,7 @@ function clean() {
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
-	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+	elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
 		if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi

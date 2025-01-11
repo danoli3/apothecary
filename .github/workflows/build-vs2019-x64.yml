@@ -19,7 +19,8 @@ env:
   VS_VER: 16
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: true
-    
+  DISABLE_WORKFLOW: "false"
+
 jobs:
   build-vs2019:
     runs-on: windows-2019
@@ -30,6 +31,13 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+    - name: Check if Workflow is disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "Workflow is disabled. Exiting."
+          exit 1
+        fi
     - name: Setup msys2
       uses: msys2/setup-msys2@v2
       with:
@@ -49,7 +57,7 @@ jobs:
           mingw-w64-x86_64-gdb
           mingw-w64-x86_64-make
     - name: Clone repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
     - name: Determine Release
