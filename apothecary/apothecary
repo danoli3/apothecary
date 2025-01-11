@@ -2712,6 +2712,17 @@ if [ "$TYPE" == "linux" ]; then
         export GCC_VERSION=14
     fi
 
+    if [[ "$GCC_VERSION" =~ ^(10|11|12)$ ]]; then
+        export C_STANDARD=17
+        export CPP_STANDARD=20
+    elif [[ "$GCC_VERSION" =~ ^(13|14)$ ]]; then
+        export C_STANDARD=17
+        export CPP_STANDARD=23
+    else
+        export C_STANDARD=17
+        export CPP_STANDARD=17
+    fi
+
     if [[ "$ABI" =~ ^(armv7l|aarch64|armv6l)$ ]]; then
         CROSSCOMPILING=1
     fi
