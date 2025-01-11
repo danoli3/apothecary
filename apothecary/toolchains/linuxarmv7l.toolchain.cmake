@@ -30,8 +30,13 @@ endif()
 set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
 set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
 
-set(CMAKE_FIND_ROOT_PATH ${rootfs_dir})
+
+message(INFO "SYSROOT: ${SYSROOT}")
+message(INFO "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}")
+
 set(CMAKE_SYSROOT ${rootfs_dir})
+
+set(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_ROOT} ${SYSROOT})
 
 if(NOT DEFINED C_STANDARD)
     set(C_STANDARD 17) # Default to C17
