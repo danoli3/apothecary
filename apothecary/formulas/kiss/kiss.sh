@@ -49,7 +49,7 @@ function build() {
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DBUILD_SHARED_LIBS=OFF"         
-	    cmake  ../build/cmake \
+	    cmake  .. \
 	    	${DEFINES} \
 			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
 			-DGCC_VERSION=${GCC_VERSION} \
