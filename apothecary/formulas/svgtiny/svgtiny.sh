@@ -166,7 +166,7 @@ function build() {
 	        -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 	        -D CMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
 	        -DBUILD_SHARED_LIBS=OFF
-	    cmake --build . --config Release -j${PARALLEL_MAKE}
+	    cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 	    cd ..
 	elif [ "$TYPE" == "vs" ] ; then
         LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
@@ -401,9 +401,8 @@ function copy() {
         cp -f "build_${TYPE}_${ARCH}/libsvgtiny.a" $1/lib/$TYPE/libsvgtiny.a
         secure $1/lib/$TYPE/libsvgtiny.a svgtiny.pkl
 	elif [ "$TYPE" == "linux" ]  ; then
-		cp -Rv "build_${TYPE}_${PLATFORM}/include/" $1/
 		mkdir -p $1/lib/$TYPE/${PLATFORM}/		
-        cp -f "build_${TYPE}_${PLATFORM}/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
+        cp -f "build_${TYPE}_${PLATFORM}/Release/libsvgtiny.a" $1/lib/$TYPE/$PLATFORM/libsvgtiny.a
         secure $1/lib/$TYPE/$PLATFORM/libsvgtiny.a svgtiny.pkl
 	fi
 
