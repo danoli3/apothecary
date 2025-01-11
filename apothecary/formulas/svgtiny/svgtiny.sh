@@ -127,9 +127,9 @@ function build() {
             source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
         fi
 
-        LIBXML2_ROOT=$(realpath "$LIBS_ROOT/libxml2/")
-        export LIBXML2_INCLUDE_DIR=$(realpath "$LIBS_ROOT/libxml2/include")
-        export LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
+        LIBXML2_ROOT="$LIBS_ROOT/libxml2/"
+        LIBXML2_INCLUDE_DIR="$LIBS_ROOT/libxml2/include"
+        LIBXML2_LIBRARY="$LIBS_ROOT/libxml2/lib/$TYPE/$PLATFORM/libxml2.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"

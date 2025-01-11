@@ -2721,7 +2721,9 @@ if [ "$TYPE" == "linux" ]; then
             echoWarning "Trying to cross compile but TOOLCHAIN_ROOT not set"
             echoWarning "Trying to continue in case PATH is set to correct toolchain"
             echoWarning "If compiling fails try setting TOOLCHAIN_ROOT to root of cross compiler toolchain"
-            export TOOLCHAIN_PREFIX=aarch64-linux-gnu
+            if [[ -z ${TOOLCHAIN_PREFIX+z} ]]; then
+                export TOOLCHAIN_PREFIX="aarch64-linux-gnu"
+            fi
         fi
         if [[ -z ${SYSROOT+z} ]]; then
             echoError "Trying to cross compile but SYSROOT environment variable is not set"
@@ -2729,6 +2731,9 @@ if [ "$TYPE" == "linux" ]; then
             export SYSROOT="/"
         fi        
     else
+        if [[ -z ${TOOLCHAIN_ROOT+z} ]];  then
+            export TOOLCHAIN_ROOT=""
+        fi
         if [[ -z ${TOOLCHAIN_PREFIX+z} ]];  then
             export TOOLCHAIN_PREFIX=""
         fi
