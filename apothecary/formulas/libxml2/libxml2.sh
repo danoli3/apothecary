@@ -394,9 +394,11 @@ function copy() {
         cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
 
     elif [ "$TYPE" == "msys2" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${ARCH}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
         secure $1/lib/$TYPE/$PLATFORM/libxml2.a
     elif [ "$TYPE" == "linux" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
         secure $1/lib/$TYPE/$PLATFORM/libxml2.a
 
