@@ -49,8 +49,9 @@ sudo apt-get update
 sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 sudo apt-get update
 sudo apt-get install -y qemu-user-static binfmt-support
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
+if  command -v docker &> /dev/null; then
+	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+fi
 
 if [ "$GCC" == "gcc14" ]; then
     # https://gcc.gnu.org/gcc-14/changes.html
