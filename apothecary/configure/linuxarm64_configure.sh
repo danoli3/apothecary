@@ -1,2 +1,3 @@
-# Set the root directory
+#!/usr/bin/env bash
+
 

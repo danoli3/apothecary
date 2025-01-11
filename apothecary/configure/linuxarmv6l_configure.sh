@@ -1,18 +1,16 @@
-# Set the root directory
+#!/usr/bin/env bash
+
 export RPI_ROOT=$SYSROOT/rootfs
-# Set Raspbian toolchain directory
 RASP="$RPI_ROOT"
 
-# Set GCC cross-compilation variables
 export GCC_PREFIX="arm-linux-gnueabihf"
 export GCC_VERSION="14.2.0" # Adjust as needed
-CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
 
+CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
 export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
 
-# Define cross-compilation tools
 export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
 export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
 export CPP="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-cpp"
@@ -22,21 +20,16 @@ export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
-# GCC plugin path for LTO
 GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
-
-# Package configuration path
 export PKG_CONFIG_PATH="$SYSROOT/usr/lib/$GCC_PREFIX/pkgconfig:$SYSROOT/usr/share/pkgconfig:$SYSROOT/usr/lib/pkgconfig"
 
-# Compiler flags for cross-compilation
 export CFLAGS="--sysroot=${RPI_ROOT} \
 	-I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -march=armv6 -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -fPIC -ftree-vectorize -Wno-psabi -pipe -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -DTARGET_POSIX -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -DUSE_EXTERNAL_OMX -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM"
 
-# Linker flags for cross-compilation
 export LDFLAGS="--sysroot=${RPI_ROOT} -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib \
     -L${TOOLCHAIN_ROOT}/lib \
     -Wl,-rpath-link,${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
@@ -44,7 +37,6 @@ export LDFLAGS="--sysroot=${RPI_ROOT} -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PR
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib -lm"
 
-# Host system for cross-compilation
 export HOST="${GCC_PREFIX}"
 
 echo "--------------------"

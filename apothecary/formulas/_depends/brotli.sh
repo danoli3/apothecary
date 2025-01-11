@@ -118,7 +118,7 @@ function build() {
 	elif [[ "$TYPE" =~ ^(linux|)$ ]]; then
     
     if [ $CROSSCOMPILING -eq 1 ]; then
-        source $APOTHECARY_DIR/configure/${TYPE}{PLATFORM}_configure.sh
+        source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
     fi
 
     mkdir -p "build_${TYPE}_${PLATFORM}"
