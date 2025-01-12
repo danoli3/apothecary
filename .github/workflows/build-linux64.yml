@@ -73,8 +73,10 @@ jobs:
       run: scripts/package.sh
       env:
         BUNDLE: ${{ matrix.bundle }}
+
     - name: List output directory
-        run: ls -lah out/
+      run: ls -lah out/
+      
     - name: Update Release 64
       if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
       uses: softprops/action-gh-release@v2.1.0

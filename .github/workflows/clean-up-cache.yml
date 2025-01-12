@@ -1,11 +1,3 @@
-name: cleanup caches by a branch
-# on:
-#   push:
-#     paths-ignore:
-#       - '**/README.md'
-#   pull_request:
-#     paths-ignore:
-#       - '**/README.md'
 name: Cleanup Caches by Branch
 on:
   pull_request:
