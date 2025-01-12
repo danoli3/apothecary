@@ -20,7 +20,12 @@ format_scripts() {
     if ! command -v shfmt &>/dev/null; then
         echo "shfmt is not installed. Please install shfmt to automatically format shell scripts."
         # Uncomment the next line to abort if shfmt is not installed
-        # exit 1
+        return 1
+    fi
+
+    if ! command -v dos2unix &>/dev/null; then
+        echo "dos2unix is not installed. Please install shfmt to automatically format shell scripts."
+        # Uncomment the next line to abort if shfmt is not installed
         return 1
     fi
 
@@ -33,7 +38,9 @@ format_scripts() {
     echo "Formatting shell scripts in $directory..."
 
     # Find and format all .sh files recursively within the directory
-    find "$directory" -type f -name "*.sh" -exec shfmt -i 4 -ci -w {} \;
+    # find "$directory" -type f -name "*.sh" -exec shfmt -i 4 -ci -w {} \;
+
+    find "$directory" -type f -name "*.sh" -exec dos2unix {} \;
 
     # Stage the formatted .sh files with git add
     # Note: This will stage all .sh files in the directory, not just the ones modified by shfmt
