@@ -12,16 +12,40 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TARGET: "xros"
+  NO_FORCE: 1
+  GA_CI_SECRET: ${{ secrets.CI_SECRET }}
+  USE_ARTIFACT: true
+  DISABLE_WORKFLOW: "true"
+
 jobs:
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
   build-macos-platforms:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
     runs-on: macos-14
+    needs: pre-check
     strategy:
       matrix:
         bundle: [1, 2, 3]
     env:
       TARGET: "xros"
       BUNDLE: ${{ matrix.bundle }}
-      DEVELOPER_DIR: "/Applications/Xcode_15.2.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer"
     steps:
       - name: Determine Release
         id: vars
@@ -34,7 +58,7 @@ jobs:
             echo "release=bleeding" >> $GITHUB_ENV
             echo "prerelease=true" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install

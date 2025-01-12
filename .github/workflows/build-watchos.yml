@@ -1,4 +1,4 @@
-name: build-catos
+name: build-watchos
 
 on:
   push:
@@ -7,21 +7,44 @@ on:
   pull_request:
     paths-ignore:
       - '**/README.md'
-      
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TARGET: "watchos"
+  NO_FORCE: 1
+  GA_CI_SECRET: ${{ secrets.CI_SECRET }}
+  USE_ARTIFACT: true
+  DISABLE_WORKFLOW: "true"
+
 jobs:
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
   build-macos-platforms:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
     runs-on: macos-14
+    needs: pre-check
     strategy:
       matrix:
         bundle: [1, 2, 3]
     env:
-      TARGET: "catos"
       BUNDLE: ${{ matrix.bundle }}
-      DEVELOPER_DIR: "/Applications/Xcode_15.2.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode.app/Contents/Developer"
     steps:
       - name: Determine Release
         id: vars
@@ -34,29 +57,35 @@ jobs:
             echo "release=bleeding" >> $GITHUB_ENV
             echo "prerelease=true" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
         run: ./scripts/catos/install.sh
-      - name: Build Catalyst arm64
+      - name: Build WatchOS arm64
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/build.sh
         env:
-          TARGET: "catos"
+          TARGET: "watchos"
           BUNDLE: ${{ matrix.bundle }}
           ARCH: arm64
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-      - name: Build Catalyst x86_64
+      - name: Build WatchOS SIM_x86_64
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/build.sh
         env:
-          TARGET: "catos"
+          TARGET: "watchos"
           BUNDLE: ${{ matrix.bundle }}
-          ARCH: x86_64
+          ARCH: SIM_WATCH
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-      - name: List output directory
-        run: ls -lah out/
+      - name: Build WatchOS SIM_arm64
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: scripts/build.sh
+        env:
+          TARGET: "watchos"
+          BUNDLE: ${{ matrix.bundle }}
+          ARCH: SIM_WATCH
+          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Package Binaries for Artifact
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         working-directory: ${{ env.GITHUB_WORKSPACE }}
@@ -68,7 +97,7 @@ jobs:
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: actions/upload-artifact@v4
         with:
-          name: libs-mac-cataylst-${{ env.TARGET }}-${{ matrix.bundle }}
+          name: libs-watchos-${{ env.TARGET }}-${{ matrix.bundle }}
           path: out/openFrameworksLibs_${{ env.release }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
           retention-days: 2
       - name: Remove .tar.bz2 files
@@ -77,11 +106,13 @@ jobs:
           echo "Removing .tar.bz2 files from out/ directory..."
           rm -f out/*.tar.bz2
           echo "Cleanup complete."
-      - name: Merge our iOS libaries into XC Framework
+      - name: List output directory
+        run: ls -lah out/
+      - name: Merge our watch libaries into XC Framework 
         working-directory: ${{ env.GITHUB_WORKSPACE }}
-        run: scripts/catos/xcframework_all.sh
+        run: scripts/watchos/xcframework_all.sh
         env:
-          TARGET: "catos"
+          TARGET: "watchos"
           BUNDLE: ${{ matrix.bundle }}
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
 #      - name: Package
