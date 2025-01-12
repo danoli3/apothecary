@@ -45,8 +45,8 @@ set(CMAKE_CXX_STANDARD ${CPP_STANDARD} CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler Binary Paths
-set(CMAKE_C_COMPILER "${GCC_PATH}/aarch64-linux-gnu-gcc-${GCC_VERSION}")
-set(CMAKE_CXX_COMPILER "${GCC_PATH}/aarch64-linux-gnu-g++-${GCC_VERSION}")
+set(CMAKE_C_COMPILER "${GCC_PATH}/aarch64-linux-gnu-gcc")
+set(CMAKE_CXX_COMPILER "${GCC_PATH}/aarch64-linux-gnu-g++")
 set(TOOLCHAIN_ROOT "${GCC_PATH}")
 
 # Paths to system libraries and includes
