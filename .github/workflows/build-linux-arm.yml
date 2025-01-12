@@ -14,8 +14,25 @@ env:
   USE_ARTIFACT: false
   DISABLE_WORKFLOW: "false"
 
-jobs:
+jobs:  
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
   build-linux-aarch64:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    needs: pre-check
     runs-on: ubuntu-latest
     env:
       TARGET: linux
@@ -102,6 +119,8 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv6l-pi-1zero:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    needs: pre-check
     runs-on: ubuntu-latest
     env:
       TARGET: linux
@@ -172,6 +191,8 @@ jobs:
           files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
 
   build-linux-armv7-pi3ab45:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    needs: pre-check
     runs-on: ubuntu-latest
     env:
       TARGET: linux
