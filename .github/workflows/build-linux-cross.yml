@@ -37,7 +37,7 @@ jobs:
       run: |
         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
           echo "Workflow is disabled. Exiting."
-          exit 1
+          exit 78
         fi
     - name: Determine Release
       id: vars

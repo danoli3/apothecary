@@ -36,7 +36,7 @@ jobs:
       run: |
         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
           echo "Workflow is disabled. Exiting."
-          exit 1
+          exit 78
         fi
     - name: Setup msys2
       uses: msys2/setup-msys2@v2
