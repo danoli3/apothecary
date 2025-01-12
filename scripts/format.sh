@@ -44,7 +44,7 @@ format_scripts() {
     # find "$directory" -type f -name "*.sh" -exec {} \;
 
     # echo "Listing all .sh files without 755 permissions in $directory:"
-	# find "$directory" -type f -name "*.sh" ! -perm 755 -exec ls -l {} \;
+	find "$directory" -type f -name "*.sh" ! -perm 755 -exec ls -l {} \;
 
     sh_files=$(find "$directory" -type f -name "*.sh")
     if [ -z "$sh_files" ]; then
@@ -62,10 +62,10 @@ format_scripts() {
         # shfmt -i 4 -ci -w "$file"
 
         # Fix line endings with dos2unix
-        dos2unix "$file" && echo "Converted to Unix line endings: [$file]"
+        # dos2unix "$file" && echo "Converted to Unix line endings: [$file]"
 
         # Set permissions to 755
-        chmod 755 "$file" && echo "Set permissions to 755: [$file]"
+        chmod +x "$file" && echo "Set permissions to +x: [$file]"
     done
 
     # Stage the formatted .sh files with git add
