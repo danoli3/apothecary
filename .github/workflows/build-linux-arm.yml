@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TARGET: linux
-      ARCH: armv6
+      ARCH: armv6l
       WORKDIR: "/home/runner/work/apothecary/apothecary"
       SYSROOT: "/home/runner/work/apothecary/apothecary/raspbian_rootfs"
       TOOLCHAIN_ROOT: "/home/runner/work/apothecary/apothecary/raspbian"
