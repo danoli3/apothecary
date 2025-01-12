@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
+
 set -o pipefail
 # trap any script errors and exit
 trap "trapError" ERR
@@ -15,16 +19,17 @@ sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texin
 sudo aptitude install -y gperf
 wget https://raw.githubusercontent.com/abhiTronix/raspberry-pi-cross-compilers/master/utils/SSymlinker
 
-ROOT=/home/runner/work/apothecary/apothecary
-echo $ROOT
-cd $ROOT
-export RASP="$ROOT/raspbian"
+
+echo $APOTHECARY_LEVEL
+cd $APOTHECARY_LEVEL
+export RASP_CROSSCOMPILER="$APOTHECARY_LEVEL/raspbian"
+export RASP_ROOTFS="$APOTHECARY_LEVEL/raspbian_rootfs"
 
 export ARCH=aarch64
 export TYPE=linux
 
-PATH=$RASP/bin:$PATH
-LD_LIBRARY_PATH=$RASP/lib
+PATH=$RASP_CROSSCOMPILER/bin:$PATH
+LD_LIBRARY_PATH=$RASP_CROSSCOMPILER/lib
 
 export GCC_PREFIX=aarch64-linux-gnu
 export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/

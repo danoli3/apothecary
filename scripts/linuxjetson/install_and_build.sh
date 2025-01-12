@@ -15,7 +15,6 @@ sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texin
 sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev ccache
 sudo aptitude install -y gperf
 
-
 echo "calculate formulas"
 $ROOT/scripts/calculate_formulas.sh
 
