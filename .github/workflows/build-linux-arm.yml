@@ -31,18 +31,18 @@ jobs:
           echo "::set-output name=disabled::false"
         fi
     - name: Determine Release
-        id: vars
-        shell: bash
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "::set-output name=RELEASE=${{ github.ref_name }}"
-          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "::set-output name=RELEASE=nightly"
-          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-            echo "::set-output name=RELEASE=latest"
-          else
-            echo "::set-output name=RELEASE=latest"
-          fi
+      id: vars
+      shell: bash
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "::set-output name=RELEASE=${{ github.ref_name }}"
+        elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          echo "::set-output name=RELEASE=nightly"
+        elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+          echo "::set-output name=RELEASE=latest"
+        else
+          echo "::set-output name=RELEASE=latest"
+        fi
   build-linux-aarch64:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
