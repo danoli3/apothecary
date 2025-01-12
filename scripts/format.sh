@@ -1,6 +1,8 @@
 #!/bin/bash
-
+# set -x
+echo " Format Bash Scripts all nice"
 printHelp(){
+	echo "Help"
 cat << EOF
     Usage:
     ."$SCRIPT_DIR/format.sh"
@@ -13,15 +15,16 @@ EOF
 format_scripts() {
     local directory="$1"
 
-    if [ -z "$1" ]
-    then printHelp; fi
+    if [ -z "$1" ]; then
+    	printHelp;
+    fi
 
     # Check if shfmt is installed
-    if ! command -v shfmt &>/dev/null; then
-        echo "shfmt is not installed. Please install shfmt to automatically format shell scripts."
-        # Uncomment the next line to abort if shfmt is not installed
-        return 1
-    fi
+    # if ! command -v shfmt &>/dev/null; then
+    #     echo "shfmt is not installed. Please install shfmt to automatically format shell scripts."
+    #     # Uncomment the next line to abort if shfmt is not installed
+    #     return 1
+    # fi
 
     if ! command -v dos2unix &>/dev/null; then
         echo "dos2unix is not installed. Please install shfmt to automatically format shell scripts."
@@ -31,16 +34,39 @@ format_scripts() {
 
     # Check if the directory exists
     if [ ! -d "$directory" ]; then
-        echo "The specified directory does not exist: $directory"
+        echo "The specified directory does not exist: [$directory]"
         return 1
     fi
 
-    echo "Formatting shell scripts in $directory..."
+    echo "Formatting shell scripts in [$directory]..."
 
     # Find and format all .sh files recursively within the directory
-    # find "$directory" -type f -name "*.sh" -exec shfmt -i 4 -ci -w {} \;
+    # find "$directory" -type f -name "*.sh" -exec {} \;
 
-    find "$directory" -type f -name "*.sh" -exec dos2unix {} \;
+    # echo "Listing all .sh files without 755 permissions in $directory:"
+	# find "$directory" -type f -name "*.sh" ! -perm 755 -exec ls -l {} \;
+
+    sh_files=$(find "$directory" -type f -name "*.sh")
+    if [ -z "$sh_files" ]; then
+        echo "No .sh files found in [$directory.]"
+        return 0
+    fi
+
+    echo "Found the following .sh files:"
+    echo "$sh_files"
+
+    # Iterate over the list of files
+    for file in $sh_files; do
+        echo " Processing: [$file]"
+
+        # shfmt -i 4 -ci -w "$file"
+
+        # Fix line endings with dos2unix
+        dos2unix "$file" && echo "Converted to Unix line endings: [$file]"
+
+        # Set permissions to 755
+        chmod 755 "$file" && echo "Set permissions to 755: [$file]"
+    done
 
     # Stage the formatted .sh files with git add
     # Note: This will stage all .sh files in the directory, not just the ones modified by shfmt
@@ -48,3 +74,5 @@ format_scripts() {
 
     echo "Shell scripts formatted and staged successfully."
 }
+
+format_scripts $1
