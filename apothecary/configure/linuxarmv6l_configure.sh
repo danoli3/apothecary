@@ -56,14 +56,30 @@ export LDFLAGS="--sysroot=${SYSROOT} -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PRE
 
 export HOST="${GCC_PREFIX}"
 
+tools=("gcc" "g++" "cpp" "ar" "as" "ranlib" "gfortran" "ld")
+
+# Check each tool
+for tool in "${tools[@]}"; do
+    filepath="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-${tool}"
+    if [[ -f "$filepath" ]]; then
+        echo "Found: $filepath"
+    else
+        echo "Missing: [$tool] - [$filepath]"
+    fi
+done
+
+# Debugging output
 echo "--------------------"
 echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
-echo "Toolchain Path: $RASP"
+echo "ROOTFS Path: $ROOTFS"
 echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
+echo "CROSS_ARCH: $CROSS_ARCH"
+echo "HOST_ARCH: $HOST_ARCH"
+echo "HOST_PLATFORM: $HOST_PLATFORM"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"
-echo "Path: $PATH"
+echo "Path: [$PATH]"
 echo "--------------------"

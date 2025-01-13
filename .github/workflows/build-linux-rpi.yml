@@ -1,4 +1,4 @@
-name: build-linux-arm
+name: build-linux-rpi
 on:
   push:
     paths-ignore:

@@ -60,21 +60,36 @@ export LDFLAGS="--sysroot=${RPI_ROOT} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
     -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 
-[ -d "${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" ] && ls -la "${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" || echo "Directory not found: ${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+[ -d "${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" ] && ls -la "${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" || echo "Directory not found: ${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
 [ -d "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" ] && ls -la "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" || echo "Directory not found: ${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64"
 [ -d "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" ] && ls -la "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" || echo "Directory not found: ${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
 
 export HOST="${GCC_PREFIX}"
+
+tools=("gcc" "g++" "cpp" "ar" "as" "ranlib" "gfortran" "ld")
+
+# Check each tool
+for tool in "${tools[@]}"; do
+    filepath="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-${tool}"
+    if [[ -f "$filepath" ]]; then
+        echo "Found: $filepath"
+    else
+        echo "Missing: [$tool] - [$filepath]"
+    fi
+done
 
 # Debugging output
 echo "--------------------"
 echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
 echo "Using GCC Version: $GCC_VERSION"
 echo "Library Path: $LIBRARY_PATH"
-echo "SYSROOT Path: $RASP"
+echo "ROOTFS Path: $ROOTFS"
 echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
+echo "CROSS_ARCH: $CROSS_ARCH"
+echo "HOST_ARCH: $HOST_ARCH"
+echo "HOST_PLATFORM: $HOST_PLATFORM"
 echo "GCC Path: $GCCPATH"
 echo "LDFLAGS : $LDFLAGS"
 echo "CFLAGS : $CFLAGS"
-echo "Path: $PATH"
+echo "Path: [$PATH]"
 echo "--------------------"
