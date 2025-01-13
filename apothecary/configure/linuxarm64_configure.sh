@@ -38,7 +38,7 @@ export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
-export CFLAGS="--sysroot=${RPI_ROOT}"
+export CFLAGS="--sysroot=${ROOTFS}"
  # \
  #    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
  #    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
