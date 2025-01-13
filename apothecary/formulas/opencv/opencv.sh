@@ -88,7 +88,7 @@ function build() {
 		-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
 		-DPNG_LIBRARY=${LIBPNG_LIBRARY}"
 
-		DEFS="
+		DEFINES="
 		-DBUILD_DOCS=OFF \
 		-DENABLE_BUILD_HARDENING=ON \
 		-DBUILD_EXAMPLES=OFF \
@@ -178,7 +178,7 @@ function build() {
 
 		FRAMEWORKS="-framework Foundation -framework AVFoundation -framework CoreFoundation -framework CoreVideo"
 
-		cmake .. ${CORE_DEFS} ${DEFS} ${EXTRA_DEFS} \
+		cmake .. ${CORE_DEFS} ${DEFINES} ${EXTRA_DEFS} \
 			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
 			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
 			-DPLATFORM=$PLATFORM \
@@ -218,7 +218,7 @@ function build() {
 		FLAGS_RELEASE=$(echo $FLAGS_RELEASE | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 		FLAGS_DEBUG=$(echo $FLAGS_DEBUG | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 
-		DEFS="
+		DEFINES="
 				-DCMAKE_C_STANDARD=${C_STANDARD} \
 				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -321,7 +321,7 @@ function build() {
 				EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON"
 			fi
 
-		cmake .. ${DEFS} \
+		cmake .. ${DEFINES} \
 				-A "${PLATFORM}" \
 				-G "${GENERATOR_NAME}" \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -345,7 +345,7 @@ function build() {
 				-DBUILD_WITH_STATIC_CRT=OFF
 
 		 cmake --build . --target install --config Debug
-		 cmake .. ${DEFS} \
+		 cmake .. ${DEFINES} \
 				-A "${PLATFORM}" \
 				-G "${GENERATOR_NAME}" \
 				-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \

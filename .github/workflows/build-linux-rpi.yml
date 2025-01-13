@@ -80,8 +80,11 @@ jobs:
       - name: Setup Cross Compiler and Target Local File System
         run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
       
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Script Install
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+
+      - name: Script Build
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
 
       - name: Update Release ARM64
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
@@ -127,8 +130,12 @@ jobs:
       - name: Setup Cross Compiler and Target Local File System
         run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
       
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Script Install
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+
+      - name: Script Build
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
+
       - name: Update Release armv6l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v2.1.0
@@ -196,8 +203,11 @@ jobs:
       - name: Setup Cross Compiler and Target Local File System
         run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
       
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install_and_build.sh
+      - name: Script Install
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+
+      - name: Script Build
+        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
 
       - name: Update Release armv7l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
