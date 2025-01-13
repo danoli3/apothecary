@@ -8,7 +8,7 @@ cd $APOTHECARY_LEVEL
 CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="arm"
-CROSS_CPU="cortex-a7"
+CROSS_CPU=${CROSS_CPU:-"cortex-a7"}
 CROSSCOMPILE=${CROSSCOMPILE:-1}
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
@@ -45,7 +45,7 @@ export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -march=armv7-a -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard \
+    -march=armv7-a -mcpu=${CROSS_CPU} -mfpu=neon -mfloat-abi=hard \
     -fPIC -ftree-vectorize -Wno-psabi -pipe \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS \

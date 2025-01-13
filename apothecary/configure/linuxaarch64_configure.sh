@@ -42,18 +42,18 @@ GCCPATH="$TOOLCHAIN_ROOT/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
 export RANLIBFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
 
-export CFLAGS="--sysroot=${RPI_ROOT} \
+export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
     -D_FILE_OFFSET_BITS=64 \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
-export LDFLAGS="--sysroot=${RPI_ROOT} \
-    -Wl,-rpath-link,${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -L${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -Wl,-rpath-link,${RPI_ROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -L${RPI_ROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
+export LDFLAGS="--sysroot=${SYSROOT} \
+    -Wl,-rpath-link,${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -Wl,-rpath-link,${SYSROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${SYSROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
