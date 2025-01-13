@@ -44,6 +44,7 @@ jobs:
       ARCH: ${{ matrix.ARCH }}
       SDK: ${{ matrix.SDK }}
       NDK: ${{ matrix.NDK }}
+      NDK_ROOT: ${{ matrix.NDK }}
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Determine Release
@@ -59,6 +60,8 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
+      - name: Scripts Setup
+        run: ./scripts/$TARGET/setup.sh
       - name: Scripts Calc Formula Android - ${{ matrix.ARCH }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
