@@ -125,7 +125,6 @@ function build() {
 		-DWITH_IMAGEIO=OFF \
 		-DWITH_IPP=OFF \
 		-DWITH_OPENCL=OFF \
-
 		-DWITH_OPENNI=OFF \
 		-DWITH_OPENNI2=OFF \
 		-DWITH_QT=OFF \
@@ -171,7 +170,7 @@ function build() {
 			fi
 	fi
 
-		if [[ "$TYPE" =~ ^(tvos)$ ]]; then
+		if [[ "$TYPE" =~ ^(tvos|xros|watchos)$ ]]; then
 			EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
 		else
 			EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
