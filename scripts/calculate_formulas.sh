@@ -61,6 +61,25 @@ if [[ "$TARGET" =~ ^(linux)$ ]]; then
             "fmt"
             "uriparser"
         )
+elif [[ "$TARGET" =~ ^(android)$ ]]; then
+    FORMULAS=(
+            "pkg-config"
+            "glm"
+            "json"
+            "utf8"
+            "brotli"
+            "zlib"
+            "libxml2"
+            "svgtiny"
+            "tess2"
+            "kiss"
+            "fmt"
+            "pugixml"
+            "uriparser"
+            "freetype"
+            "FreeImage"
+            "assimp"
+        )
 elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 if [ "$BUNDLE" == "1" ]; then
 
