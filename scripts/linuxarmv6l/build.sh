@@ -70,7 +70,7 @@ export TYPE=linux
 #echo $GCCPATH
 
 echo "calculate formulas"
-$ROOT/scripts/calculate_formulas.sh
+$APOTHECARY_LEVEL/scripts/calculate_formulas.sh
 
 echo "building"
-$ROOT/scripts/build.sh
+$APOTHECARY_LEVEL/scripts/build.sh
