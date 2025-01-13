@@ -3,7 +3,7 @@
 # metalangle
 # https://github.com/kakashidinho/metalangle.git
 
-FORMULA_TYPES=( "osx" "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "osx" "ios" "watchos" "tvos" ) # "catos" "xros" @ TODO
 FORMULA_DEPENDS=( )
 
 # define the version

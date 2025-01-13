@@ -44,12 +44,6 @@ jobs:
         PTHREADS: [0, 1]
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Check if Workflow is disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 78
-          fi
       - name: Docker Step
         run: docker run -di --name emscripten -v $PWD:/src emscripten/emsdk:${{ env.EMSDK_VERSION }} bash
       - name: Scripts Calc Formula
