@@ -49,10 +49,10 @@ export ANDROID_NDK_HOME=$NDK_ROOT
 export TOOLCHAIN_TYPE=llvm${CLANG_VERSION}
 export TOOLCHAIN=${NDK_ROOT}/toolchains/${TOOLCHAIN_TYPE}/prebuilt/${HOST_PLATFORM}
 
-if [[ "$NDK_VERSION_MAJOR" = "23"  || "$NDK_VERSION_MAJOR" = "24" ]]; then
-    export SYSROOT="${TOOLCHAIN}/sysroot"
-    echo "NDK_VESION_MAJOR: ${NDK_VERSION_MAJOR}"
-fi
+# if [[ "$NDK_VERSION_MAJOR" = "23"  || "$NDK_VERSION_MAJOR" = "24" ]]; then
+     export SYSROOT="${TOOLCHAIN}/sysroot"
+#     echo "NDK_VESION_MAJOR: ${NDK_VERSION_MAJOR}"
+# fi
 
 echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
 echo "SYSROOT: $SYSROOT"

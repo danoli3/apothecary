@@ -19,7 +19,24 @@ if(NOT DEFINED SYSROOT)
     if(DEFINED ENV{SYSROOT})
         set(SYSROOT $ENV{SYSROOT})
     else()
-        set(SYSROOT /) # Default value
+        set(SYSROOT "/")
+    endif()
+endif()
+
+if(NOT DEFINED TOOLCHAIN_ROOT)
+    if(DEFINED ENV{TOOLCHAIN_ROOT})
+        set(TOOLCHAIN_ROOT $ENV{TOOLCHAIN_ROOT})
+    else()
+        set(TOOLCHAIN_ROOT "/" )
+    endif()
+endif()
+
+if(NOT DEFINED CROSS_CPU)
+    if(DEFINED ENV{CROSS_CPU})
+        set(CROSS_CPU $ENV{CROSS_CPU})
+    else()
+        set(CROSS_CPU cortex-a53)
+        message(WARNING "CROSS_CPU not specified. Defaulting to CROSS_CPU=cortex-a53")
     endif()
 endif()
 
@@ -28,7 +45,7 @@ if(NOT DEFINED GCC_PATH)
     if(DEFINED ENV{GCC_PATH})
         set(GCC_PATH $ENV{GCC_PATH}) # Use GCC_PATH from the env
     else()
-        set(GCC_PATH "/usr/bin") # Default path
+        set(GCC_PATH "/usr/bin")
     endif()
 endif()
 
@@ -47,7 +64,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Compiler Binary Paths
 set(CMAKE_C_COMPILER "${GCC_PATH}/aarch64-linux-gnu-gcc")
 set(CMAKE_CXX_COMPILER "${GCC_PATH}/aarch64-linux-gnu-g++")
-set(TOOLCHAIN_ROOT "${GCC_PATH}")
 
 # Paths to system libraries and includes
 set(CMAKE_SYSROOT "/")
@@ -82,9 +98,16 @@ set(EXTRA_LINKS "-Wl,
     -L${CMAKE_SYSROOT}/lib/aarch64-linux-gnu \
     -Wl,-rpath-link,${CMAKE_SYSROOT}/lib/aarch64-linux-gnu")
 
+set(CFLAGS "--sysroot=${SYSROOT} \
+    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
+    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
+    -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
+    -D_FILE_OFFSET_BITS=64 \
+    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST")
+
 # Compiler and linker flags
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -march=armv8-a ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=armv8-a ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS} -fPIC -O3 -Wall -Wextra -march=armv8-a ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS} -fPIC -O3 -Wall -Wextra -std=c++${CPP_STANDARD} -march=armv8-a ${EXTRA_LINKS}")
 set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie ${EXTRA_LINKS}")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC")
 

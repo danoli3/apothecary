@@ -27,6 +27,15 @@ if(NOT DEFINED SYSROOT)
     endif()
 endif()
 
+if(NOT DEFINED CROSS_CPU)
+    if(DEFINED ENV{CROSS_CPU})
+        set(CROSS_CPU $ENV{CROSS_CPU})
+    else()
+        set(CROSS_CPU cortex-a7)
+        message(WARNING "CROSS_CPU not specified. Defaulting to CROSS_CPU=cortex-a7")
+    endif()
+endif()
+
 set(tools ${TOOLCHAIN_ROOT}) # warning change toolchain path here.
 set(rootfs_dir ${SYSROOT}/rootfs) # warning change compiled rootfs path here.
 
@@ -63,8 +72,8 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHIT
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
 # Update compiler flags for ARMv7
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv7-a -mfpu=vfp -mcpu=cortex-a7 -mfloat-abi=hard ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv7-a -mfpu=vfp -mcpu=cortex-a7 -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv7-a -mfpu=vfp -mcpu=${CROSS_CPU} -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv7-a -mfpu=vfp -mcpu=${CROSS_CPU} -mfloat-abi=hard ${EXTRA_LINKS}")
 
 # NEON
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon")
