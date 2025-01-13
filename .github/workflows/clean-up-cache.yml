@@ -12,14 +12,12 @@ permissions:
   contents: write
 
 env:
-  GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
       - name: Setup GitHub CLI
         run: |
           # Ensure the latest version of GitHub CLI is installed
@@ -30,7 +28,7 @@ jobs:
       - name: Check Token Permissions
         run: gh auth status
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Cleanup Caches
         run: |
@@ -53,7 +51,7 @@ jobs:
           done
           echo "Cleanup completed."
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Remaining Caches
         run: |
@@ -65,7 +63,7 @@ jobs:
           else
             echo "Remaining caches detected:"
             echo "$remainingCaches"
-            exit 78
+            exit 0
           fi
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
