@@ -9,7 +9,7 @@ CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="arm"
 CROSS_CPU="cortex-a7"
-CROSS_CPU="cortex-a7"
+CROSSCOMPILE=${CROSSCOMPILE:-1}
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"

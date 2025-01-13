@@ -4,7 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPT_DIR
 APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
 cd $APOTHECARY_LEVEL
-
+CROSSCOMPILE=${CROSSCOMPILE:-0}
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     ROOTFS="/"
 else

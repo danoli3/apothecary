@@ -8,6 +8,7 @@ cd $APOTHECARY_LEVEL
 CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="arm"
+CROSSCOMPILE=${CROSSCOMPILE:-1}
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"

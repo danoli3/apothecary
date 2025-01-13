@@ -7,6 +7,7 @@ cd $APOTHECARY_LEVEL
 
 CROSS_COMPILER="android"
 CROSS_SYSROOT="android_ndk"
+CROSSCOMPILE=${CROSSCOMPILE:-1}
 CROSS_ARCH="$1"
 export ABI=$1
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
