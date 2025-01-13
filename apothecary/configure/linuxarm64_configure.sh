@@ -38,6 +38,25 @@ export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
+export CFLAGS="--sysroot=${RPI_ROOT}"
+ # \
+ #    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
+ #    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
+ #    -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
+ #    -D_FILE_OFFSET_BITS=64 \
+ #    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
+
+export LDFLAGS="--sysroot=${ROOTFS}"
+    # -Wl,-rpath-link,${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    # -L${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    # -Wl,-rpath-link,${ROOTFS}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
+    # -L${ROOTFS}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
+    # -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
+    # -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
+    # -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
+    # -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
+    # -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
+
 
 tools=("gcc" "g++" "cpp" "ar" "as" "ranlib" "gfortran" "ld")
 
