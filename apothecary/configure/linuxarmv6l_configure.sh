@@ -38,8 +38,8 @@ export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
 # GCCPATH="$TOOLCHAIN_ROOT/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
-export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
-export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
+# export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
+# export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export PKG_CONFIG_PATH="$SYSROOT/usr/lib/$GCC_PREFIX/pkgconfig:$SYSROOT/usr/share/pkgconfig:$SYSROOT/usr/lib/pkgconfig"
 
 export CFLAGS="--sysroot=${SYSROOT} \
