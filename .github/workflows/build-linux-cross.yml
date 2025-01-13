@@ -72,6 +72,10 @@ jobs:
 
     - name: Scripts Calc Formula - ${{matrix.cfg.target}} - ${{matrix.cfg.gcc}}
       run: ./scripts/calculate_formulas.sh
+
+    - name: Scripts Setup
+      run: ./scripts/linux${PLATFORM}/setup.sh
+
     - name: Scripts Install
       run: ./scripts/linux${PLATFORM}/install.sh
       

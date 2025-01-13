@@ -2,20 +2,9 @@
 set -e
 APOTHECARY_PATH=$(cd $(dirname "$0"); pwd -P)/../../apothecary
 
-sudo apt-get update -q
-sudo apt-get remove mssql-tools 2> /dev/null # this is because mysql-tools includes a program called bcp which conflicts with boosts bcp
-sudo apt-get install -y libboost-tools-dev gperf
-sudo apt-get update && sudo apt-get install -y autoconf libtool automake
-
-sudo apt remove --purge --auto-remove cmake
-
-# from https://apt.kitware.com - to get latest cmake
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-
-sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ xenial main'
-sudo apt update
-sudo apt install -y cmake
-cmake --version
+sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev cmake unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils libtool dos2unix
+sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev ccache
+sudo aptitude install -y gperf
 
 NDK_VERSION="r24"
 export NDK_ROOT="$(realpath ~/)/android-ndk-${NDK_VERSION}/"

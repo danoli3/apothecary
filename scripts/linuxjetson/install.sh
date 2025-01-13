@@ -4,6 +4,11 @@ set -o pipefail
 # trap any script errors and exit
 trap "trapError" ERR
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
+cd $APOTHECARY_LEVEL
+
 trapError() {
 	echo
 	echo " ^ Received error ^"
@@ -15,11 +20,4 @@ sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texin
 sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev ccache
 sudo aptitude install -y gperf
 
-echo "calculate formulas"
-$ROOT/scripts/calculate_formulas.sh
-
-export ARCH=jetson
-export TYPE=linux
-
-echo "building"
-$ROOT/scripts/build.sh
+echo "install depeneds formulas  complete"
