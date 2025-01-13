@@ -17,7 +17,7 @@ env:
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: true
-  DISABLE_WORKFLOW: "true"
+  DISABLE_WORKFLOW: "false"
 
 jobs:
   pre-check:
@@ -50,12 +50,14 @@ jobs:
         id: vars
         shell: bash
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "release=nightly" >> $GITHUB_ENV
-            echo "prerelease=false" >> $GITHUB_ENV
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+            echo "RELEASE=nightly" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-            echo "release=bleeding" >> $GITHUB_ENV
-            echo "prerelease=true" >> $GITHUB_ENV
+            echo "RELEASE=latest" >> $GITHUB_ENV
+          else
+            echo "RELEASE=latest" >> $GITHUB_ENV
           fi
       - uses: actions/checkout@v4.2.2
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
