@@ -44,7 +44,6 @@ echoDots(){
 }
 
 echo "GCC Version: [$GCC]"
-
 sudo apt-get update
 sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 sudo apt-get update

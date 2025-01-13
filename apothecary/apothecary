@@ -119,12 +119,12 @@ fi
 BUILD_MACHINE_ARCH=`uname -m`
 
 # paths to android SDK, etc
-ANDROID_NDK_ROOT=
-ANDROID_SDK_ROOT=
-NDK_VERSION=24
-NDK_VERSION_MAJOR=24
-ANDROID_API=21
-ANDROID_PLATFORM=android-${ANDROID_API}
+# ANDROID_NDK_ROOT={$}
+# ANDROID_SDK_ROOT=
+# NDK_VERSION=24
+# NDK_VERSION_MAJOR=24
+# ANDROID_API=21
+# ANDROID_PLATFORM=android-${ANDROID_API}
 
 ################################################################################
 ### PRIVATE VARS, for internal use
@@ -144,7 +144,7 @@ mkdir -p ${APOTHECARY_DIR}/build
 FORMULAS_DIR=$(realpath ${APOTHECARY_DIR}/formulas)
 BUILD_DIR=$(realpath ${APOTHECARY_DIR}/build)
 OF_ROOT=$(realpath ${APOTHECARY_DIR}/../../..)
-REL_LIBS_DIR=${APOTHECARY_DIR}/../
+REL_LIBS_DIR=${APOTHECARY_DIR}/../out
 ADDONS_DIR=$OF_ROOT/addons
 REL_ADDONS_DIR=$OF_ROOT/addons
 # echo "OF: $OF_ROOT/"
@@ -215,7 +215,7 @@ if [ -z "${LOADSAVE_RESULT+x}" ]; then
 fi
 
 if [ -z "${GCC+x}" ]; then
-    GCC=gcc14 
+    GCC=gcc14
 fi
 
 WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
@@ -1034,7 +1034,7 @@ get_directory_path() {
             final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         android)
-            final_path="${base_dir}/lib/${type}/${pAbi}/"
+            final_path="${base_dir}/lib/${type}/${pPlatform}/"
             ;;
         *)
             echo "Unsupported type: $type" >&2
@@ -1111,11 +1111,8 @@ function installAndroidToolchain() {
 				--stl=libc++
 		fi
 	fi
-
     export PLATFORM=$ARCH
-
 	cd $WD
-
 }
 
 # check if a given string matches anything in VALID_TYPES,
@@ -2589,6 +2586,7 @@ echoVerbose "Architecture: $ARCH"
 echoVerbose "Build dir: $BUILD_DIR"
 
 # use default libs dir?
+mkdir -p $REL_LIBS_DIR
 if [ -z "${CUSTOM_LIBS_DIR+x}" ] ; then
 	export LIBS_DIR=$REL_LIBS_DIR
     export REAL_LIBS_DIR=$REL_LIBS_DIR
@@ -2620,24 +2618,24 @@ if [[ "$TYPE" == "android" ]] ; then
     if [ -z "${NDK_ROOT+x}" ]; then
         NDK_ROOT=NDK_ROOT=/Users/one/Library/Android/sdk/ndk/25.2.9519653
         echoError " NDK_ROOT not defined! This is ussually /Users/{username}/Library/Android/sdk/ndk on macOS"
+        exit 1
     fi
-
-	if [[ -e ${APOTHECARY_DIR}/paths.make ]] ; then
-		source ${APOTHECARY_DIR}/paths.make
-		ANDROID_NDK_ROOT=${NDK_ROOT}
-		echoVerbose "Android NDK root: $ANDROID_NDK_ROOT"
-	elif [[ -e ${OF_ROOT}/libs/openFrameworksCompiled/project/android/paths.make ]] ; then
-		source $OF_ROOT/libs/openFrameworksCompiled/project/android/paths.make
-		ANDROID_NDK_ROOT=${NDK_ROOT}
-		echoVerbose "Android NDK root: $ANDROID_NDK_ROOT"
-	elif [[ -e ${NDK_ROOT} ]]; then
-		ANDROID_NDK_ROOT=${NDK_ROOT}
-	else
-		echoError "Targeting android, but can't find the SDK. Missing"
-		echoError "paths.make in apothecary folder or"
-		echoError "projects/android/paths.make in OF folder"
-		exit 1
-	fi
+	# if [[ -e ${APOTHECARY_DIR}/paths.make ]] ; then
+	# 	source ${APOTHECARY_DIR}/paths.make
+	# 	ANDROID_NDK_ROOT=${NDK_ROOT}
+	# 	echoVerbose "Android NDK root: $ANDROID_NDK_ROOT"
+	# elif [[ -e ${OF_ROOT}/libs/openFrameworksCompiled/project/android/paths.make ]] ; then
+	# 	source $OF_ROOT/libs/openFrameworksCompiled/project/android/paths.make
+	# 	ANDROID_NDK_ROOT=${NDK_ROOT}
+	# 	echoVerbose "Android NDK root: $ANDROID_NDK_ROOT"
+	# elif [[ -e ${NDK_ROOT} ]]; then
+	# 	ANDROID_NDK_ROOT=${NDK_ROOT}
+	# else
+	# 	echoError "Targeting android, but can't find the SDK. Missing"
+	# 	echoError "paths.make in apothecary folder or"
+	# 	echoError "projects/android/paths.make in OF folder"
+	# 	exit 1
+	# fi
 
 	if [ "$ARCH" == "armv7" ]; then
 	    ABI=armeabi-v7a
@@ -2696,6 +2694,7 @@ if [ "$TYPE" == "linux" ]; then
     elif [[ "$ARCH" =~ ^(arm64)$ ]]; then
         export PLATFORM="arm64"
         export ABI="aarch64"
+    	export GCC=gcc13
     elif [[ "$ARCH" =~ ^("jetson")$ ]]; then
         export PLATFORM="jetson"
         export ABI="aarch64"

@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 
-#if [ "${TYPE}" == "tvos" ]; then
-#    IOS_ARCHS="x86_64 arm64"
-#elif [ "$TYPE" == "ios" ]; then
-#    IOS_ARCHS="i386 x86_64 armv7 arm64 " #armv7s
-#fi
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
+cd $APOTHECARY_LEVEL
+CROSSCOMPILE=${CROSSCOMPILE:-0}
+if [ "${CROSSCOMPILE}" -eq 0 ]; then
+    ROOTFS="/"
+else
+    ROOTFS="/"
+fi
+
 TYPE=$1
 IOS_ARCH=$2
-declare -a HOSTS
-declare -a SDKS
-declare -a MIN_TYPES
 
-HOST_ARCH=$(uname -m)
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
 
 if [[ "$HOST_ARCH" == "arm64" ]]; then
   echo "Running on M1 (ARM) processor"
@@ -23,8 +27,6 @@ else
   M1_PROCESS=0
   echo "Running on Intel (x86) processor"
 fi
-
-
 
 if [ "${TYPE}" == "tvos" ]; then
     SIM=appletvsimulator
@@ -98,11 +100,8 @@ export PLATFORM=$CSDK
 export CROSS_TOP=`xcode-select --print-path`/Platforms/${CSDK}.platform/Developer
 export CROSS_SDK=${CSDK}.sdk
 
-SDKVERSION=`xcrun -sdk ${OS} --show-sdk-version`
-MIN_IOS_VERSION=$IOS_MIN_SDK_VER
-MIN_IOS_VERSION=13.0
-
-
+export SDKVERSION=`xcrun -sdk ${OS} --show-sdk-version`
+export MIN_IOS_VERSION=$IOS_MIN_SDK_VER
 
 export CC="$(xcrun -find -sdk ${SDK} clang)"
 export CXX="$(xcrun -find -sdk ${SDK} clang++)"

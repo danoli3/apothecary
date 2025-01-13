@@ -163,17 +163,25 @@ function build() {
         cd ..
             
     elif [ "$TYPE" == "android" ]; then
-        ./autogen.sh
+
         cp $FORMULA_DIR/config.h .
 
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+            # ./autogen.sh
+
+        mkdir -p "build_${TYPE}_$PLATFORM"
+        cd "build_${TYPE}_$PLATFORM"
+        rm -f CMakeCache.txt *.a *.o
         
         source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
-        mkdir -p build_${TYPE}_${ABI}
-        cd build_${TYPE}_${ABI}
-        rm -f CMakeCache.txt *.a *.o
+
         export CMAKE_CFLAGS="$CFLAGS"
         export CFLAGS=""
         export CMAKE_LDFLAGS="$LDFLAGS"
@@ -191,6 +199,10 @@ function build() {
             -DANDROID_NDK=$NDK_ROOT \
             -DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DANDROID_STL=c++_shared \
+            -DCMAKE_PREFIX_PATH="${ZLIB_ROOT}" \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \

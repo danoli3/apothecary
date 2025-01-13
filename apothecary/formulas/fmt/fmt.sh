@@ -66,6 +66,7 @@ function build() {
 			-DCMAKE_INSTALL_INCLUDEDIR=include"
 
 	if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+		echoVerbose "building [$TYPE] | PLATFORM:[$PLATFORM] MIN_SDK_VER:[$MIN_SDK_VER]"
 		mkdir -p "build_${TYPE}_${PLATFORM}"
 		cd "build_${TYPE}_${PLATFORM}"
 		rm -f CMakeCache.txt *.a *.o

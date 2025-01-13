@@ -3,7 +3,7 @@
 # metalangle
 # https://github.com/kakashidinho/metalangle.git
 
-FORMULA_TYPES=( "osx" "ios" "watchos" "catos" "xros" "tvos" )
+FORMULA_TYPES=( "osx" "ios" "tvos" ) # "catos" "xros" "watchos" @ TODO
 FORMULA_DEPENDS=( )
 
 # define the version
@@ -29,8 +29,6 @@ DEFINES="ANGLE_IS_64_BIT_CPU"
 function download() {
 	. "$DOWNLOADER_SCRIPT"
     git clone ${GIT_URL}
-
-
 }
 
 # prepare the build environment, executed inside the lib src dir

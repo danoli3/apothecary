@@ -1,4 +1,4 @@
-name: build-linux-arm
+name: build-linux-cross
 
 on:
   push:
@@ -16,11 +16,28 @@ env:
   TARGET: "linux"
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-  USE_ARTIFACT: true  
-  DISABLE_WORKFLOW: "false"
+  USE_ARTIFACT: false
+  DISABLE_WORKFLOW: "true"
 
-jobs:
-  build-linux-arm64:
+jobs:  
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
+  build-linux-arch64:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    needs: pre-check
     runs-on: ubuntu-latest
     strategy:
         matrix:
@@ -37,7 +54,7 @@ jobs:
       run: |
         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
           echo "Workflow is disabled. Exiting."
-          exit 1
+          exit 78
         fi
     - name: Determine Release
       id: vars
@@ -55,8 +72,12 @@ jobs:
 
     - name: Scripts Calc Formula - ${{matrix.cfg.target}} - ${{matrix.cfg.gcc}}
       run: ./scripts/calculate_formulas.sh
+
+    - name: Scripts Setup
+      run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
+
     - name: Scripts Install
-      run: ./scripts/linux${PLATFORM}/install.sh
+      run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
       
     - name: BuildLinux64
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -64,11 +85,15 @@ jobs:
       env:
         BUNDLE: ${{ matrix.bundle }}
     - name: Package
-      if: (github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding'))
+      # if: (github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding'))
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: scripts/package.sh
       env:
         BUNDLE: ${{ matrix.bundle }}
+
+    - name: List output directory
+      run: ls -lah out/
+
     - name: Update Release 64
       if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
       uses: softprops/action-gh-release@v2.1.0

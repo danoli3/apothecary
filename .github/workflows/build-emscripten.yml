@@ -18,8 +18,25 @@ env:
   USE_ARTIFACT: true
   DISABLE_WORKFLOW: "false"
 
-jobs:
-  build-emscripten:
+jobs:  
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
+  build-macos-platforms:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    needs: pre-check
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,12 +44,6 @@ jobs:
         PTHREADS: [0, 1]
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Check if Workflow is disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 1
-          fi
       - name: Docker Step
         run: docker run -di --name emscripten -v $PWD:/src emscripten/emsdk:${{ env.EMSDK_VERSION }} bash
       - name: Scripts Calc Formula

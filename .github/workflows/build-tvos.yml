@@ -19,9 +19,26 @@ env:
   USE_ARTIFACT: true
   DISABLE_WORKFLOW: "false"
 
-jobs:
-  build-macos-platforms:
+jobs:  
+  pre-check:
+    runs-on: ubuntu-latest
+    outputs:
+      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
+    steps:
+    - name: Check if Workflow is disabled
+      id: check-disabled
+      shell: bash
+      run: |
+        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
+          echo "disabled=true" >> $GITHUB_ENV
+          echo "::set-output name=disabled::true"
+        else
+          echo "::set-output name=disabled::false"
+        fi
+  build-tvos-platforms:
+    if: needs.pre-check.outputs.workflow_disabled != 'true'
     runs-on: macos-14
+    needs: pre-check
     strategy:
       matrix:
         bundle: [1, 2, 3]
@@ -33,7 +50,7 @@ jobs:
         run: |
           if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
             echo "Workflow is disabled. Exiting."
-            exit 1
+            exit 78
           fi
       - name: Determine Release
         id: vars

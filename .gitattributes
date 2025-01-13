@@ -1,0 +1,23 @@
+# Set default behavior for text files, normalize to native line endings
+* text=auto
+
+# Explicitly declare text files to normalize
+*.cpp text
+*.h text
+*.mm text
+
+# Files with CRLF line endings for Windows
+*.sln text eol=crlf
+*.vcxproj* text eol=crlf
+.appveyor.yml text eol=crlf
+*.bat text eol=crlf
+
+# Files with LF line endings for Unix-like systems
+*.sh text eol=lf
+
+# Binary files (no EOL normalization)
+*.png binary
+*.jpg binary
+
+# Exclude .patch files in apothecary from EOL normalization
+**/*.patch -text

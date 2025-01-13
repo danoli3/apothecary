@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
+cd $APOTHECARY_LEVEL
+
+CROSS_COMPILER="android"
+CROSS_SYSROOT="android_ndk"
+CROSSCOMPILE=${CROSSCOMPILE:-1}
+CROSS_ARCH="$1"
 export ABI=$1
+if [ "${CROSSCOMPILE}" -eq 0 ]; then
+    export ROOTFS="/"
+    export TOOLCHAIN_ROOT="/${CROSS_COMPILER}"
+else
+    export ROOTFS="${APOTHECARY_LEVEL}/${CROSS_SYSROOT}"
+    export TOOLCHAIN_ROOT="${APOTHECARY_LEVEL}/${CROSS_COMPILER}"
+fi
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
 
 if  [ -z "$2" ]; then
     export BUILD_SYSTEM=make
@@ -8,11 +27,12 @@ else
     export BUILD_SYSTEM=$2 #make / cmake
     echo "android_configure: cmake config"
 fi
-
-if [ "$(uname)" = "Darwin" ]; then
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
+if [ "${HOST_PLATFORM}" = "Darwin" ]; then
     export HOST_PLATFORM=darwin-x86_64
     export ANDROID_TOOLHOST="linux-android"
-elif [ "$(uname)" == "windows" ]; then
+elif [ "${HOST_PLATFORM}" == "windows" ]; then
     export ANDROID_HOST="windows-x86_64"
     export ANDROID_TOOLHOST="windows-android"
 else
@@ -22,11 +42,9 @@ fi
 
 export HOST_TAG=$HOST_PLATFORM
 export LIBSPATH=android/$ABI
-export NDK_PLATFORM=$ANDROID_PLATFORM
 export TOOLCHAIN_VERSION=4.9
 export CLANG_VERSION=
 export ANDROID_NDK_HOME=$NDK_ROOT
-
 
 export TOOLCHAIN_TYPE=llvm${CLANG_VERSION}
 export TOOLCHAIN=${NDK_ROOT}/toolchains/${TOOLCHAIN_TYPE}/prebuilt/${HOST_PLATFORM}
@@ -36,7 +54,6 @@ if [[ "$NDK_VERSION_MAJOR" = "23"  || "$NDK_VERSION_MAJOR" = "24" ]]; then
     echo "NDK_VESION_MAJOR: ${NDK_VERSION_MAJOR}"
 fi
 
-echo "NDK_PLATFORM: $ANDROID_PLATFORM"
 echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
 echo "SYSROOT: $SYSROOT"
 
