@@ -1,14 +1,33 @@
 #!/usr/bin/env bash
-export RPI_ROOT=$SYSROOT/rootfs
-RASP="$RPI_ROOT"
 
-export GCC_PREFIX="arm-linux-gnueabihf"
-export GCC_VERSION="14.2.0" # Adjust as needed
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
+cd $APOTHECARY_LEVEL
+
+CROSS_COMPILER="raspbian"
+CROSS_SYSROOT="rpi_rootfs"
+CROSS_ARCH="arm"
+CROSS_CPU="cortex-a7"
+CROSS_CPU="cortex-a7"
+
+if [ "${CROSSCOMPILE}" -eq 0 ]; then
+    export ROOTFS="/"
+    export TOOLCHAIN_ROOT="/${CROSS_COMPILER}"
+else
+    export ROOTFS="${APOTHECARY_LEVEL}/${CROSS_SYSROOT}"
+    export TOOLCHAIN_ROOT="${APOTHECARY_LEVEL}/${CROSS_COMPILER}"
+fi
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
+export SYSROOT=${ROOTFS}
+export GCC_PREFIX="${CROSS_ARCH}-linux-gnueabihf"
+export GCC_VERSION="1.0"
 
 CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
 export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
 export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
-export PATH=$RASP/bin:$LIBRARY_PATH:$PATH
+export PATH=$TOOLCHAIN_ROOT/bin:$LIBRARY_PATH:$PATH
 
 export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
 export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
@@ -19,11 +38,11 @@ export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
-GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
+GCCPATH="$TOOLCHAIN_ROOT/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
 
-export CFLAGS="--sysroot=${RPI_ROOT} \
+export CFLAGS="--sysroot=${SYSROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
     -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
     -march=armv7-a -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard \
@@ -33,11 +52,11 @@ export CFLAGS="--sysroot=${RPI_ROOT} \
     -DTARGET_POSIX -DHAVE_LIBOPENMAX=2 -DOMX -DOMX_SKIP64BIT -DUSE_EXTERNAL_OMX \
     -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST -DUSE_VCHIQ_ARM"
 
-export LDFLAGS="--sysroot=${RPI_ROOT} \
+export LDFLAGS="--sysroot=${SYSROOT} \
     -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib \
     -L${TOOLCHAIN_ROOT}/lib \
-    -Wl,-rpath-link,${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -L${RPI_ROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -Wl,-rpath-link,${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
+    -L${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib"
 

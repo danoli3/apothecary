@@ -5,9 +5,9 @@ cd $SCRIPT_DIR
 APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
 cd $APOTHECARY_LEVEL
 
-CROSS_COMPILER="raspbian"
-CROSS_SYSROOT="rpi_rootfs"
-CROSS_ARCH="aarch64"
+CROSS_COMPILER=""
+CROSS_SYSROOT=""
+CROSS_ARCH="x86_64"
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"
@@ -41,6 +41,8 @@ export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 GCCPATH="$TOOLCHAIN_ROOT/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
 export ARFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
 export RANLIBFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
+
+export GST_VERSION="1.0"
 
 export CFLAGS="--sysroot=${RPI_ROOT} \
     -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
