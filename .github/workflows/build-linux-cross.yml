@@ -43,7 +43,7 @@ jobs:
         matrix:
           cfg:
           - {target: linux, arch: arm64, gcc: gcc14}
-          - {target: linux, arch: jetson, gcc: gcc14}
+          # - {target: linux, arch: jetson, gcc: gcc14}
     env:
       TARGET: ${{matrix.cfg.target}}
       GCC: ${{matrix.cfg.gcc}}

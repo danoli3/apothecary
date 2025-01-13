@@ -51,17 +51,15 @@ jobs:
   strategy:
     matrix:
       CROSS_CPU: [cortex-a53, cortex-a72, cortex-a76]
-      CROSS_OS: [bookworm] #, bullseye
+      CROSS_OS: [bookworm]
       ARCH: [aarch64, armv8]
-
   env:
-    TARGET: linux
     CROSS_COMPILER: raspbian
     CROSS_OS: ${{ matrix.CROSS_OS }}
     ARCH: ${{ matrix.ARCH }}
     WORKDIR: "/home/runner/work/apothecary/apothecary"
     SYSROOT: "${WORKDIR}/${CROSS_SYSROOT}"
-      TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
+    TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
   steps:
     - uses: actions/checkout@v4.2.2
 
