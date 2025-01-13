@@ -52,10 +52,11 @@ jobs:
         shell: msys2 {0}
     steps:
       - name: Setup msys2
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@v2.26.0
         with:
           update: true
-          release : true
+          release : false
+          cache: false
           msystem: ${{ matrix.flavor }}
           install: >-
             base-devel
@@ -69,13 +70,6 @@ jobs:
             libxml2:p
             python3:p
             wget2:p
-      - name: Check if Workflow is disabled
-        shell: bash
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 78
-          fi
       - name: Determine Release
         id: vars
         shell: bash

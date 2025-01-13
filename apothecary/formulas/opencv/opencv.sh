@@ -170,7 +170,7 @@ function build() {
 			fi
 	fi
 
-		if [[ "$TYPE" =~ ^(tvos|xros|watchos)$ ]]; then
+		if [[ "$TYPE" =~ ^(tvos|xros|watchos|catos)$ ]]; then
 			EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
 		else
 			EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
