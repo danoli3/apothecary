@@ -57,7 +57,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4.2.2
-
       - name: Determine Release
         id: vars
         shell: bash
@@ -106,14 +105,6 @@ jobs:
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
-
-      - name: Check if Workflow is disabled
-        run: |
-          if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-            echo "Workflow is disabled. Exiting."
-            exit 78
-          fi
-
       - name: Determine Release
         id: vars
         shell: bash
@@ -127,7 +118,6 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-
       - name: Update and Upgrade System Packages
         run: |
           sudo apt update && sudo apt dist-upgrade -y
@@ -160,7 +150,6 @@ jobs:
       TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
     steps:
       - uses: actions/checkout@v4.2.2
-
       - name: Check if Workflow is disabled
         run: |
           if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
