@@ -88,9 +88,9 @@ if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "armeabi" ]; then
     export TARGET=armv7a-${ANDROID_TOOLHOST}eabi #special fix for armv7
 fi
 
-if [ "$NDK_VERSION_MAJOR" = "22" ]; then
+# if [ "$NDK_VERSION_MAJOR" = "22" ]; then
     export LIB_SYSROOT="${SYSROOT}/usr/lib/$ANDROID_PLATFORM/arch-arm"
-fi
+# fi
 
 
 export ANDROID_CMAKE_TOOLCHAIN=${NDK_ROOT}/build/cmake/android.toolchain.cmake
