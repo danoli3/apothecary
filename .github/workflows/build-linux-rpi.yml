@@ -43,59 +43,84 @@ jobs:
         else
           echo "::set-output name=RELEASE=latest"
         fi
-  build-linux-aarch64:
-    if: needs.pre-check.outputs.workflow_disabled != 'true'
-    needs: pre-check
-    runs-on: ubuntu-latest
-    env:
-      TARGET: linux
-      ARCH: aarch64
-      CROSS_COMPILER: raspbian
-      CROSS_OS: bookworm
-      WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "${WORKDIR}/${CROSS_SYSROOT}"
-      TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
-      TOOLCHAIN_PREFIX: "aarch64-linux-gnu"
 
-    steps:
-      - uses: actions/checkout@v4.2.2
-      - name: Determine Release
-        id: vars
-        shell: bash
-        run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "RELEASE=nightly" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-            echo "RELEASE=latest" >> $GITHUB_ENV
-          else
-            echo "RELEASE=latest" >> $GITHUB_ENV
-          fi
+build-linux-aarch64:
+  if: needs.pre-check.outputs.workflow_disabled != 'true'
+  needs: pre-check
+  runs-on: ubuntu-latest
 
-      - name: Update and Upgrade System Packages
-        run: |
-          sudo apt update && sudo apt dist-upgrade -y
-          sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
-      
-          
-      - name: Setup Cross Compiler and Target Local File System
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
-      
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+  strategy:
+    matrix:
+      CROSS_CPU: [cortex-a53, cortex-a72, cortex-a76]
+      CROSS_OS: [bookworm]
+      ARCH: [aarch64, armv8]
+      exclude:
+        - ARCH: armv8
+          CROSS_CPU: cortex-a72 # Example exclusion, customize as needed
 
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
+  env:
+    CROSS_COMPILER: raspbian
+    CROSS_OS: ${{ matrix.CROSS_OS }}
+    ARCH: ${{ matrix.ARCH }}
+    WORKDIR: "/home/runner/work/apothecary/apothecary"
+    SYSROOT: "${WORKDIR}/${{ matrix.CROSS_OS }}_sysroot"
+    TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
 
-      - name: Update Release ARM64
-        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: softprops/action-gh-release@v2.1.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.RELEASE }}
-          draft: false
-          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
+  steps:
+    - uses: actions/checkout@v4.2.2
+
+    - name: Setup Environment
+      run: |
+        echo "Setting up environment for ${CROSS_OS} ${ARCH}"
+        echo "CROSS_CPU: ${matrix.CROSS_CPU}"
+        echo "SYSROOT: ${SYSROOT}"
+        echo "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}"
+
+    - name: Determine Release
+      id: vars
+      shell: bash
+      run: |
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          echo "RELEASE=nightly" >> $GITHUB_ENV
+        elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
+          echo "RELEASE=latest" >> $GITHUB_ENV
+        else
+          echo "RELEASE=latest" >> $GITHUB_ENV
+        fi
+
+    - name: Update and Upgrade System Packages
+      run: |
+        sudo apt update && sudo apt dist-upgrade -y
+        sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
+
+    - name: Setup Cross Compiler and Target Local File System
+      run: ./scripts/${{ env.TARGET }}/${{ matrix.arch }}/setup.sh
+      env:
+        CROSS_CPU: ${{ matrix.cross_cpu }}
+        CROSS_OS: ${{ matrix.cross_os }}
+
+    - name: Script Install and Build
+      run: ./scripts/${{ env.TARGET }}/${{ matrix.arch }}/install.sh
+      env:
+        CROSS_CPU: ${{ matrix.cross_cpu }}
+        CROSS_OS: ${{ matrix.cross_os }}
+
+    - name: Script Install and Build
+      run: ./scripts/${{ env.TARGET }}/${{ matrix.arch }}/build.sh
+      env:
+        CROSS_CPU: ${{ matrix.cross_cpu }}
+        CROSS_OS: ${{ matrix.cross_os }}
+
+    - name: Update Release
+      if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+      uses: softprops/action-gh-release@v2.1.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: ${{ env.RELEASE }}
+        draft: false
+        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ matrix.arch }}_${{ matrix.cross_cpu }}_${{ matrix.cross_os }}.tar.bz2
 
   build-linux-armv6l-pi-1zero:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
@@ -132,13 +157,13 @@ jobs:
           sudo apt-get install -y build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Setup Cross Compiler and Target Local File System
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/setup.sh
       
       - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/install.sh
 
       - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/build.sh
 
       - name: Update Release armv6l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
@@ -147,7 +172,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           draft: false
-          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}/${{ env.ARCH }}.tar.bz2
 
   build-linux-armv7-pi3ab45:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
@@ -207,13 +232,13 @@ jobs:
       #     fi
 
       - name: Setup Cross Compiler and Target Local File System
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/setup.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/setup.sh
 
       - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/install.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/install.sh
 
       - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}${{ env.ARCH }}/build.sh
+        run: ./scripts/${{ env.TARGET }}/${{ env.ARCH }}/build.sh
 
       - name: Update Release armv7l
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
@@ -222,4 +247,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           draft: false
-          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}${{ env.ARCH }}.tar.bz2
+          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}/${{ env.ARCH }}.tar.bz2

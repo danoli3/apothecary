@@ -850,7 +850,7 @@ if [ "$TYPE" = "emscripten" ]; then
         echo "Emscripten: ARCH:${ARCH}"
     fi
     if [ -z "${PTHREADS_ENABLED+x}" ]; then
-        export PTHREADS_ENABLED=0
+        export PTHREADS_ENABLED=1
     fi
 
     if [ -z "${EXCEPTIONS_ENABLED+x}" ]; then
@@ -862,13 +862,8 @@ if [ "$TYPE" = "emscripten" ]; then
         fi
     fi
 
-    if [ "$PTHREADS_ENABLED" == "1" ] ; then
-        PTHREADS_FLAG="-DUSE_PTHREADS=1 -pthread"
-    else
-        PTHREADS_FLAG=""
-    fi
-    export FLAG_RELEASE+="-O3 ${PTHREADS_FLAG} -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG"
-	export LINK_FLAGS="-s WASM=2 -sMODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=0 -sLINKABLE=1 -s ASSERTIONS=1 -s EXPORT_ALL=1 --no-entry -s DYNAMIC_EXECUTION=0 -s NO_DYNAMIC_EXECUTION=1 -s EMBIND_AOT=1"
+    export FLAG_RELEASE+="-O3 -DUSE_PTHREADS=1 -pthread -matomics -mbulk-memory -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG"
+	export LINK_FLAGS="-s WASM=2 -pthread -matomics -mbulk-memory -sMODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=0 -sLINKABLE=1 -s ASSERTIONS=1 -s EXPORT_ALL=1 --no-entry -s DYNAMIC_EXECUTION=0 -s NO_DYNAMIC_EXECUTION=1 -s EMBIND_AOT=1"
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi

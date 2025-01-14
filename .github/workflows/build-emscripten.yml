@@ -17,6 +17,7 @@ env:
   EMSDK_VERSION: "3.1.74"
   USE_ARTIFACT: true
   DISABLE_WORKFLOW: "false"
+  PTHREADS_ENABLED: 1
 
 jobs:  
   pre-check:
@@ -34,14 +35,13 @@ jobs:
         else
           echo "::set-output name=disabled::false"
         fi
-  build-macos-platforms:
+  build-emscripten-platforms:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
     runs-on: ubuntu-latest
     strategy:
       matrix:
         ARCH: [32, 64]
-        PTHREADS: [0, 1]
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Docker Step
@@ -89,14 +89,13 @@ jobs:
             const target = process.env.TARGET;
             const release = process.env.RELEASE;
             const arch = process.env.ARCH;
-            const pthreads = process.env.PTHREADS_ENABLED;
-            const artifactName = `libs-${release}-${target}-${arch}-${pthreads}`;
+            const artifactName = `libs-${release}-${target}-${arch}`;
 
             let count = 0;
             const max = 1;
 
             for (const artifact of artifacts.data.artifacts) {
-              const isArtifactMatch = artifact.name.includes(`libs-${release}-${target}-${arch}-${pthreads}`) && !artifact.expired;
+              const isArtifactMatch = artifact.name.includes(`libs-${release}-${target}-${arch}`) && !artifact.expired;
               if (isArtifactMatch) {
                 const download = await github.rest.actions.downloadArtifact({
                   owner: context.repo.owner,
@@ -160,8 +159,6 @@ jobs:
         env:
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
           ARCH: ${{ matrix.ARCH }}
-          PTHREADS_ENABLED: ${{ matrix.PTHREADS }}
-
     
       - name: Package Binaries for Artifact
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
@@ -171,11 +168,8 @@ jobs:
           if [[ "${{ matrix.ARCH }}" == "64" ]]; then
             ARCH_SUFFIX="_memory64"
           fi
-          PTHREADS_SUFFIX=""
-          if [[ "${{ matrix.PTHREADS }}" == "1" ]]; then
-            PTHREADS_SUFFIX="_pthreads"
-          fi
-          FILENAME="openFrameworksLibs_${{ env.RELEASE }}_emscripten${ARCH_SUFFIX}${PTHREADS_SUFFIX}.tar.bz2"
+
+          FILENAME="openFrameworksLibs_${{ env.RELEASE }}_emscripten${ARCH_SUFFIX}.tar.bz2"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           scripts/artifact/artifact.sh
         env:
@@ -185,7 +179,7 @@ jobs:
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         uses: actions/upload-artifact@v4
         with:
-          name: libs-${{ env.RELEASE }}-emscripten-${{ matrix.ARCH }}-${{ matrix.PTHREADS }}
+          name: libs-${{ env.RELEASE }}-emscripten-${{ matrix.ARCH }}
           path: out/${{ env.FILENAME }}
           retention-days: 31
 
@@ -205,17 +199,15 @@ jobs:
           if [[ "${{ matrix.ARCH }}" == "64" ]]; then
             ARCH_SUFFIX="_memory64"
           fi
-          PTHREADS_SUFFIX=""
-          if [[ "${{ matrix.PTHREADS }}" == "1" ]]; then
-            PTHREADS_SUFFIX="_pthreads"
-          fi
-          FILENAME="openFrameworksLibs_${{ env.RELEASE }}_emscripten${ARCH_SUFFIX}${PTHREADS_SUFFIX}.tar.bz2"
+          FILENAME="openFrameworksLibs_${{ env.RELEASE }}_emscripten${ARCH_SUFFIX}.tar.bz2"
           echo "FILENAME=$FILENAME" >> $GITHUB_ENV
           scripts/package.sh
         env:
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
           ARCH: ${{ matrix.ARCH }}
-          PTHREADS_ENABLED: ${{ matrix.PTHREADS }}
+
+      - name: List output directory final
+        run: ls -lah out/
 
       - name: Update Release emscripten
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')

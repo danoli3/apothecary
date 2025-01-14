@@ -49,10 +49,10 @@ export ANDROID_NDK_HOME=$NDK_ROOT
 export TOOLCHAIN_TYPE=llvm${CLANG_VERSION}
 export TOOLCHAIN=${NDK_ROOT}/toolchains/${TOOLCHAIN_TYPE}/prebuilt/${HOST_PLATFORM}
 
-if [[ "$NDK_VERSION_MAJOR" = "23"  || "$NDK_VERSION_MAJOR" = "24" ]]; then
-    export SYSROOT="${TOOLCHAIN}/sysroot"
-    echo "NDK_VESION_MAJOR: ${NDK_VERSION_MAJOR}"
-fi
+# if [[ "$NDK_VERSION_MAJOR" = "23"  || "$NDK_VERSION_MAJOR" = "24" ]]; then
+     export SYSROOT="${TOOLCHAIN}/sysroot"
+#     echo "NDK_VESION_MAJOR: ${NDK_VERSION_MAJOR}"
+# fi
 
 echo "ANDROID_NDK_HOME: $ANDROID_NDK_HOME"
 echo "SYSROOT: $SYSROOT"
@@ -88,9 +88,9 @@ if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "armeabi" ]; then
     export TARGET=armv7a-${ANDROID_TOOLHOST}eabi #special fix for armv7
 fi
 
-if [ "$NDK_VERSION_MAJOR" = "22" ]; then
-    export LIB_SYSROOT="${SYSROOT}/usr/lib/$ANDROID_PLATFORM/arch-arm"
-fi
+# if [ "$NDK_VERSION_MAJOR" = "22" ]; then
+    # export LIB_SYSROOT="${SYSROOT}/usr/lib/$ANDROID_POSTFIX/arch-arm"
+# fi
 
 
 export ANDROID_CMAKE_TOOLCHAIN=${NDK_ROOT}/build/cmake/android.toolchain.cmake

@@ -9,6 +9,7 @@ CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="aarch64"
 CROSSCOMPILE=${CROSSCOMPILE:-1}
+
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"
     export TOOLCHAIN_ROOT="/${CROSS_COMPILER}"

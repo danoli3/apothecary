@@ -14,7 +14,7 @@ if(NOT DEFINED TOOLCHAIN_ROOT)
         set(TOOLCHAIN_ROOT $ENV{TOOLCHAIN_ROOT})
     else()
         set(TOOLCHAIN_ROOT rasbian) # Default value
-        message(WARNING "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=rasbian")
+        message(WARNING "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=")
     endif()
 endif()
 
@@ -24,6 +24,15 @@ if(NOT DEFINED SYSROOT)
     else()
         set(SYSROOT raspbian_rootfs) # Default value
         message(WARNING "SYSROOT not specified. Defaulting to SYSROOT=raspbian_rootfs")
+    endif()
+endif()
+
+if(NOT DEFINED CROSS_CPU)
+    if(DEFINED ENV{CROSS_CPU})
+        set(CROSS_CPU $ENV{CROSS_CPU})
+    else()
+        set(CROSS_CPU cortex-a53)
+        message(WARNING "CROSS_CPU not specified. Defaulting to CROSS_CPU=cortex-a53")
     endif()
 endif()
 
@@ -57,9 +66,16 @@ set(EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHIT
 # Update linker flags for armv8-a
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIC ${EXTRA_LINKS}")
 
+set(CFLAGS "--sysroot=${SYSROOT} \
+    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
+    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
+    -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
+    -D_FILE_OFFSET_BITS=64 \
+    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST")
+
 # Update compiler flags for armv8-a
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS} -fPIC -march=armv8-a -mfloat-abi=hard ${EXTRA_LINKS}")
 
 # NEON
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon-fp-armv8")

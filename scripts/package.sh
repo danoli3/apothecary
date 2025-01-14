@@ -294,10 +294,13 @@ else
     CUR_BRANCH="$RELEASE"
 fi
 
-# Output variables for verification (optional)
+echo "Checking for .bak files in $OUTPUT_FOLDER..."
+if [ -d "$OUTPUT_FOLDER" ]; then
+    find "$OUTPUT_FOLDER" -type f -name "*.bak" -exec rm -v {} \;
+fi
+
 echo "Release: [$RELEASE]"
 echo "Current Branch: [$CUR_BRANCH]"
-
 
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET$ARCH_$OPT$ARCH$BUNDLE.tar.bz2
 if [ "$TARGET" == "msys2" ]; then
@@ -320,13 +323,8 @@ elif [ "$TARGET" == "emscripten" ]; then
 	else
 			POSTFIX=""
 	fi
-	if [ "$PTHREADS_ENABLED" == "1" ]; then
-			PTHREADS_POSTFIX="_pthreads"
-	else
-			PTHREADS_POSTFIX=""
-	fi
     rm -f *.pc
-	TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}${PTHREADS_POSTFIX}.tar.bz2
+	TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}${POSTFIX}.tar.bz2
 	run "cd ${OUTPUT_FOLDER}; tar cjf $TARBALL $LIBS"
 	echo "tar cjf $TARBALL $LIBS"
 	echo " a $TARBALL $LIBS"
