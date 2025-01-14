@@ -38,7 +38,7 @@ export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
 export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
 export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
 
-export CFLAGS="--sysroot=${ROOTFS}"
+export CFLAGS=""
  # \
  #    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
  #    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
@@ -46,7 +46,7 @@ export CFLAGS="--sysroot=${ROOTFS}"
  #    -D_FILE_OFFSET_BITS=64 \
  #    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
 
-export LDFLAGS="--sysroot=${ROOTFS}"
+export LDFLAGS=""
     # -Wl,-rpath-link,${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
     # -L${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
     # -Wl,-rpath-link,${ROOTFS}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
