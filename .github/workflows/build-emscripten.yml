@@ -35,14 +35,13 @@ jobs:
         else
           echo "::set-output name=disabled::false"
         fi
-  build-macos-platforms:
+  build-emscripten-platforms:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
     runs-on: ubuntu-latest
     strategy:
       matrix:
         ARCH: [32, 64]
-
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Docker Step
@@ -162,7 +161,7 @@ jobs:
           ARCH: ${{ matrix.ARCH }}
     
       - name: Package Binaries for Artifact
-        # if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: |
           ARCH_SUFFIX=""
@@ -177,7 +176,7 @@ jobs:
           BUNDLE: ${{ matrix.bundle }}
 
       - name: Upload Artifact
-        # if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         uses: actions/upload-artifact@v4
         with:
           name: libs-${{ env.RELEASE }}-emscripten-${{ matrix.ARCH }}
@@ -185,7 +184,7 @@ jobs:
           retention-days: 31
 
       - name: Remove .tar.bz2 files
-        # if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         run: |
           echo "Removing .tar.bz2 files from out/ directory..."
           rm -f out/*.tar.bz2
@@ -193,7 +192,7 @@ jobs:
           echo "Cleanup complete."
 
       - name: Package
-        # if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: |
           ARCH_SUFFIX=""

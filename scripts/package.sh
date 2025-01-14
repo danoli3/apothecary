@@ -294,10 +294,13 @@ else
     CUR_BRANCH="$RELEASE"
 fi
 
-# Output variables for verification (optional)
+echo "Checking for .bak files in $OUTPUT_FOLDER..."
+if [ -d "$OUTPUT_FOLDER" ]; then
+    find "$OUTPUT_FOLDER" -type f -name "*.bak" -exec rm -v {} \;
+fi
+
 echo "Release: [$RELEASE]"
 echo "Current Branch: [$CUR_BRANCH]"
-
 
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_$TARGET$ARCH_$OPT$ARCH$BUNDLE.tar.bz2
 if [ "$TARGET" == "msys2" ]; then
