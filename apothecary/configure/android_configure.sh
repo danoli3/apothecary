@@ -89,7 +89,7 @@ if [ "$ABI" = "armeabi-v7a" ] || [ "$ABI" = "armeabi" ]; then
 fi
 
 # if [ "$NDK_VERSION_MAJOR" = "22" ]; then
-    export LIB_SYSROOT="${SYSROOT}/usr/lib/$ANDROID_PLATFORM/arch-arm"
+    # export LIB_SYSROOT="${SYSROOT}/usr/lib/$ANDROID_POSTFIX/arch-arm"
 # fi
 
 
