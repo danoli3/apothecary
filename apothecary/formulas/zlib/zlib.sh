@@ -101,13 +101,13 @@ function build() {
 		 cd ..
     elif [ "$TYPE" == "android" ] ; then
 
-		source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
+		# source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
 		mkdir -p "build_${TYPE}_${ABI}"
 		cd "build_${TYPE}_${ABI}"
 		rm -f CMakeCache.txt *.a *.o
-		export CFLAGS="$CFLAGS $FLAG_RELEASE -DNDEBUG"
-		export CXXFLAGS="$CFLAGS $FLAG_RELEASE -DNDEBUG"
+		# export CFLAGS="$CFLAGS $FLAG_RELEASE"
+		# export CXXFLAGS="$CFLAGS $FLAG_RELEASE"
 
 		DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -117,21 +117,11 @@ function build() {
 			-DCMAKE_CXX_EXTENSIONS=OFF \
 			-DBUILD_SHARED_LIBS=OFF"
 	    cmake .. ${DEFINES} \
-			-DCMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
+			-DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
 			-DPLATFORM=$PLATFORM \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
-			-D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
-			-D CMAKE_C_COMPILER_RANLIB=${RANLIB} \
-			-D CMAKE_CXX_COMPILER_AR=${AR} \
-			-D CMAKE_C_COMPILER_AR=${AR} \
-			-D CMAKE_C_COMPILER=${CC} \
-			-D CMAKE_CXX_COMPILER=${CXX} \
-			-D CMAKE_C_FLAGS=${CFLAGS} \
-			-D CMAKE_CXX_FLAGS=${CXXFLAGS} \
 			-D ANDROID_ABI=${ABI} \
-			-D CMAKE_CXX_STANDARD_LIBRARIES=${LIBS} \
-			-D CMAKE_C_STANDARD_LIBRARIES=${LIBS} \
 			-D ANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
 			-D ANDROID_TOOLCHAIN=clang \
 			-DENABLE_VISIBILITY=OFF \
