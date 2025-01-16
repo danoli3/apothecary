@@ -17,7 +17,7 @@ env:
   EMSDK_VERSION: "4.0.0"
   USE_ARTIFACT: false
   PTHREADS_ENABLED: 1
-  DISABLE_WORKFLOW: "false"
+  DISABLE_WORKFLOW: "true"
 
 jobs:  
   pre-check:
