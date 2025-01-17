@@ -188,7 +188,7 @@ if [ -n "${ALWAYS_BUILD+x}" ]; then
     CUR_BRANCH="latest"
     RELEASE="latest"
 else
-    if [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "bleeding" || "${GITHUB_REF##*/}" == "latest") && -z "${GITHUB_HEAD_REF}" ]] ||
+    if [[ ("${GITHUB_REF##*/}" == "master" || "${GITHUB_REF##*/}" == "development" || "${GITHUB_REF##*/}" == "latest") && -z "${GITHUB_HEAD_REF}" ]] ||
         [[ "${GITHUB_REF}" == refs/tags/* ]]; then
 
         # Check if we are on a tag
@@ -197,13 +197,13 @@ else
             RELEASE="${GITHUB_REF##*/}" # Use tag name as the release
             CUR_BRANCH="$RELEASE"
         else
-            echo "On Master, Bleeding, or Latest branch - proceeding with branch-specific build steps"
+            echo "On Master, development, or Latest branch - proceeding with branch-specific build steps"
             CUR_BRANCH="latest"
             RELEASE="latest"
         fi
 
     else
-        echo "This is a PR or not on master/bleeding branch; exiting build before compressing."
+        echo "This is a PR or not on master/development branch; exiting build before compressing."
         # Exit early if this is a PR or a branch we don't want to build
         exit 0
     fi
