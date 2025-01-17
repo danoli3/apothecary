@@ -1,5 +1,5 @@
 #!/bin/bash
-VERSION=4.4.0
+VERSION=4.5.0
 printDownloaderHelp() {
     cat <<EOF
     
@@ -424,18 +424,16 @@ downloader() {
                 exit 1
             fi
         fi
-    fi
-
-    if [[ "$CLOSE_CONNECTION" == "1" ]]; then
-        if [[ $CURL == 1 ]] && [[ $CURL_INSTALLED == 1 ]] || [[ $CURL == 1 && $WGET2 == 1 ]]; then
-            FIRST_URL=$FORWARDED_URLS[1]
-            if [[ ${#FORWARDED_URLS[@]} -eq 0 ]]; then
-                echo "  [downloader] No active connections to close"
-            else
-                FIRST_URL="${FORWARDED_URLS[0]}"
-                FIRST_URL=$(echo "$FIRST_URL" | sed 's/[[:space:]]*$//')
-                echo "  [downloader] Closing the ports yarr url:[$FIRST_URL]"
-                curl -I -L --retry-connrefused --insecure --silent --head --max-time 1 --retry ${RETRY_MAX} ${CLOSE_EXTRA_ARGS} --no-keepalive --header "Connection: close" --retry-delay ${RETRY_DELAY_S} --max-redirs ${MAX_REDIRECTS} ${FIRST_URL}
+        if [[ "$CLOSE_CONNECTION" == "1" ]]; then
+            if [[ $CURL == 1 ]] && [[ $CURL_INSTALLED == 1 ]] || [[ $CURL == 1 && $WGET2 == 1 ]]; then
+                if [[ ${#FORWARDED_URLS[@]} -eq 0 ]]; then
+                    echo "  [downloader] No active connections to close"
+                else
+                    FIRST_URL="${FORWARDED_URLS[0]}"
+                    FIRST_URL=$(echo "$FIRST_URL" | sed 's/[[:space:]]*$//')
+                    echo "  [downloader] Closing the ports yarr url:[$FIRST_URL]"
+                    curl -I -L --retry-connrefused --insecure --silent --head --max-time 1 --retry ${RETRY_MAX} ${CLOSE_EXTRA_ARGS} --no-keepalive --header "Connection: close" --retry-delay ${RETRY_DELAY_S} --max-redirs ${MAX_REDIRECTS} ${FIRST_URL}
+                fi
             fi
         fi
     fi
