@@ -10,7 +10,7 @@ FORMULA_TYPES=("osx" "linux" "vs" "ios" "watchos" "catos" "xros" "tvos" "android
 FORMULA_DEPENDS=("zlib")
 
 # define the version by sha
-VER=2.12.7
+VER=2.13.5
 BUILD_ID=1
 DEFINES=""
 
@@ -73,32 +73,32 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
-    DEFINES="  -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include\
-            -DLIBXML2_WITH_UNICODE=ON \
-            -DLIBXML2_WITH_LZMA=OFF \
-            -DLIBXML2_WITH_ZLIB=ON \
-            -DLIBXML2_WITH_FTP=OFF \
-            -DLIBXML2_WITH_HTTP=OFF \
-            -DLIBXML2_WITH_HTML=ON \
-            -DLIBXML2_WITH_ICONV=OFF \
-            -DLIBXML2_WITH_LEGACY=OFF \
-            -DLIBXML2_WITH_UNICODE=ON \
-            -DLIBXML2_WITH_MODULES=OFF \
-            -DLIBXML2_WITH_OUTPUT=ON \
-            -DLIBXML2_WITH_PYTHON=OFF \
-            -DLIBXML2_WITH_PROGRAMS=OFF \
-            -DLIBXML2_WITH_DEBUG=OFF \
-            -DLIBXML2_WITH_THREADS=ON \
-            -DLIBXML2_WITH_THREAD_ALLOC=OFF \
-            -DLIBXML2_WITH_TESTS=OFF \
-            -DLIBXML2_WITH_SCHEMATRON=OFF"
+    DEFINES="-DCMAKE_C_STANDARD=${C_STANDARD} \
+-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+-DCMAKE_CXX_STANDARD_REQUIRED=ON \
+-DCMAKE_CXX_EXTENSIONS=OFF \
+-DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
+-DBUILD_SHARED_LIBS=OFF \
+-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+-DCMAKE_INSTALL_INCLUDEDIR=include\
+-DLIBXML2_WITH_UNICODE=ON \
+-DLIBXML2_WITH_LZMA=OFF \
+-DLIBXML2_WITH_ZLIB=ON \
+-DLIBXML2_WITH_FTP=OFF \
+-DLIBXML2_WITH_HTTP=OFF \
+-DLIBXML2_WITH_HTML=OFF \
+-DLIBXML2_WITH_ICONV=OFF \
+-DLIBXML2_WITH_LEGACY=OFF \
+-DLIBXML2_WITH_UNICODE=ON \
+-DLIBXML2_WITH_MODULES=OFF \
+-DLIBXML2_WITH_OUTPUT=ON \
+-DLIBXML2_WITH_PYTHON=OFF \
+-DLIBXML2_WITH_PROGRAMS=OFF \
+-DLIBXML2_WITH_DEBUG=OFF \
+-DLIBXML2_WITH_THREADS=ON \
+-DLIBXML2_WITH_THREAD_ALLOC=OFF \
+-DLIBXML2_WITH_TESTS=OFF \
+-DLIBXML2_WITH_SCHEMATRON=OFF"
 
     if [ "$TYPE" == "vs" ]; then
         echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
@@ -239,7 +239,8 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DZLIB_ROOT="$LIBS_ROOT/zlib/" \
             -DZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include" \
-            -DZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+            -DZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a" \
+            -GXcode
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
@@ -324,8 +325,6 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
-        export CFLAGS="-DTRIO_FPCLASSIFY=fpclassify"
-        sed -i "s/#if defined.STANDALONE./#if 0/g" trionan.c
         find . -name "test*.c" | xargs -r rm
         find . -name "run*.c" | xargs -r rm
         rm -f *.o
@@ -337,14 +336,13 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE} ${CFLAGS}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DTRIO_FPCLASSIFY=fpclassify \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
@@ -392,6 +390,7 @@ function copy() {
         sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
         sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
         sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -418,6 +417,7 @@ function copy() {
         sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
         sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
         sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
     else
         echo "Unknown build TYPE: $TYPE"
