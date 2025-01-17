@@ -1,10 +1,9 @@
 #!/bin/bash
 # set -e
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd $SCRIPT_DIR
-APOTHECARY_LEVEL="$( cd "$SCRIPT_DIR/../.." && pwd )"
-
+APOTHECARY_LEVEL="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 sudo apt-get install -y aptitude build-essential gawk gcc g++ gfortran git texinfo bison libncurses-dev cmake unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils
 sudo aptitude install -y gperf
@@ -53,6 +52,7 @@ sudo apt-get install \
     librtaudio-dev:arm64 \
     gdb:arm64 \
     libglfw3-dev:arm64 \
+    libfftw3-dev:arm64 \
     liburiparser-dev:arm64 \
     libpugixml-dev:arm64 \
     libgconf-2-4:arm64 \
