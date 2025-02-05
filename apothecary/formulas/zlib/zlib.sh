@@ -1,4 +1,4 @@
-#!/usr/bin/env /bash
+#!/usr/bin/env bash
 #
 # A Massively Spiffy Yet Delicately Unobtrusive Compression Library
 # http://zlib.net/
@@ -8,7 +8,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.3.1
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
@@ -100,30 +100,33 @@ function build() {
         cd ..
     elif [ "$TYPE" == "android" ]; then
 
-        # source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
         mkdir -p "build_${TYPE}_${ABI}"
         cd "build_${TYPE}_${ABI}"
         rm -f CMakeCache.txt *.a *.o
-        # export CFLAGS="$CFLAGS $FLAG_RELEASE"
-        # export CXXFLAGS="$CFLAGS $FLAG_RELEASE"
 
         DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
-			-DCMAKE_BUILD_TYPE=Release \
-			-DCMAKE_C_STANDARD=${C_STANDARD} \
-			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-			-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-			-DCMAKE_CXX_EXTENSIONS=OFF \
-			-DBUILD_SHARED_LIBS=OFF"
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
-            -D ANDROID_ABI=${ABI} \
-            -D ANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
-            -D ANDROID_TOOLCHAIN=clang \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
@@ -166,12 +169,12 @@ function build() {
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.a *.o *.so
         DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
-	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF \
-	        -DBUILD_SHARED_LIBS=OFF"
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
@@ -195,16 +198,16 @@ function build() {
         fi
         echoVerbose "building $TYPE | $ARCH "
         echoVerbose "--------------------"
-        mkdir -p "build_${TYPE}_${ARCH}"
-        cd "build_${TYPE}_${ARCH}"
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.so
         DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
-	        -DCMAKE_BUILD_TYPE=Release \
-	        -DCMAKE_C_STANDARD=${C_STANDARD} \
-	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-	        -DCMAKE_CXX_EXTENSIONS=OFF \
-	        -DBUILD_SHARED_LIBS=OFF"
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
@@ -218,6 +221,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
@@ -265,6 +269,17 @@ function copy() {
         cp -v "build_${TYPE}_${ABI}/Release/lib/libz.a" $1/lib/$TYPE/$ABI/zlib.a
         cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
         secure $1/lib/$TYPE/$ABI/zlib.a
+
+        cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$ABI/zlib.pc
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${ABI}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$ABI"
+
     elif [ "$TYPE" == "emscripten" ]; then
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/
         mkdir -p $1/lib/$TYPE/$PLATFORM

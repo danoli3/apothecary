@@ -1,4 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd $SCRIPT_DIR
+APOTHECARY_LEVEL="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 set -e
 
 echo "=== Linux ARM64 cross setup ==="
@@ -8,45 +14,19 @@ sudo apt update -y
 sudo apt install -y \
     git \
     cmake \
-    gawk \
     pkgconf \
     build-essential \
     ninja-build \
+    gawk \
     automake \
     autoconf \
     flex \
-    xz-utils \
     crossbuild-essential-armhf \
     crossbuild-essential-arm64
-
-# sudo apt-mark hold \
-#     git \
-#     cmake \
-#     gawk \
-#     pkgconf \
-#     build-essential \
-#     ninja-build \
-#     automake \
-#     autoconf \
-#     flex \
-#     xz-utils \
-#     crossbuild-essential-armhf \
-#     crossbuild-essential-arm64
 
 sudo apt install -y \
     python3-minimal \
     python3-numpy
-
-# if [[ "$(uname -m)" == "x86_64" ]]; then
-#     wget https://ftp.gnu.org/gnu/gawk/gawk-5.3.1.tar.xz
-#     tar --xz -xf gawk-5.3.1.tar.xz  # Explicitly tell tar to handle xz
-#     cd gawk-5.3.1
-#     ./configure
-#     make
-#     sudo make install
-#     echo 'export LD_LIBRARY_PATH=/usr/local/lib/gawk:$LD_LIBRARY_PATH' >> ~/.zshrc
-#     source ~/.zshrc
-# fi
 
 # Ensure the script is run as root
 if [[ $EUID -ne 0 ]]; then
@@ -101,16 +81,17 @@ echo "'Architectures: amd64' added where missing after 'Types: deb' in $SOURCE_F
 
 fi
 sudo dpkg --add-architecture arm64
+sudo dpkg --add-architecture amd64
 dpkg --print-architecture
 dpkg --print-foreign-architectures
+
 # Update package lists
 echo "Updating APT package lists..."
 sudo apt-get update
-
 echo "Done! ARM64 and ARMHF architectures are ready."
 
 echo "Installing ARM64 packages..."
-apt-get install -y --no-install-recommends \
+apt-get install -y \
     aptitude:arm64 \
     gcc-aarch64-linux-gnu \
     g++-aarch64-linux-gnu \
@@ -126,6 +107,7 @@ apt-get install -y --no-install-recommends \
     autoconf:arm64 \
     automake:arm64 \
     figlet:arm64 \
+    xz-utils:arm64 \
     gperf:arm64 \
     libgl1-mesa-dev:arm64 \
     libglu1-mesa-dev:arm64 \
@@ -141,21 +123,11 @@ apt-get install -y --no-install-recommends \
     libgles2-mesa-dev:arm64
 
 # apt-get install -y gawk:arm64 --no-remove
-# if [[ "$(uname -m)" == "x86_64" ]]; then
-#     # issues with apt packages install manually
-# wget http://ftp.us.debian.org/debian/pool/main/g/gawk/gawk_5.2.1-2+b2_arm64.deb
-# sudo dpkg -i --force-architecture --force-depends gawk_5.2.1-2+b2_arm64.deb
-# fi
-
-
-# sudo apt-get install -y aptitude gawk gcc g++ gfortran texinfo bison libncurses-dev unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils
-# sudo aptitude install -y gperf
-# sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev
-# sudo apt-get install -y ccache
-# sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
-
-# dpkg -L gcc-aarch64-linux-gnu
-# sudo apt install libgl1-mesa-dev libgles2-mesa-dev
+if [[ "$(uname -m)" == "x86_64" ]]; then
+    # issues with apt packages install manually
+    wget http://ftp.us.debian.org/debian/pool/main/g/gawk/gawk_5.2.1-2+b2_arm64.deb
+    sudo dpkg -i --force-architecture --force-depends gawk_5.2.1-2+b2_arm64.deb
+fi
 
 
 if [ -d "/usr/lib/x86_64-linux-gnu" ]; then

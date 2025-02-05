@@ -6,7 +6,7 @@
 #
 # an autotools project
 
-FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "emscripten")
+FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "emscripten" "linux" )
 FORMULA_DEPENDS=("zlib" "libpng" "brotli")
 
 # define the version
@@ -283,8 +283,23 @@ function build() {
             cmake --build . --target install --config Release -j${PARALLEL_MAKE}
         cd ..
     elif [ "$TYPE" == "linux" ]; then
-        mkdir -p build_$TYPE
-        cd build_$TYPE
+
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
+        fi
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
+        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
+
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
             ${DEFINES} \
@@ -300,27 +315,40 @@ function build() {
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -std=c++${CPP_STANDARD} -frtti ${FLAG_RELEASE}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -std=c${C_STANDARD} -Wno-implicit-function-declaration ${FLAG_RELEASE}" \
+            -DCMAKE_INCLUDE_PATH="${LIBPNG_INCLUDE_DIR}:${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_LIBRARY_PATH="${LIBPNG_LIBRARY}:${ZLIB_LIBRARY}" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
+            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_ROOT=${LIBPNG_ROOT} \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include
             cmake --build . --target install --config Release -j${PARALLEL_MAKE}
         cd ..
     elif [ "$TYPE" == "android" ]; then
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        LIBPNG_ROOT="${LIBS_ROOT}/libpng/"
+        LIBPNG_INCLUDE_DIR="${LIBS_ROOT}/libpng/include"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/${TYPE}/${PLATFORM}/libpng16.a"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${LIBPNG_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
 
         source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
         rm -rf "build_${ABI}/"
         rm -rf "build_${ABI}/CMakeCache.txt"
         mkdir -p "build_$ABI"
         cd "./build_$ABI"
-        CFLAGS=""
-        export CMAKE_CFLAGS="$CFLAGS"
-        export CPPFLAGS=""
-        export CMAKE_LDFLAGS="$LDFLAGS"
-        export LDFLAGS=""
-
         NO_LINK_BROTLI=OFF
         if [ "$PLATFORM" == "ARM64" ]; then
             NO_LINK_BROTLI=ON
@@ -329,46 +357,50 @@ function build() {
         EXTRA_DEFS="
             -DFT_DISABLE_BROTLI=${NO_LINK_BROTLI} 
             "
-        cmake ${DEFINES} \
-            -D CMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
-            -D CMAKE_OSX_SYSROOT:PATH=${SYSROOT} \
-            -D CMAKE_C_COMPILER=${CC} \
-            -D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
-            -D CMAKE_C_COMPILER_RANLIB=${RANLIB} \
-            -D CMAKE_CXX_COMPILER_AR=${AR} \
-            -D CMAKE_C_COMPILER_AR=${AR} \
-            -D CMAKE_C_COMPILER=${CC} \
-            -D CMAKE_CXX_COMPILER=${CXX} \
-            -D CMAKE_C_FLAGS=${CFLAGS} \
-            -D CMAKE_CXX_FLAGS=${CXXFLAGS} \
+        cmake .. ${DEFINES} \
+            ${EXTRA_DEFS} \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_INSTALL_PREFIX=Release \
-            -D ANDROID_ABI=${ABI} \
-            -D CMAKE_CXX_STANDARD_LIBRARIES=${LIBS} \
-            -D CMAKE_C_STANDARD_LIBRARIES=${LIBS} \
-            -D CMAKE_STATIC_LINKER_FLAGS=${LDFLAGS} \
-            -D ANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
-            -D ANDROID_TOOLCHAIN=clang \
-            -D CMAKE_BUILD_TYPE=Release \
-            -D FT_REQUIRE_ZLIB=ON \
-            -D FT_DISABLE_BZIP2=ON \
-            -D FT_REQUIRE_HARFBUZZ=OFF \
-            -D FT_DISABLE_HARFBUZZ=ON \
-            -D FT_DISABLE_PNG=OFF \
-            -D FT_REQUIRE_PNG=ON \
-            -DCMAKE_SYSROOT=$SYSROOT \
-            -DANDROID_NDK=$NDK_ROOT \
-            -DANDROID_ABI=$ABI \
+            -DCMAKE_INCLUDE_PATH="${LIBPNG_INCLUDE_DIR}:${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_LIBRARY_PATH="${LIBPNG_LIBRARY}:${ZLIB_LIBRARY}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DFT_REQUIRE_ZLIB=ON \
+            -DFT_DISABLE_BZIP2=ON \
+            -DFT_REQUIRE_HARFBUZZ=OFF \
+            -DFT_DISABLE_HARFBUZZ=ON \
+            -DFT_DISABLE_PNG=OFF \
+            -DFT_REQUIRE_PNG=ON \
             -DCMAKE_ANDROID_ARCH_ABI=$ABI \
-            -DANDROID_STL=c++_shared \
-            -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DPLATFORM=$PLATFORM \
+            -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
+            -DURIPARSER_ENABLE_INSTALL=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_INCLUDE_PATH="${LIBPNG_INCLUDE_DIR}:${ZLIB_INCLUDE_DIR}" \
+            -DCMAKE_LIBRARY_PATH="${LIBPNG_LIBRARY}:${ZLIB_LIBRARY}" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -G 'Unix Makefiles' ..
-
-        make -j${PARALLEL_MAKE} VERBOSE=1
+            -DBUILD_SHARED_LIBS=OFF \
+            -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_ROOT=${LIBPNG_ROOT} \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
     elif [ "$TYPE" == "emscripten" ]; then
@@ -470,7 +502,33 @@ function copy() {
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libfreetype.lib freetype.pkl
         # cp -v "build_${TYPE}_${ARCH}/lib/"*.pdb $1/lib/$TYPE/$PLATFORM/
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -R "build_${TYPE}_${PLATFORM}/Release/include/freetype2/" $1/include
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.a
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/freetype2.pc" $1/lib/${TYPE}/${PLATFORM}/freetype.pc
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/libfreetype.a freetype.pkl
 
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
+    elif [ "$TYPE" == "linux" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -R "build_${TYPE}_${PLATFORM}/Release/include/freetype2/" $1/include
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libfreetype.a" $1/lib/$TYPE/$PLATFORM/libfreetype.a
+        . "$SECURE_SCRIPT"
+        secure $1/lib/$TYPE/$PLATFORM/libfreetype.a freetype.pkl
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/freetype2.pc" $1/lib/${TYPE}/${PLATFORM}/freetype.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
     elif [ "$TYPE" == "msys2" ]; then
         # cp -v lib/$TYPE/libfreetype.a $1/lib/$TYPE/libfreetype.a
         echoWarning "TODO: copy msys2 lib"
@@ -486,8 +544,8 @@ function copy() {
         . "$SECURE_SCRIPT"
         secure $1/lib/$TYPE/$PLATFORM/libfreetype.a freetype.pkl
 
-        cp -v "build_${TYPE}_$PLATFORM/freetype2.pc" $1/lib/$TYPE/$PLATFORM/freetype2.pc
-        PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype2.pc"
+        cp -v "build_${TYPE}_$PLATFORM/freetype2.pc" $1/lib/$TYPE/$PLATFORM/freetype.pc
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/freetype.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
         sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
         sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"

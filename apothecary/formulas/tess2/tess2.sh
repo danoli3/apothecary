@@ -52,22 +52,21 @@ function prepare() {
 
 # executed inside the lib src dir
 function build() {
-    DEFS="
+    export DEFINES="
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
 	        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
 	        -DCMAKE_CXX_EXTENSIONS=OFF
 	        -DCMAKE_INSTALL_PREFIX=Release \
 	        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-	        -DCMAKE_INSTALL_INCLUDEDIR=include
-	     "
+	        -DCMAKE_INSTALL_INCLUDEDIR=include"
 
     cp -v $FORMULA_DIR/CMakeLists.txt .
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
@@ -97,7 +96,7 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.lib *.o
-        cmake .. ${DEFS} \
+        cmake .. ${DEFINES} \
             -DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
@@ -120,44 +119,29 @@ function build() {
 
         cp -v $FORMULA_DIR/CMakeLists.txt .
 
-        mkdir -p "build_$ABI"
-        cd "./build_$ABI"
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
-        export CFLAGS=""
-        export CMAKE_CFLAGS="$CFLAGS"
 
-        export CPPFLAGS=""
-        export CMAKE_LDFLAGS="$LDFLAGS"
-        export LDFLAGS=""
-        cmake -D CMAKE_TOOLCHAIN_FILE=${NDK_ROOT}/build/cmake/android.toolchain.cmake \
-            -D CMAKE_OSX_SYSROOT:PATH==${SYSROOT} \
-            -D CMAKE_C_COMPILER==${CC} \
-            -D CMAKE_CXX_COMPILER_RANLIB=${RANLIB} \
-            -D CMAKE_C_COMPILER_RANLIB=${RANLIB} \
-            -D CMAKE_CXX_COMPILER_AR=${AR} \
-            -D CMAKE_C_COMPILER_AR=${AR} \
-            -D CMAKE_C_COMPILER=${CC} \
-            -D CMAKE_CXX_COMPILER=${CXX} \
-            -D CMAKE_C_FLAGS=${CFLAGS} \
-            -D CMAKE_CXX_FLAGS=${CPPFLAGS} \
-            -D ANDROID_ABI=${ABI} \
-            -D CMAKE_CXX_STANDARD_LIBRARIES=${LIBS} \
-            -D CMAKE_C_STANDARD_LIBRARIES=${LIBS} \
-            -D CMAKE_STATIC_LINKER_FLAGS=${LDFLAGS} \
-            -D ANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
-            -D ANDROID_TOOLCHAIN=clang \
-            -DCMAKE_SYSROOT=$SYSROOT \
-            -DANDROID_NDK=$NDK_ROOT \
-            -DANDROID_ABI=$ABI \
-            -DCMAKE_ANDROID_ARCH_ABI=$ABI \
-            -DANDROID_STL=c++_shared \
-            -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+        cmake .. ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DPLATFORM=$PLATFORM \
+            -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -G 'Unix Makefiles' ..
-        make -j${PARALLEL_MAKE} VERBOSE=1
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_BUILD_TYPE="Release" \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_CXX_EXTENSIONS=OFF
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
 
     elif [ "$TYPE" == "emscripten" ]; then
@@ -182,12 +166,30 @@ function build() {
             -DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE}"
         $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}${PARALLEL_MAKE}
     elif [ "$TYPE" == "msys2" ]; then
-        mkdir -p build
-        cd build
+        mkdir -p build_${TYPE}_${PLATFORM}
+        cd build_${TYPE}_${PLATFORM}
         rm -f CMakeCache.txt *.a *.o
-        cp -v $FORMULA_DIR/Makefile .
-        cp -v $FORMULA_DIR/tess2.make .
-        make config=release tess2
+        export DEFINES="${DEFINES} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
+
+        cmake .. ${DEFINES} \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c${C_STANDARD} -Wno-implicit-function-declaration -frtti ${FLAG_RELEASE}" \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_VERBOSE_MAKEFILE=TRUE
+
+        cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+        cd ..
     elif [ "$TYPE" == "linux" ]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
             source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh $ABI
@@ -197,7 +199,8 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.so
-        DEFINES="-DLIBRARY_SUFFIX=${ABI} \
+        export DEFINES="${DEFINES} \
+            -DLIBRARY_SUFFIX=${ABI} \
 	        -DCMAKE_BUILD_TYPE=Release \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 	        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -207,7 +210,6 @@ function build() {
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
-            -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
@@ -216,8 +218,6 @@ function build() {
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
-            -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
@@ -238,13 +238,10 @@ function build() {
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
-
-    # headers
     rm -rf $1/include
     mkdir -p $1/include
     cp -Rv Include/* $1/include/
     . "$SECURE_SCRIPT"
-    # lib
     mkdir -p $1/lib/$TYPE
     if [ "$TYPE" == "vs" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
@@ -261,12 +258,12 @@ function copy() {
         cp -v build_${TYPE}_${PLATFORM}/libtess2.a $1/lib/$TYPE/$PLATFORM/libtess2.a
         secure $1/lib/$TYPE/$PLATFORM/libtess2.a tess2
     elif [ "$TYPE" == "msys2" ]; then
-        cp -v build/libtess2.a $1/lib/$TYPE/libtess2.a
+        cp -v build_${TYPE}_${PLATFORM}/Release/lib/libtess2.a $1/lib/$TYPE/$PLATFORM/libtess2.a
         secure $1/lib/$TYPE/libtess2.a tess2
     elif [ "$TYPE" == "android" ]; then
         rm -rf $1/lib/$TYPE/$ABI
         mkdir -p $1/lib/$TYPE/$ABI
-        cp -v build_$ABI/libtess2.a $1/lib/$TYPE/$ABI/libtess2.a
+        cp -v build_${TYPE}_${PLATFORM}/libtess2.a $1/lib/$TYPE/$ABI/libtess2.a
         secure $1/lib/$TYPE/$ABI/libtess2.a tess2
     else
         cp -v build/$TYPE/libtess2.a $1/lib/$TYPE/libtess2.a
@@ -285,12 +282,11 @@ function copy() {
 function clean() {
     if [ "$TYPE" == "vs" ]; then
         if [ -d "build_${TYPE}_${ARCH}" ]; then
-            # Delete the folder and its contents
             rm -r build_${TYPE}_${ARCH}
         fi
     elif [ "$TYPE" == "android" ]; then
-        if [ -d "build_${TYPE}_${ABI}" ]; then
-            rm -r build_${TYPE}_${ABI}
+        if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+            rm -r build_${TYPE}_${PLATFORM}
         fi
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|linux)$ ]]; then
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then

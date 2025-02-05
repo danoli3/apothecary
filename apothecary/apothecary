@@ -79,42 +79,12 @@ LOAD_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/load.sh")"
 SAVE_FILE="$(realpath "$APOTHECARY_DIR/../scripts")/status.txt"
 SECURE_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/secure.sh")"
 FORMAT_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/format.sh")"
+OSTYPE_SCRIPT="$(realpath "$APOTHECARY_DIR/ostype.sh")"
+APOTHECARY_SCRIPT="$(realpath "$APOTHECARY_DIR/apothecary")"
 
 USE_SAVE=1
 
-### Xcode/ios specific settings
-
-# xcode Developer root
-if [ "$(${APOTHECARY_DIR}/ostype.sh)" == "osx" ]; then
-	XS="xcode-select -print-path"
-	XCODE_DEV_ROOT=
-
-	# used when building some libs for osx
-	OSX_LATEST_SDK="xcrun -sdk macosx --show-sdk-version"
-	OSX_SDK_VER=15.0
-	OSX_MIN_SDK_VER=10.15
-
-	# used when building for ios, the sdks you have installed are found in:
-	IOS_SDK_VER=18.1
-	IOS_LATEST_SDK=$(xcrun -sdk iphoneos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
-	IOS_MIN_SDK_VER=15.0
-	TVOS_MIN_SDK_VER=17.0
-	TVOS_LATEST_SDK=$(xcrun -sdk appletvos --show-sdk-version 2>/dev/null || echo "SDKNotInstalled")
-	XROS_MIN_SDK_VER=1.1
-	WATCHOS_MIN_SDK_VER=6.0
-	if ! which realpath >&/dev/null; then
-	  if ! which brew >&/dev/null; then
-		msg="ERROR: This script requires brew. See https://brew.sh for installation instructions."
-		echo "$(tput setaf 1)$msg$(tput sgr0)" >&2
-		exit 1
-	fi
-	echo "Installing coreutils/realpath"
-	brew install coreutils >&/dev/null
-fi
-
 thisDir=$( dirname "`realpath "$0"`" )
-# echo "This script is run from \"$thisDir\""
-fi
 
 BUILD_MACHINE_ARCH=`uname -m`
 
@@ -860,6 +830,26 @@ if [ "$TYPE" = "emscripten" ]; then
 	. "$EMSCRIPTEN_SCRIPT"
 fi
 
+if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+	XS="xcode-select -print-path"
+	XCODE_DEV_ROOT=
+
+	# used when building some libs for osx
+	OSX_LATEST_SDK="xcrun -sdk macosx --show-sdk-version"
+	OSX_SDK_VER=15.0
+	OSX_MIN_SDK_VER=10.15
+
+	# used when building for ios, the sdks you have installed are found in:
+	IOS_SDK_VER=18.1
+	IOS_LATEST_SDK=$(xcrun -sdk iphoneos --show-sdk-version >/dev/null || echo "SDKNotInstalled")
+	IOS_MIN_SDK_VER=15.0
+	TVOS_MIN_SDK_VER=17.0
+	TVOS_LATEST_SDK=$(xcrun -sdk appletvos --show-sdk-version >/dev/null || echo "SDKNotInstalled")
+	XROS_MIN_SDK_VER=1.1
+	WATCHOS_MIN_SDK_VER=6.0
+fi
+
+
 if [ "$TYPE" = "ios" ]; then
 	if [[ "$IOS_LATEST_SDK" == "SDKNotInstalled" ]]; then
 		echoError "No iOS SDK installed. Please install Xcode and ensure the iOS SDK is available."
@@ -1042,7 +1032,7 @@ function installAndroidToolchain() {
 
 	cd $ANDROID_NDK_ROOT/build/tools
 
-	local HOST=$(${BUILD_DIR}/../ostype.sh)
+	local HOST=$(${APOTHECARY_DIR}/ostype.sh)
 
 	if [ "${HOST}" == "linux" ]; then
 		ANDROID_HOST="linux-x86"
@@ -2525,11 +2515,11 @@ WD=$(pwd)
 
 # change to the dir of this script
 cd $(dirname $0)
-APOTHECARY_DIR=$(pwd)
-APOTHECARY_SCRIPT=$APOTHECARY_DIR/apothecary
+# APOTHECARY_DIR=$(pwd)
+#
 
 # set OS & build types
-HOST_OS=`./ostype.sh`
+HOST_OS=$(${APOTHECARY_DIR}/ostype.sh)
 if [ "$TYPE" == "" ] ; then
 	case "$HOST_OS" in
 		windows)
