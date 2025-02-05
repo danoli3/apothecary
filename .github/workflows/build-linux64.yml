@@ -9,8 +9,8 @@ on:
     - '**/README.md'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   TARGET: "linux"
@@ -132,6 +132,9 @@ jobs:
       env:
         GA_CI_SECRET: ${{ secrets.CI_SECRET }}
         ARCH: ${{ env.ARCH }}
+
+    - name: List output directory 3
+      run: ls -lah out/
 
     - name: Upload to GitHub Release
       if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')

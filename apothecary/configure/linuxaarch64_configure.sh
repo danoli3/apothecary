@@ -9,16 +9,26 @@ CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="aarch64"
 CROSSCOMPILE=${CROSSCOMPILE:-1}
+SYSROOT_PATH="/usr/${CROSS_ARCH}-linux-gnu"
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
+
+if [[ "$HOST_ARCH" != "$CROSS_ARCH" ]]; then
+    CROSSCOMPILE=1
+    echo "Detected different host ($HOST_ARCH) and target ($CROSS_ARCH). Enabling cross-compilation."
+else
+    CROSSCOMPILE=0
+    echo "Native compilation detected. No cross-compilation needed."
+fi
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"
-    export TOOLCHAIN_ROOT="/${CROSS_COMPILER}"
+    export TOOLCHAIN_ROOT="/usr"
 else
     export ROOTFS="${APOTHECARY_LEVEL}/${CROSS_SYSROOT}"
     export TOOLCHAIN_ROOT="${APOTHECARY_LEVEL}/${CROSS_COMPILER}"
 fi
-export HOST_ARCH=$(uname -m)
-export HOST_PLATFORM=$(uname)
+
 export SYSROOT=${ROOTFS}
 export GCC_PREFIX="${CROSS_ARCH}-linux-gnu"
 if [ "${GCC_VERSION}" -eq 0 ]; then
@@ -66,18 +76,6 @@ export LDFLAGS="--sysroot=${SYSROOT} \
 [ -d "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" ] && ls -la "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" || echo "Directory not found: ${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
 
 export HOST="${GCC_PREFIX}"
-
-tools=("gcc" "g++" "cpp" "ar" "as" "ranlib" "gfortran" "ld")
-
-# Check each tool
-for tool in "${tools[@]}"; do
-    filepath="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-${tool}"
-    if [[ -f "$filepath" ]]; then
-        echo "Found: $filepath"
-    else
-        echo "Missing: [$tool] - [$filepath]"
-    fi
-done
 
 # Debugging output
 echo "--------------------"

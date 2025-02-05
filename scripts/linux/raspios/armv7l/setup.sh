@@ -13,16 +13,23 @@ trapError() {
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd $SCRIPT_DIR
-APOTHECARY_LEVEL="$(cd "$SCRIPT_DIR/../.." && pwd)"
-cd $APOTHECARY_LEVEL
+ROOT=$(
+    cd $(dirname "$0")
+    pwd -P
+)/../../../../../
+APOTHECARY_PATH=$ROOT/apothecary
 
 CROSS_COMPILER=${CROSS_COMPILER:-raspbian}
 CROSS_SYSROOT=${CROSS_SYSROOT:-rpi_rootfs}
 CROSS_OS="${CROSS_OS:-bookworm}"
 NATIVE="${NATIVE:-"false"}"
 
-
-
+if grep -q "Raspbian" /etc/os-release 2>/dev/null && [[ "$(uname -m)" == "armv7l" ]]; then
+    NATIVE="true"
+    echo "Detected Raspberry Pi OS (Raspbian) on armv7l. Setting NATIVE=true"
+else
+    NATIVE="false"
+fi
 
 if [ "$CROSS_OS" == "bookworm" ] && [ "$NATIVE" == "0" ]; then
     CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Raspberry%20Pi%20GCC%20Cross-Compiler%20Toolchains/Buster/GCC%2014.2.0/Raspberry%20Pi%203A%2B%2C%203B%2B%2C%204%2C%205/cross-gcc-14.2.0-pi_3%2B.tar.gz/download"
@@ -55,6 +62,5 @@ if [ "$NATIVE" == "0" ]; then
     ./build_rootfs.sh create
 fi
 
-echo "setup complete"
-
+echo "===setup complete==="
 cd $SCRIPT_DIR

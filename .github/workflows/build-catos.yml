@@ -9,7 +9,7 @@ on:
       - '**/README.md'
       
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -17,7 +17,7 @@ env:
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: true
-  DISABLE_WORKFLOW: "false"
+  DISABLE_WORKFLOW: "true"
 
 jobs:
   pre-check:

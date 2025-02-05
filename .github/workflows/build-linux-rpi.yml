@@ -7,12 +7,16 @@ on:
     paths-ignore:
       - "**/README.md"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   TARGET: "linux"
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: false
-  DISABLE_WORKFLOW: "true"
+  DISABLE_WORKFLOW: "false"
 
 jobs:  
   pre-check:
@@ -92,7 +96,7 @@ jobs:
           sudo apt-get install -y build-essential gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
 
       - name: Script Install
-        run: ./scripts/${{ env.TARGET }}/raspios/install.sh
+        run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/install.sh
 
       - name: Setup Cross Compiler and Target Local File System
         run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/setup.sh
@@ -157,7 +161,7 @@ jobs:
           sudo apt-get install -y build-essential gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
       
       - name: Setup Cross Compiler and Target Local File System
-        run: ./scripts/${{ env.TARGET }}/raspios/setup.sh
+        run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/setup.sh
       
       - name: Script Install and Build
         run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/install.sh
@@ -232,7 +236,7 @@ jobs:
       #     fi
 
       - name: Setup Cross Compiler and Target Local File System
-        run: ./scripts/${{ env.TARGET }}/raspios/setup.sh
+        run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/setup.sh
 
       - name: Script Install and Build
         run: ./scripts/${{ env.TARGET }}/raspios/${{ env.ARCH }}/install.sh

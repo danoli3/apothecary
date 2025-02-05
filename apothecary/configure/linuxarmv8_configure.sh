@@ -9,18 +9,28 @@ CROSS_COMPILER="raspbian"
 CROSS_SYSROOT="rpi_rootfs"
 CROSS_ARCH="arm"
 CROSS_CPU=${CROSS_CPU:-"cortex-a53"}
-CROSS_MARCH=${CROSS_CPU:-"armv8"}
+CROSS_MARCH=${CROSS_CPU:-"armv8l"}
 CROSSCOMPILE=${CROSSCOMPILE:-1}
+
+export HOST_ARCH=$(uname -m)
+export HOST_PLATFORM=$(uname)
+
+if [[ "$HOST_ARCH" != "$CROSS_MARCH" ]]; then
+    CROSSCOMPILE=1
+    echo "Detected different host ($HOST_ARCH) and target ($CROSS_MARCH). Enabling cross-compilation."
+else
+    CROSSCOMPILE=0
+    echo "Native compilation detected. No cross-compilation needed."
+fi
 
 if [ "${CROSSCOMPILE}" -eq 0 ]; then
     export ROOTFS="/"
-    export TOOLCHAIN_ROOT="/${CROSS_COMPILER}"
+    export TOOLCHAIN_ROOT="/usr"
 else
     export ROOTFS="${APOTHECARY_LEVEL}/${CROSS_SYSROOT}"
     export TOOLCHAIN_ROOT="${APOTHECARY_LEVEL}/${CROSS_COMPILER}"
 fi
-export HOST_ARCH=$(uname -m)
-export HOST_PLATFORM=$(uname)
+
 export SYSROOT=${ROOTFS}
 export GCC_PREFIX="${CROSS_ARCH}-linux-gnueabihf"
 export GCC_VERSION="1.0"
@@ -62,18 +72,6 @@ export LDFLAGS="--sysroot=${SYSROOT} \
     -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib"
 
 export HOST="${GCC_PREFIX}"
-
-tools=("gcc" "g++" "cpp" "ar" "as" "ranlib" "gfortran" "ld")
-
-# Check each tool
-for tool in "${tools[@]}"; do
-    filepath="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-${tool}"
-    if [[ -f "$filepath" ]]; then
-        echo "Found: $filepath"
-    else
-        echo "Missing: [$tool] - [$filepath]"
-    fi
-done
 
 # Debugging output
 echo "--------------------"
