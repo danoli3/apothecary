@@ -9,7 +9,7 @@ FORMULA_DEPENDS=("zlib")
 # define the version
 MAJOR_VER=16
 VER=1.6.43
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
@@ -150,15 +150,24 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
-        if [ "$PLATFORM" == "ARM64EC" ]; then
-            HARDWARE_OPTIMIZATIONS="OFF"
+        HARDWARE_OPTIMIZATIONS=on
+        # if [ "$PLATFORM" == "ARM64EC" ]; then
+        #     HARDWARE_OPTIMIZATIONS="OFF"
+        # else
+        #     HARDWARE_OPTIMIZATIONS="ON"
+        # fi
+
+        if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
+            EXTRA_DEFS="-DPNG_ARM_NEON=on"
         else
-            HARDWARE_OPTIMIZATIONS="ON"
+            EXTRA_DEFS="-DPNG_ARM_NEON=off -DPNG_INTEL_SS=on"
         fi
+
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
         env CFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${CALLING_CONVENTION}"
         cmake .. ${DEFINES} \
+            ${EXTRA_DEFS} \
             -B . \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \

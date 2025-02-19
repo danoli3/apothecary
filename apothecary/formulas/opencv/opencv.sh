@@ -10,8 +10,8 @@ FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten")
 FORMULA_DEPENDS=("zlib" "libpng")
 
 # define the version
-VER=4.10.0
-BUILD_ID=3
+VER=4.11.0
+BUILD_ID=4
 DEFINES=""
 FRAMEWORKS=""
 
@@ -314,9 +314,9 @@ function build() {
                 -DCV_DISABLE_OPTIMIZATION=OFF"
 
         if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DBUILD_opencv_rgbd=OFF"
+            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=on"
         else
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON"
+            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DPNG_ARM_NEON=off -DPNG_INTEL_SS=on"
         fi
 
         cmake .. ${DEFINES} \
