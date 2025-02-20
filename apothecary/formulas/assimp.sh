@@ -71,6 +71,13 @@ function build() {
             -DASSIMP_BUILD_ZLIB=OFF 
             -DASSIMP_WARNINGS_AS_ERRORS=OFF"
 
+        if [ "${ASSIMP_DOUBLE:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_DOUBLE_PRECISION=ON"
+        fi
+        if [ "${ASSIMP_NO_EXPORT:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
+        fi
+
         cmake .. ${DEFINES} \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -99,7 +106,6 @@ function build() {
 
         cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
-        #cleanup to not fail if the other platform is called
         rm -f CMakeCache.txt
 
     elif [ "$TYPE" == "vs" ]; then
@@ -124,6 +130,13 @@ function build() {
             -DASSIMP_BUILD_SAMPLES=0 \
             -DASSIMP_BUILD_3MF_IMPORTER=0 \
             -DASSIMP_WARNINGS_AS_ERRORS=OFF"
+
+        if [ "${ASSIMP_DOUBLE:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_DOUBLE_PRECISION=ON"
+        fi
+        if [ "${ASSIMP_NO_EXPORT:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
+        fi
 
         if [ "${ASSIMP_STATIC:-0}" = "1" ]; then
             DEFINES="${DEFINES} \
@@ -184,7 +197,46 @@ function build() {
         echo "Completed Assimp for $TYPE | $ARCH | $VS_VER"
 
     elif [ "$TYPE" == "msys2" ]; then
-        echoWarning "TODO: msys2 build"
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$ARCH/zlib.a"
+
+        DEFINES="
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DASSIMP_BUILD_TESTS=OFF \
+            -DASSIMP_BUILD_SAMPLES=OFF \
+            -DASSIMP_BUILD_3MF_IMPORTER=OFF \
+            -DASSIMP_WARNINGS_AS_ERRORS=OFF \
+            -DASSIMP_BUILD_ZLIB=OFF"
+
+        if [ "${ASSIMP_DOUBLE:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_DOUBLE_PRECISION=ON"
+        fi
+        if [ "${ASSIMP_NO_EXPORT:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
+        fi
+
+        mkdir -p "build_${TYPE}_${ARCH}"
+        cd "build_${TYPE}_${ARCH}"
+        find ./ -name "*.o" -type f -delete
+        rm -f CMakeCache.txt *.a *.o || true
+
+        cmake .. ${DEFINES} \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCMAKE_C_FLAGS="-fPIC -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE} -Wno-implicit-function-declaration" \
+            -DCMAKE_CXX_FLAGS="-fPIC -I${ZLIB_INCLUDE_DIR} ${FLAG_RELEASE}" \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
     elif [ "$TYPE" == "android" ]; then
 
@@ -212,6 +264,13 @@ function build() {
             -DASSIMP_ENABLE_BOOST_WORKAROUND=1 \
             -D_LARGEFILE64_SOURCE=1 \
             -DASSIMP_BUILD_ZLIB=OFF"
+
+        if [ "${ASSIMP_DOUBLE:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_DOUBLE_PRECISION=ON"
+        fi
+        if [ "${ASSIMP_NO_EXPORT:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
+        fi
 
         mkdir -p "build_${TYPE}_${ABI}"
         cd "build_${TYPE}_${ABI}"
@@ -250,18 +309,23 @@ function build() {
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
-        # warning, assimp on github uses the ASSIMP_ prefix for CMake options ...
-        # these may need to be updated for a new release
+
         DEFINES="
             -DBUILD_SHARED_LIBS=OFF
             -DASSIMP_BUILD_TESTS=0
             -DASSIMP_BUILD_SAMPLES=0
             -DASSIMP_BUILD_3MF_IMPORTER=0"
 
+        if [ "${ASSIMP_DOUBLE:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_DOUBLE_PRECISION=ON"
+        fi
+        if [ "${ASSIMP_NO_EXPORT:-0}" == "1" ]; then
+            DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
+        fi
+
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM"
         mkdir -p build_${TYPE}_${PLATFORM}
         cd build_${TYPE}_${PLATFORM}
-        find ./ -name "*.o" -type f -delete
         rm -f CMakeCache.txt *.a *.o *.a *.js
         rm -f CMakeCache.txt || true
         $EMSDK/upstream/emscripten/emcmake cmake .. \
@@ -280,24 +344,60 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DASSIMP_BUILD_ZLIB=OFF \
-            -DASSIMP_BUILD_STATIC_LIB=1 \
             -DASSIMP_BUILD_STL_IMPORTER=0 \
             -DASSIMP_BUILD_BLEND_IMPORTER=0 \
             -DASSIMP_BUILD_3MF_IMPORTER=0 \
-            -DASSIMP_BUILD_ZLIB=OFF \
-            -DASSIMP_ENABLE_BOOST_WORKAROUND=1 \
-            -DENABLE_VISIBILITY=OFF \
+            -DENABLE_VISIBILITY=ON \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DASSIMP_BUILD_ZLIB=OFF \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -G 'Unix Makefiles'
-        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
-        $EMSDK/upstream/emscripten/emmake make install
-        # cmake --build . --config Release -j${PARALLEL_MAKE}
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
+            # -G 'Unix Makefiles'
+        # $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
+        # $EMSDK/upstream/emscripten/emmake make install
+        cmake --build . --config Release -j${PARALLEL_MAKE}
         cd ..
+    elif [[ "$TYPE" =~ ^(linux)$ ]]; then
 
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        DEFINES="
+            -DBUILD_SHARED_LIBS=OFF
+            -DASSIMP_BUILD_TESTS=0
+            -DASSIMP_BUILD_SAMPLES=0
+            -DASSIMP_BUILD_3MF_IMPORTER=0"
+
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+        fi
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.o *.a
+
+        cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_CXX_FLAGS="-fPIC ${FLAG_RELEASE}" \
+            -DGCC_VERSION=${GCC_VERSION} \
+            -DCMAKE_C_FLAGS="-fPIC ${FLAG_RELEASE}" \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            $DEFINES
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
     fi
 }
 
@@ -329,7 +429,7 @@ function copy() {
             secure $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib assimp.pkl
         fi
 
-    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux|msys2)$ ]]; then
         cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv build_${TYPE}_${PLATFORM}/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
@@ -370,7 +470,7 @@ function clean() {
         fi
         rm -f CMakeCache.txt 2>/dev/null
 
-    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux|msys2)$ ]]; then
         rm -f build_${TYPE}_${PLATFORM}
         rm -f CMakeCache.txt
     else
