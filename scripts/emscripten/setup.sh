@@ -7,10 +7,6 @@ EMSDK_VERSION=${EMSDK_VERSION:-latest}  # Default to 'latest' if unset
 check_emsdk() {
     if [ -d "$1/upstream/emscripten" ] && command -v emcc >/dev/null 2>&1; then
         local installed_version=$(emcc --version | head -n1 | cut -d' ' -f3)
-        if [ "$installed_version" != "$EMSDK_VERSION" ] && [ "$EMSDK_VERSION" != "latest" ]; then
-            echo "Installed version ($installed_version) does not match desired version ($EMSDK_VERSION)."
-            return 1
-        fi
         echo "Emscripten version: $installed_version"
         return 0
     else
