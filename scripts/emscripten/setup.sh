@@ -1,26 +1,55 @@
 #!/usr/bin/env bash
 
-EMSDK_VERSION=${EMSDK_VERSION:-latest}
+EMSDK_PATH="$HOME/emsdk"
+EMSDK_VERSION=${EMSDK_VERSION:-latest} # "3.1.20"
 
-if [ ! -d "$HOME/emsdk/upstream/emscripten" ]; then
-    echo "===Emscripten SDK not found. Installing...==="
-    if [ ! -d "$HOME/emsdk" ]; then
-        git clone https://github.com/emscripten-core/emsdk.git $HOME/emsdk
+check_emsdk() {
+    if [ -d "$1/upstream/emscripten" ]; then
+        local installed_version=$(emcc --version | head -n1 | cut -d' ' -f3)
+        if [ "$installed_version" != "$EMSDK_VERSION" ] && [ "$EMSDK_VERSION" != "latest" ]; then
+            echo "Installed version ($installed_version) does not match desired version ($EMSDK_VERSION)."
+            return 1
+        fi
+        echo "Emscripten version: $installed_version"
+        return 0
+    else
+        return 1
     fi
-    cd $HOME/emsdk
+}
+
+if check_emsdk "$EMSDK_PATH"; then
+    echo "Emscripten SDK already installed at $EMSDK_PATH"
+else
+    echo "===Emscripten SDK not found. Installing...==="
+    if [ ! -d "$EMSDK_PATH" ]; then
+        git clone https://github.com/emscripten-core/emsdk.git "$EMSDK_PATH"
+    else
+        cd "$EMSDK_PATH"
+        git pull
+    fi
+    cd "$EMSDK_PATH"
     ./emsdk install "$EMSDK_VERSION"
     ./emsdk activate "$EMSDK_VERSION"
-    echo "EMSDK_PATH=$HOME/emsdk" >> $GITHUB_ENV
-    echo "EMSCRIPTEN=$HOME/emsdk/upstream/emscripten" >> $GITHUB_ENV
-    echo 'export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"' >> $HOME/.bashrc
-    source $HOME/emsdk/emsdk_env.sh
-else
-    echo "Emscripten SDK already installed at $HOME/emsdk"
+
+     if [ -n "$GITHUB_ACTIONS" ]; then
+        echo "EMSDK_PATH=$HOME/emsdk" >> $GITHUB_ENV
+        echo "EMSCRIPTEN=$HOME/emsdk/upstream/emscripten" >> $GITHUB_ENV
+    fi
+    source "$EMSDK_PATH/emsdk_env.sh"
+
+    # Check if .bashrc or .zshrc exists to add the path permanently
+    if [ -f "$HOME/.bashrc" ]; then
+        echo 'export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"' >> "$HOME/.bashrc"
+    elif [ -f "$HOME/.zshrc" ]; then
+        echo 'export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"' >> "$HOME/.zshrc"
+    fi
+
+    if check_emsdk "$EMSDK_PATH"; then
+        echo "Emscripten SDK installed successfully."
+    else
+        echo "Error: Failed to install Emscripten SDK."
+        exit 1
+    fi
 fi
-if [ -d "$HOME/emsdk/upstream/emscripten" ]; then
-    source "$HOME/emsdk/emsdk_env.sh"
-    echo "Emscripten version: $(emcc --version)"
-else
-    echo "Error: Emscripten SDK directory not found at $HOME/emsdk/upstream/emscripten"
-    exit 1
-fi
+
+source "$EMSDK_PATH/emsdk_env.sh"
