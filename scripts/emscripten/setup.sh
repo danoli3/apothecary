@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 EMSDK=${EMSDK:-$HOME/emsdk}
-EMSDK_VERSION=${EMSDK_VERSION:-latest} # "3.1.20"
+export EMSDK_VERSION=${EMSDK_VERSION:-latest} # "3.1.20"
 
 check_emsdk() {
     if [ -d "$1/upstream/emscripten" ]; then
