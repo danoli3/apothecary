@@ -11,7 +11,7 @@ FORMULA_DEPENDS=("zlib" "libpng")
 
 # define the version
 VER=4.11.0
-BUILD_ID=4
+BUILD_ID=5
 DEFINES=""
 FRAMEWORKS=""
 
@@ -156,7 +156,7 @@ function build() {
 
         if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
             # ARM64 targets: Enable NEON
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='NEON' -DCPU_DISPATCH='' -DWITH_GTK_2_X=OFF -DCV_DISABLE_OPTIMIZATION=OFF"
+            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='NEON' -DCPU_DISPATCH='' -DCV_DISABLE_OPTIMIZATION=OFF"
         else
             # x86_64 targets: Enable SSE2 as baseline, dispatch higher SSE/AVX
             EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='SSE2' -DCPU_DISPATCH='SSE4_1;SSE4_2;AVX' -DCV_DISABLE_OPTIMIZATION=OFF"
