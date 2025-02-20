@@ -365,7 +365,7 @@ function build() {
             -DBUILD_PNG=OFF \
             -DPNG_ROOT=${LIBPNG_ROOT} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-            -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+            -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
             rm -f CMakeCache.txt *.a *.o *.lib *.js
         fi
