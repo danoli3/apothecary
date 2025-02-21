@@ -39,7 +39,9 @@ if [ -z $TARGET ]; then
     exit 0
 fi
 
-source $LOCAL_ROOT/scripts/calculate_formulas.sh
+echo "Sourcing: ${LOCAL_ROOT}/scripts/calculate_formulas.sh"
+ls -lah "${LOCAL_ROOT}/scripts/"
+source "${LOCAL_ROOT}/scripts/calculate_formulas.sh"
 if [ -z "$FORMULAS" ]; then
     echo "No formulas to build"
     exit 0
@@ -74,9 +76,11 @@ fi
 
 cd $OUTPUT_FOLDER
 
-echo "Compressing individual libraries from [$OUTPUT_FOLDER]..."
+echo "Compressing individual libraries from [$OUTPUT_FOLDER]... FORMULAS:[$FORMULAS]"
 
-for LIB in $FORMULAS; do
+for LIB in "${FORMULAS[@]}"; do
+    LIB=$(echo "$LIB" | tr -d '[:space:]')  # Remove all whitespace
+    echo "Loop: [$LIB]"
     if [ -d "$LIB" ]; then
         if [[ "$TARGET" == "msys2" || "$TARGET" == "vs" ]]; then
             # ZIP format for Windows (msys2 / vs)
