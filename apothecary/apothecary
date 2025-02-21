@@ -102,9 +102,9 @@ DEPENDS_SUBDIR=_depends
 BUILDROOT_SUBDIR=_buildroot
 
 # paths relative to this script
-mkdir -p ${APOTHECARY_DIR}/build
+mkdir -p ${APOTHECARY_DIR}/../build
 FORMULAS_DIR=$(realpath ${APOTHECARY_DIR}/formulas)
-BUILD_DIR=$(realpath ${APOTHECARY_DIR}/build)
+BUILD_DIR=$(realpath ${APOTHECARY_DIR}/../build)
 OF_ROOT=$(realpath ${APOTHECARY_DIR}/../../..)
 REL_LIBS_DIR=${APOTHECARY_DIR}/../out
 ADDONS_DIR=$OF_ROOT/addons
@@ -152,11 +152,11 @@ WIN10_INSTALLED_SDK_2019=10.0.19041.0
 WIN10_INSTALLED_SDK_2019_HEX=0x0A004A31
 WIN11_INSTALLED_SDK_2019=10.0.22000.0
 WIN11_INSTALLED_SDK_2019_HEX=0x0A0055F0
-
 WIN10_INSTALLED_SDK_2022=10.0.20348.0
 WIN10_INSTALLED_SDK_2022_HEX=0x0A004F5C
+WIN11_INSTALLED_SDK_2022=10.0.26100.0
+WIN11_INSTALLED_SDK_2022_HEX=0x0A0065F4
 
-WIN11_INSTALLED_SDK_2022=10.0.22621.0
 if [ -z "${VS_TYPE+x}" ]; then # Professional # Enterprise # Community
 	VS_TYPE=Community 
 fi
@@ -179,8 +179,6 @@ fi
 if [ -z "${GCC+x}" ]; then
 	GCC=gcc14
 fi
-
-WIN11_INSTALLED_SDK_2022_HEX=0x0A00586D
 
 # if [ -z "${USE_CCACHE+x}" ]; then
 #     export CC="ccache gcc"
@@ -619,9 +617,9 @@ if [ "$TYPE" = "vs" ]; then
 
 	VS_BAT="vcvarsall.bat"
 	if [ -z "${WSL_DISTRO_NAME+x}" ]; then
-		DRIVE=/c
+		export DRIVE=/c
 	else
-		DRIVE=/mnt/c
+		export DRIVE=/mnt/c
 	fi
 	if [ -z ${VS_HOSTPLATFORM+x} ]; then
 		if [ ${VS_HOST} == "amd64" ]; then
@@ -824,8 +822,9 @@ if [ "$TYPE" = "emscripten" ]; then
 		fi
 	fi
 
-	export FLAG_RELEASE+="-O3 -pthread -matomics -mbulk-memory -fPIC ${PLATFORM_FLAG} -fvisibility=hidden -Wno-implicit-function-declaration -frtti -DWASM=ON -DNDEBUG"
+	export FLAG_RELEASE+="-O3 -pthread -matomics -mbulk-memory -fPIC ${PLATFORM_FLAG} -frtti -DWASM=ON -DNDEBUG" #-Wno-implicit-function-declaration
 	export LINK_FLAGS="-s WASM=2 -pthread -matomics -mbulk-memory -sMODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s MAIN_MODULE=0 -sLINKABLE=1 -s ASSERTIONS=1 -s EXPORT_ALL=1 --no-entry -s DYNAMIC_EXECUTION=0 -s NO_DYNAMIC_EXECUTION=1 -s EMBIND_AOT=1"
+
 	EMSCRIPTEN_SCRIPT="$(realpath "$APOTHECARY_DIR/../scripts/emscripten/setup.sh")"
 	. "$EMSCRIPTEN_SCRIPT"
 fi
@@ -1356,6 +1355,8 @@ function downloadFormula(){
 	echoInfo " Downloading \"$1\" "
 	echoVerbose " Formula dir: $FORMULA_DIR"
 	echoVerbose " Formula build types: ${FORMULA_TYPES[*]}"
+	mkdir -p $BUILD_DIR
+	mkdir -p $BUILD_ROOT_DIR
 	echoVerbose " Build dir: $BUILD_DIR"
 	echoVerbose " Depends formula dir: $DEPENDS_FORMULA_DIR"
 	if [ ${#FORMULA_DEPENDS[@]} -gt 0 ] ; then
@@ -1379,8 +1380,7 @@ function downloadFormula(){
 	else
 		echoInfo "  Not using cache : [! -e $1] for downloadFormula \"$1\" "
 	fi
-	mkdir -p $BUILD_DIR
-	mkdir -p $BUILD_ROOT_DIR
+
 	cd $BUILD_DIR
 
 	if [ -e $1 ] ; then
