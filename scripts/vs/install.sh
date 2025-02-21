@@ -46,3 +46,4 @@ echoDots() {
 winget install -e --id Microsoft.WindowsTerminal
 winget install Ninja-build.Ninja
 winget install jqlang.jq
+winget install --id Oracle.JDK.17 -e

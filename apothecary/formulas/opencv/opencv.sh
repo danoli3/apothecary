@@ -312,10 +312,10 @@ function build() {
                 -DWITH_GTK_2_X=OFF"
 
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows: Use NEON
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=on"
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=ON -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=on"
             #EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='NEON' -DCPU_DISPATCH='' -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=ON" # must patch
         else  # x86/x64 on Windows: Use SSE2 baseline, dispatch higher SSE/AVX
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DPNG_ARM_NEON=off -DPNG_INTEL_SSE=on" #must use lowercase on for this png
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=ON -DPNG_ARM_NEON=off -DPNG_INTEL_SSE=on" #must use lowercase on for this png
             #EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='SSE2' -DCPU_DISPATCH='SSE4_1;SSE4_2;AVX' -DPNG_ARM_NEON=OFF -DPNG_INTEL_SSE=ON"
         fi
 
