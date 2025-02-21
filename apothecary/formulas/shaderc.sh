@@ -123,10 +123,11 @@ function copy() {
 
     # prepare libs directory if needed
     mkdir -p $1/lib/$TYPE
-
+    . "$SECURE_SCRIPT"
     if [ "$TYPE" == "vs" ]; then
         cp -Rv libshaderc/include/* $1/include
         cp -v "build_${TYPE}_${PLATFORM}/lib/Release/libshaderc_combined.lib" $1/lib/$TYPE/$PLATFORM/shaderc.lib
+        secure "$1/lib/$TYPE/$PLATFORM/shaderc.lib" "shaderc.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
     else
         pwd
@@ -135,6 +136,7 @@ function copy() {
         cp -Rv libshaderc/include/* $1/include
         # copy lib
         cp -v "build_${TYPE}_${PLATFORM}/lib/Release/libshaderc_combined.a" $1/lib/$TYPE/$PLATFORM/shaderc.a
+        secure "$1/lib/$TYPE/$PLATFORM/shaderc.a" "shaderc.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     fi
 
     # copy license file

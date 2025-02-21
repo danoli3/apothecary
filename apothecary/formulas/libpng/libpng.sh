@@ -58,9 +58,33 @@ function prepare() {
 
 }
 
+function load() {
+    . "$LOAD_SCRIPT"
+    LOAD_RESULT=$(loadsave ${TYPE} "libpng" ${ARCH} ${VER} "$LIBS_DIR_REAL/libpng/lib/$TYPE/$PLATFORM" ${BUILD_ID})
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
+
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
+
+    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+        result=$(load "libpng" | tail -n 1)
+        echoInfo "===Build $1 - Checking if Precompiled binary :[$result]==="
+        if [ $result -eq 1 ]; then
+            echoInfo "===Build \"$1\" Precompiled binary validated. Skipping updateFormula==="
+            return 0
+        else
+            echoInfo "===Build Precompiled not found or outdated. Continue updateFormula for \"$1\"=== "
+        fi
+    else
+        echoInfo "===Build  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for updateFormula \"$1\" ==="
+    fi
 
     export DEFINES="
 		    -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -304,16 +328,17 @@ function copy() {
         mkdir -p $1/include
         cp -v "build_${TYPE}_${ARCH}/Release/lib/libpng16_static.lib" $1/lib/$TYPE/$PLATFORM/libpng.lib
         secure $1/lib/$TYPE/$PLATFORM/libpng.lib
+        secure "$1/lib/$TYPE/$PLATFORM/libpng.lib" "libpng.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -RT "build_${TYPE}_${ARCH}/Release/include/" $1/include
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng.a
-        secure $1/lib/$TYPE/$PLATFORM/libpng.a
+        secure "$1/lib/$TYPE/$PLATFORM/libpng.a" "libpng.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$ABI/
-        cp -v "build_${TYPE}_${ABI}/Release/lib/libpng16.a" $1/lib/$TYPE/$ABI/libpng.a
-        secure $1/lib/$TYPE/$ABI/libpng.a
+        cp -v "build_${TYPE}_${ABI}/Release/lib/libpng16.a" $1/lib/$TYPE/${PLATFORM}/libpng.a
+        secure "$1/lib/$TYPE/${PLATFORM}/libpng.a" "libpng.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
         cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/libpng16.pc"
@@ -330,7 +355,7 @@ function copy() {
         # cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
         cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng.pc" $1/lib/${TYPE}/${PLATFORM}/libpng.pc
         cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
-        secure $1/lib/$TYPE/$PLATFORM/libpng16.a
+        secure "$1/lib/$TYPE/$PLATFORM/libpng16.a" "libpng.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/libpng16.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -347,7 +372,7 @@ function copy() {
         # cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/" $1/lib/${TYPE}/${PLATFORM}
         cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng.pc" $1/lib/${TYPE}/${PLATFORM}/libpng.pc
         cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libpng16.pc" $1/lib/${TYPE}/${PLATFORM}/libpng16.pc
-        secure $1/lib/$TYPE/$PLATFORM/libpng16.a
+        secure "$1/lib/$TYPE/$PLATFORM/libpng16.a" "libpng.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/libpng16.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -361,7 +386,7 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/libpng16.a" $1/lib/$TYPE/$PLATFORM/libpng16.a
         cp -v "build_${TYPE}_${PLATFORM}/Release/libpng.a" $1/lib/$TYPE/$PLATFORM/libpng.a
-        secure $1/lib/$TYPE/$PLATFORM/libpng.a
+        secure "$1/lib/$TYPE/$PLATFORM/libpng16.a" "libpng.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
     fi
 
@@ -393,13 +418,4 @@ function clean() {
     fi
 }
 
-function load() {
-    . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "libpng" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID})
-    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
-    if [ "$PREBUILT" -eq 1 ]; then
-        echo 1
-    else
-        echo 0
-    fi
-}
+

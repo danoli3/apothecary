@@ -3,6 +3,7 @@
 # Default EMSDK path and version
 EMSDK=${EMSDK:-$HOME/emsdk}
 EMSDK_VERSION=${EMSDK_VERSION:-latest}  # Default to 'latest' if unset
+SETUP_STATUS_FILE="$HOME/.emsdk_setup_status"
 
 check_emsdk() {
     if [ -d "$1/upstream/emscripten" ] && command -v emcc >/dev/null 2>&1; then
@@ -16,6 +17,17 @@ check_emsdk() {
 
 # Preserve EMSDK_VERSION before sourcing emsdk_env.sh
 export ORIGINAL_EMSDK_VERSION="$EMSDK_VERSION"
+
+if [ -f "$SETUP_STATUS_FILE" ]; then
+    SAVED_VERSION=$(cat "$SETUP_STATUS_FILE")
+    if [ "$SAVED_VERSION" = "$EMSDK_VERSION" ] && check_emsdk "$EMSDK"; then
+        echo "=== EMSDK is already set up (Version: $SAVED_VERSION). Skipping installation. ==="
+        source "$EMSDK/emsdk_env.sh"
+        return 0
+    else
+        echo "=== EMSDK version mismatch or not properly installed. Reinstalling... ==="
+    fi
+fi
 
 # Install or update Emscripten if needed
 if [ ! -d "$EMSDK" ]; then
@@ -37,6 +49,8 @@ source "./emsdk_env.sh"
 # Restore EMSDK_VERSION after sourcing
 export EMSDK_VERSION="$ORIGINAL_EMSDK_VERSION"
 
+
+
 # Verify installation
 if check_emsdk "$EMSDK"; then
     echo "Emscripten SDK installed successfully."
@@ -45,8 +59,10 @@ else
     exit 1
 fi
 
+echo "$EMSDK_VERSION" > "$SETUP_STATUS_FILE"
+
 # GitHub Actions environment setup
-if [ -n "$GITHUB_ACTIONS" ]; then
+if [ "${GITHUB_ACTIONS:-0}" = true ]; then
     echo "EMSDK=$EMSDK" >> "$GITHUB_ENV"
     echo "EMSCRIPTEN=$EMSDK/upstream/emscripten" >> "$GITHUB_ENV"
 fi

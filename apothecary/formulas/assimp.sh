@@ -50,6 +50,17 @@ function prepare() {
     echo "Prepare"
 }
 
+function load() {
+    . "$LOAD_SCRIPT"
+    LOAD_RESULT=$(loadsave ${TYPE} "assimp" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID})
+    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
+    if [ "$PREBUILT" -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
+
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
@@ -416,9 +427,9 @@ function copy() {
     if [ "$TYPE" == "vs" ]; then
         cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-       if [ "${ASSIMP_STATIC:-0}" = "1" ]; then
+        if [ "${ASSIMP_STATIC:-0}" = "1" ]; then
             cp -v "build_${TYPE}_${PLATFORM}/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/libassimp.lib
-            secure $1/lib/$TYPE/$PLATFORM/libassimp.lib assimp.pkl
+            secure "$1/lib/$TYPE/$PLATFORM/libassimp.lib" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
             mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
             mkdir -p $1/lib/$TYPE/$PLATFORM/Release
@@ -426,24 +437,24 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}/bin/Debug/assimp-vc${VC_VERSION}-mtd.dll" $1/lib/$TYPE/$PLATFORM/Debug/assimp-vc${VC_VERSION}-mtd.dll
             cp -v "build_${TYPE}_${PLATFORM}/lib/Debug/assimp-vc${VC_VERSION}-mtd.lib" $1/lib/$TYPE/$PLATFORM/Debug/libassimpD.lib
             cp -v "build_${TYPE}_${PLATFORM}/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib
-            secure $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib assimp.pkl
+            secure "$1/lib/$TYPE/$PLATFORM/libassimp.lib" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         fi
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux|msys2)$ ]]; then
         cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv build_${TYPE}_${PLATFORM}/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
-        secure $1/lib/$TYPE/$PLATFORM/assimp.a assimp.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libassimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$ABI/
         cp -Rv build_${TYPE}_${ABI}/include/* $1/include
         cp -Rv build_${TYPE}_${ABI}/lib/libassimp.a $1/lib/$TYPE/$ABI/libassimp.a
-        secure $1/lib/$TYPE/$PLATFORM/libassimp.a assimp.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libassimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p $1/lib/${TYPE}/${PLATFORM}
         cp -Rv build_${TYPE}_${PLATFORM}/include/* $1/include
         cp -v "build_${TYPE}_${PLATFORM}/lib/libassimp.a" $1/lib/$TYPE/${PLATFORM}/libassimp.a
-        secure $1/lib/$TYPE/${PLATFORM}/libassimp.a assimp.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libassimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     fi
 
     # copy license files
@@ -480,13 +491,4 @@ function clean() {
     fi
 }
 
-function load() {
-    . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "assimp" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" ${BUILD_ID})
-    PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
-    if [ "$PREBUILT" -eq 1 ]; then
-        echo 1
-    else
-        echo 0
-    fi
-}
+

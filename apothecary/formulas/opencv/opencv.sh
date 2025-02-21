@@ -312,10 +312,10 @@ function build() {
                 -DWITH_GTK_2_X=OFF"
 
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows: Use NEON
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=on"
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=on"
             #EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='NEON' -DCPU_DISPATCH='' -DBUILD_opencv_rgbd=OFF -DPNG_ARM_NEON=ON" # must patch
         else  # x86/x64 on Windows: Use SSE2 baseline, dispatch higher SSE/AVX
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DPNG_ARM_NEON=off -DPNG_INTEL_SSE=on" #must use lowercase on for this png
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF -DCV_ENABLE_INTRINSICS=OFF -DCPU_BASELINE='' -DCPU_DISPATCH='' -DPNG_ARM_NEON=off -DPNG_INTEL_SSE=on" #must use lowercase on for this png
             #EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='SSE2' -DCPU_DISPATCH='SSE4_1;SSE4_2;AVX' -DPNG_ARM_NEON=OFF -DPNG_INTEL_SSE=ON"
         fi
 
@@ -522,17 +522,6 @@ function build() {
 
     elif [ "$TYPE" == "emscripten" ]; then
 
-        # check if emsdk is sourced and EMSDK is set
-        if [ -z ${EMSDK+x} ]; then
-            # if not, try docker path
-            if [ -f /emsdk/emsdk_env.sh ]; then
-                source /emsdk/emsdk_env.sh
-            else
-                echo "no EMSDK found, please install from https://emscripten.org"
-                echo "and follow instructions to activate it in your shell"
-                exit 1
-            fi
-        fi
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
@@ -554,11 +543,11 @@ function build() {
             -B build \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD=17 \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
             -DCMAKE_C_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_CXX_EXTENSIONS=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_BUILD_TYPE="Release" \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -643,7 +632,8 @@ function build() {
             -DWITH_OPENCL_SVM=OFF \
             -DWITH_LAPACK=OFF \
             -DWITH_ITT=OFF \
-            -DBUILD_ZLIB=ON \
+            -DBUILD_ZLIB=OFF \
+            -DWITH_ZLIB=ON \
             -DBUILD_PNG=OFF \
             -DWITH_WEBP=ON \
             -DWITH_VTK=OFF \
@@ -706,7 +696,7 @@ function copy() {
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/share/licenses/"* $1/license
         cp -v LICENSE $1/license/
 
-        secure $1/lib/$TYPE/$PLATFORM/libopencv_core.a opencv.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libopencv_core.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
     elif [ "$TYPE" == "vs" ]; then
 
@@ -716,7 +706,7 @@ function copy() {
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
             cp -v "build_${TYPE}_${PLATFORM}/lib/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM
-            secure $1/lib/$TYPE/$PLATFORM/opencv_core490.lib opencv.pkl
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core490.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
 
             mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
@@ -746,7 +736,7 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
             cp -Rv "build_${TYPE}_${PLATFORM}/Release/etc/"* $1/etc
 
-            secure $1/lib/$TYPE/$PLATFORM/Release/opencv_core490.lib opencv.pkl
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core490.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         fi
 
@@ -765,11 +755,11 @@ function copy() {
         cp -R include/opencv2 $1/include/
         cp -R modules/*/include/opencv2/* $1/include/opencv2/
 
-        mkdir -p $1/lib/$TYPE/$ABI/
-        cp -r $BUILD_FOLDER/install/sdk/native/staticlibs/$ABI/*.a $1/lib/$TYPE/$ABI/
-        cp -r $BUILD_FOLDER/install/sdk/native/3rdparty/libs/$ABI/*.a $1/lib/$TYPE/$ABI/
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -r $BUILD_FOLDER/install/sdk/native/staticlibs/$ABI/*.a $1/lib/$TYPE/$PLATFORM/
+        cp -r $BUILD_FOLDER/install/sdk/native/3rdparty/libs/$ABI/*.a $1/lib/$TYPE/$PLATFORM/
 
-        secure $1/lib/$TYPE/$PLATFORM/libopencv_core.a opencv.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libopencv_core.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p $1/include/opencv2
@@ -779,7 +769,8 @@ function copy() {
         cp -R modules/*/include/opencv2/* $1/include/opencv2/
         cp -v build_${TYPE}_${PLATFORM}/Release/lib/*.a $1/lib/$TYPE/$PLATFORM
         cp -v build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/*.a $1/lib/$TYPE/$PLATFORM
-        secure $1/lib/$TYPE/$PLATFORM/libopencv_core.a opencv.pkl
+        secure "$1/lib/$TYPE/$PLATFORM/libopencv_core.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+
     fi
     cp -v LICENSE $1/license/
 

@@ -38,7 +38,7 @@ function copy() {
     cp -rv glm $1/include
 
     . "$SECURE_SCRIPT"
-    secure $1/include/glm/glm.hpp glm.pkl
+    secure "$1/include/glm/glm.hpp" "glm.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
     # copy license file
     if [ -d "$1/license" ]; then
@@ -56,7 +56,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave ${TYPE} "glm" ${ARCH} ${VER} "$LIBS_DIR_REAL/$1/include" ${PLATFORM})
+    LOAD_RESULT=$(loadsave ${TYPE} "glm" ${ARCH} ${VER} "$LIBS_DIR_REAL/utf8/include" ${PLATFORM})
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     if [ "$PREBUILT" -eq 1 ]; then
         echo 1
