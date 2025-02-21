@@ -19,6 +19,7 @@ VER=ff84893dd52d28f0b1737d2635733d952013bd9c
 # tools for git use
 GIT_URL=https://github.com/google/shaderc
 GIT_TAG=$VER
+DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
 function download() {
