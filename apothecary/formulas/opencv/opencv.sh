@@ -706,7 +706,7 @@ function copy() {
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
             cp -v "build_${TYPE}_${PLATFORM}/lib/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core490.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
 
             mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
@@ -736,7 +736,7 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
             cp -Rv "build_${TYPE}_${PLATFORM}/Release/etc/"* $1/etc
 
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core490.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         fi
 
