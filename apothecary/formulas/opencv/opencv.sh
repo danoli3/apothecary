@@ -314,7 +314,7 @@ function build() {
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows
             EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
                         -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='' \
+                        -DCPU_BASELINE='NONE' \
                         -DCPU_DISPATCH='' \
                         -DWITH_NEON=OFF \
                         -DENABLE_NEON=OFF \
@@ -323,7 +323,7 @@ function build() {
         else  # x86/x64 on Windows
             EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
                         -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='' \
+                        -DCPU_BASELINE='NONE' \
                         -DCPU_DISPATCH='' \
                         -DPNG_ARM_NEON=OFF \
                         -DPNG_INTEL_SSE=OFF"
