@@ -53,12 +53,10 @@ fi
 
 if command -v python >/dev/null 2>&1; then
     python -m ensurepip --upgrade
-    python -m pip install --upgrade pip
     echo "python is installed. Proceeding to install numpy..."
     python -m pip install numpy
 elif command -v python3 >/dev/null 2>&1; then
     python3 -m pip --version 2>/dev/null
-    python3 -m pip install --upgrade pip
     echo "python3 is installed. Proceeding to install numpy..."
     python3 -m pip install numpy
 else
