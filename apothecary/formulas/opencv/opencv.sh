@@ -384,8 +384,8 @@ function build() {
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
+            mv Debug ..            
             rm -f CMakeCache.txt *.a *.o *.lib *.js
-
             cd ..
             if [ -d "build_${TYPE}_${PLATFORM}" ]; then
                 rm -r build_${TYPE}_${PLATFORM}
@@ -418,6 +418,10 @@ function build() {
             ${CMAKE_WIN_SDK}
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
         cd ..
+
+        if [ -d "Debug" ]; then
+            mv "Debug" build_${TYPE}_${PLATFORM}/Debug
+        fi
 
     elif [ "$TYPE" == "android" ]; then
         export ANDROID_NDK=${NDK_ROOT}
