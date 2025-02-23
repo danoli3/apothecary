@@ -6,7 +6,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten")
+FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" "linux" )
 FORMULA_DEPENDS=("zlib" "libpng")
 
 # define the version
@@ -14,6 +14,7 @@ VER=4.11.0
 BUILD_ID=5
 DEFINES=""
 FRAMEWORKS=""
+FILE_VERSION=4110
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv
@@ -202,6 +203,9 @@ function build() {
         echoInfo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echoInfo "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
+        if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+            rm -r build_${TYPE}_${PLATFORM}
+        fi
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
@@ -217,7 +221,7 @@ function build() {
         FLAGS_RELEASE=$(echo $FLAGS_RELEASE | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
         FLAGS_DEBUG=$(echo $FLAGS_DEBUG | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 
-        DEFINES="
+        export DEFINES="
 				-DCMAKE_C_STANDARD=${C_STANDARD} \
 				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -239,7 +243,6 @@ function build() {
                 -DBUILD_TIFF=OFF \
                 -DBUILD_JPEG=OFF \
                 -DWITH_OPENCLAMDFFT=OFF \
-                -DBUILD_WITH_STATIC_CRT=OFF \
                 -DBUILD_opencv_java=OFF \
                 -DBUILD_opencv_python=OFF \
                 -DBUILD_opencv_python2=OFF \
@@ -303,52 +306,56 @@ function build() {
                 -DWITH_OPENMP=OFF \
                 -DWITH_PVAPI=OFF \
                 -DWITH_GTK=OFF \
-                -DWITH_CUDNN=OFF \
-                -DWITH_CUFFT=OFF \
-                -DWITH_CUBLAS=OFF \
                 -DWITH_NVCUVID=OFF \
                 -DWITH_NVCUVENC=OFF \
                 -DENABLE_SOLUTION_FOLDERS=OFF \
                 -DWITH_GTK_2_X=OFF"
 
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
+            export EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
                         -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='NONE' \
-                        -DCPU_DISPATCH='' \
+                        -DCPU_BASELINE='NEON;VFPV3' \
+                        -DCPU_DISPATCH=''
                         -DWITH_NEON=OFF \
                         -DENABLE_NEON=OFF \
-                        -DPNG_ARM_NEON=OFF \
+                        -DPNG_ARM_NEON=off \
+                        -DPNG_INTEL_SSE=off \
                         -DBUILD_opencv_rgbd=OFF"
         else  # x86/x64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
-                        -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='NONE' \
-                        -DCPU_DISPATCH='' \
-                        -DPNG_ARM_NEON=OFF \
-                        -DPNG_INTEL_SSE=OFF"
+            export EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
+                        -DCPU_BASELINE='SSE2' \
+                        -DCPU_DISPATCH='SSE4_1;SSE4_2'
+                        -DCV_ENABLE_INTRINSICS=ON \
+                        -DPNG_ARM_NEON=off \
+                        -DPNG_INTEL_SSE=off"
         fi
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
-            DEFINES="$DEFINES \
+            echoInfo "Building OpenCV with CUDA"
+            CUDA_VERSION=${CUDA_VERSION:-12.8}
+            DRIVE=${DRIVE:-C:}
+            DEFAULT_CUDA_PATH="${DRIVE}\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v${CUDA_VERSION}"
+            #DCUDA_TOOLKIT_ROOT_DIR=\"${CUDA_PATH:-$DEFAULT_CUDA_PATH}\" \
+            export DEFINES="$DEFINES \
                 -DWITH_CUDA=ON \
-                -DCUDA_TOOLKIT_ROOT_DIR='${CUDA_PATH:${DRIVE}/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3}' \
-                -DCUDA_ARCH_BIN='5.0;6.1;7.5;8.6' \
-                -DCUDA_ARCH_PTX='5.0;6.1;7.5;8.6' \
+                -DCUDA_ARCH_BIN='7.5;8.6;8.9;9.0' \
+                -DCUDA_ARCH_PTX='9.0' \
                 -DBUILD_opencv_cudacodec=ON \
                 -DWITH_CUDNN=ON \
                 -DWITH_CUBLAS=ON \
                 -DWITH_CUFFT=ON \
                 -DENABLE_FAST_MATH=ON"
         else
-            DEFINES="$DEFINES \
+            export DEFINES="$DEFINES \
                 -DWITH_CUDA=OFF \
+                -DWITH_CUDNN=OFF \
                 -DWITH_CUBLAS=OFF \
                 -DWITH_CUFFT=OFF"
         fi
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
-            DEFINES="${DEFINES} \
+            echoInfo "Building with OPENCV_STATIC"
+            export DEFINES="${DEFINES} \
             -DBUILD_WITH_STATIC_CRT=ON \
             -DUSE_STATIC_CRT=ON \
             -DBUILD_SHARED_LIBS=OFF"
@@ -356,7 +363,8 @@ function build() {
                 sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' ../CMakeLists.txt
             fi
         else
-            DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
+            echoInfo "Building OpenCV Debug"
+            export DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DUSE_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
             cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
@@ -378,9 +386,20 @@ function build() {
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
+            mv Debug ..
+            mv 3rdparty/lib/Debug ../Debug3rd
+
             rm -f CMakeCache.txt *.a *.o *.lib *.js
+            cd ..
+            if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+                rm -r build_${TYPE}_${PLATFORM}
+            fi
+            mkdir -p "build_${TYPE}_${PLATFORM}"
+            cd "build_${TYPE}_${PLATFORM}"
+            rm -f CMakeCache.txt || true
         fi
 
+        echoInfo "Building OpenCV Release"
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
@@ -390,7 +409,7 @@ function build() {
             -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
-            -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             ${EXTRA_DEFS} \
             -DZLIB_ROOT=${ZLIB_ROOT} \
@@ -403,6 +422,11 @@ function build() {
             ${CMAKE_WIN_SDK}
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
         cd ..
+
+        if [ -d "Debug" ]; then
+            mv "Debug" build_${TYPE}_${PLATFORM}/Debug
+            mv "Debug3rd" build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug
+        fi
 
     elif [ "$TYPE" == "android" ]; then
         export ANDROID_NDK=${NDK_ROOT}
@@ -529,6 +553,98 @@ function build() {
             -DBUILD_PERF_TESTS=OFF ..
         make -j${PARALLEL_MAKE}
         make install
+
+    elif [[ "$TYPE" =~ ^(linux)$ ]]; then
+        echo "building $TYPE | $PLATFORM"
+        echo "--------------------"
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+        fi
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.a *.o
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        CORE_DEFS="
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+        -DCMAKE_CXX_EXTENSIONS=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_INSTALL_PREFIX=Release \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY}"
+
+    DEFINES="
+        -DBUILD_DOCS=OFF \
+        -DENABLE_BUILD_HARDENING=ON \
+        -DBUILD_EXAMPLES=OFF \
+        -DBUILD_opencv_highgui=ON \
+        -DBUILD_opencv_imgcodecs=ON \
+        -DBUILD_opencv_stitching=ON \
+        -DBUILD_opencv_calib3d=ON \
+        -DBUILD_opencv_objdetect=ON \
+        -DBUILD_opencv_videoio=ON \
+        -DBUILD_opencv_videostab=ON \
+        -DOPENCV_ENABLE_NONFREE=OFF \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
+        -DWITH_FFMPEG=ON \
+        -DWITH_GSTREAMER=ON \
+        -DWITH_V4L=ON \
+        -DWITH_EIGEN=ON \
+        -DBUILD_TESTS=OFF \
+        -DWITH_OPENGL=OFF \
+        -DWITH_VULKAN=OFF \
+        -DWITH_OPENCL=OFF \
+        -DWITH_QT=OFF \
+        -DWITH_GTK=ON"
+
+        if [ "${OPENCV_CUDA:-0}" == "1" ]; then
+            CUDA_VERSION=${CUDA_VERSION:-12.8}
+            DEFAULT_CUDA_PATH="/usr/local/cuda-${CUDA_VERSION}"
+            CUDA_PATH=${CUDA_PATH:-$DEFAULT_CUDA_PATH}
+            if [ ! -d "$CUDA_PATH" ]; then
+                echo "Error: CUDA Toolkit not found at $CUDA_PATH. Please set CUDA_PATH or install CUDA."
+                exit 1
+            fi
+            DEFINES="${DEFINES} \
+                -DWITH_CUDA=ON \
+                -DCUDA_TOOLKIT_ROOT_DIR=${CUDA_PATH} \
+                -DCUDA_FAST_MATH=ON \
+                -DWITH_CUBLAS=ON \
+                -DWITH_CUFFT=ON \
+                -DCUDA_ARCH_BIN='6.1;7.5;8.6;8.9;9.0' \
+                -DCUDA_ARCH_PTX='9.0'"
+        fi
+
+        cmake .. ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DGCC_VERSION=${GCC_VERSION} \
+            -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+            -DPLATFORM=$PLATFORM \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DPNG_HARDWARE_OPTIMIZATIONS=ON \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
 
     elif [ "$TYPE" == "emscripten" ]; then
 
@@ -715,8 +831,8 @@ function copy() {
         OUTPUT_FOLDER=${BUILD_PLATFORM}
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
-            cp -v "build_${TYPE}_${PLATFORM}/lib/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            cp -v "build_${TYPE}_${PLATFORM}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/staticlib/"*.lib $1/lib/$TYPE/$PLATFORM
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core${FILE_VERSION}.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
 
             mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
@@ -746,7 +862,7 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
             cp -Rv "build_${TYPE}_${PLATFORM}/Release/etc/"* $1/etc
 
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core${FILE_VERSION}.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         fi
 
