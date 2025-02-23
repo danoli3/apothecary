@@ -6,7 +6,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten")
+FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" "linux" )
 FORMULA_DEPENDS=("zlib" "libpng")
 
 # define the version
@@ -334,6 +334,7 @@ function build() {
         fi
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
+            echoInfo "Building OpenCV with CUDA"
             CUDA_VERSION=${CUDA_VERSION:-12.8}
             DRIVE=${DRIVE:-C:}
             DEFAULT_CUDA_PATH="${DRIVE}\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v${CUDA_VERSION}"
@@ -388,7 +389,7 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
             mv Debug ..
-            mv 3rdparty/lib ..
+            mv 3rdparty/lib/Debug ../Debug3rd
 
             rm -f CMakeCache.txt *.a *.o *.lib *.js
             cd ..
@@ -426,7 +427,7 @@ function build() {
 
         if [ -d "Debug" ]; then
             mv "Debug" build_${TYPE}_${PLATFORM}/Debug
-            mv lib build_${TYPE}_${PLATFORM}/3rdparty
+            mv "Debug3rd" build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug
         fi
 
     elif [ "$TYPE" == "android" ]; then
@@ -554,6 +555,58 @@ function build() {
             -DBUILD_PERF_TESTS=OFF ..
         make -j${PARALLEL_MAKE}
         make install
+
+    elif [[ "$TYPE" =~ ^(linux)$ ]]; then
+        echo "building $TYPE | $PLATFORM"
+        echo "--------------------"
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+        fi
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.a *.o
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        if [ "${OPENCV_CUDA:-0}" == "1" ]; then
+            CUDA_VERSION=${CUDA_VERSION:-12.8}
+            DEFAULT_CUDA_PATH="/usr/local/cuda-${CUDA_VERSION}"
+            CUDA_PATH=${CUDA_PATH:-$DEFAULT_CUDA_PATH}
+            if [ ! -d "$CUDA_PATH" ]; then
+                echo "Error: CUDA Toolkit not found at $CUDA_PATH. Please set CUDA_PATH or install CUDA."
+                exit 1
+            fi
+            DEFINES="${DEFINES} \
+                -DWITH_CUDA=ON \
+                -DCUDA_TOOLKIT_ROOT_DIR=${CUDA_PATH} \
+                -DCUDA_FAST_MATH=ON \
+                -DWITH_CUBLAS=ON \
+                -DWITH_CUFFT=ON \
+                -DCUDA_ARCH_BIN='6.1;7.5;8.6;8.9;9.0' \
+                -DCUDA_ARCH_PTX='9.0'"
+        fi
+
+        cmake .. ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DGCC_VERSION=${GCC_VERSION} \
+            -DCMAKE_SYSTEM_PROCESSOR=$ABI \
+            -DPLATFORM=$PLATFORM \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DPNG_HARDWARE_OPTIMIZATIONS=ON \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
 
     elif [ "$TYPE" == "emscripten" ]; then
 
