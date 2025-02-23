@@ -334,11 +334,14 @@ function build() {
         fi
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
+            CUDA_VERSION=${CUDA_VERSION:-12.8}
+            DRIVE=${DRIVE:-C:}
+            DEFAULT_CUDA_PATH="${DRIVE}\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v${CUDA_VERSION}"
+            #DCUDA_TOOLKIT_ROOT_DIR=\"${CUDA_PATH:-$DEFAULT_CUDA_PATH}\" \
             export DEFINES="$DEFINES \
                 -DWITH_CUDA=ON \
-                -DCUDA_TOOLKIT_ROOT_DIR='${CUDA_PATH:${DRIVE}/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3}' \
-                -DCUDA_ARCH_BIN='5.0;6.1;7.5;8.6' \
-                -DCUDA_ARCH_PTX='5.0;6.1;7.5;8.6' \
+                -DCUDA_ARCH_BIN='7.5;8.6;8.9;9.0' \
+                -DCUDA_ARCH_PTX='9.0' \
                 -DBUILD_opencv_cudacodec=ON \
                 -DWITH_CUDNN=ON \
                 -DWITH_CUBLAS=ON \
