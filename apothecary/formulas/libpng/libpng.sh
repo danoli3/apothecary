@@ -175,14 +175,14 @@ function build() {
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
         HARDWARE_OPTIMIZATIONS=on
-        # if [ "$PLATFORM" == "ARM64EC" ]; then
-        #     HARDWARE_OPTIMIZATIONS="OFF"
-        # else
-        #     HARDWARE_OPTIMIZATIONS="ON"
-        # fi
+        if [ "$PLATFORM" == "ARM64EC" ]; then
+            HARDWARE_OPTIMIZATIONS="off"
+        else
+            HARDWARE_OPTIMIZATIONS="on"
+        fi
 
         if [[ ${ARCH} == "arm64ec" || "${ARCH}" == "arm64" ]]; then
-            EXTRA_DEFS="-DPNG_ARM_NEON=on"
+            EXTRA_DEFS="-DPNG_ARM_NEON=on -DPNG_INTEL_SS=off"
         else
             EXTRA_DEFS="-DPNG_ARM_NEON=off -DPNG_INTEL_SS=on"
         fi
