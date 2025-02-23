@@ -220,7 +220,7 @@ function build() {
         FLAGS_RELEASE=$(echo $FLAGS_RELEASE | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
         FLAGS_DEBUG=$(echo $FLAGS_DEBUG | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 
-        DEFINES="
+        export DEFINES="
 				-DCMAKE_C_STANDARD=${C_STANDARD} \
 				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -315,24 +315,26 @@ function build() {
                 -DWITH_GTK_2_X=OFF"
 
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
+            export EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
                         -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='NONE' \
-                        -DCPU_DISPATCH='' \
+                        -DCPU_BASELINE='NEON;VFPV3' \
+                        -DCPU_DISPATCH=''
                         -DWITH_NEON=OFF \
                         -DENABLE_NEON=OFF \
                         -DPNG_ARM_NEON=off \
                         -DPNG_INTEL_SSE=off \
                         -DBUILD_opencv_rgbd=OFF"
         else  # x86/x64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
+            export EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
+                        -DCPU_BASELINE='SSE2' \
+                        -DCPU_DISPATCH='SSE4_1;SSE4_2'
                         -DCV_ENABLE_INTRINSICS=ON \
                         -DPNG_ARM_NEON=off \
                         -DPNG_INTEL_SSE=off"
         fi
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
-            DEFINES="$DEFINES \
+            export DEFINES="$DEFINES \
                 -DWITH_CUDA=ON \
                 -DCUDA_TOOLKIT_ROOT_DIR='${CUDA_PATH:${DRIVE}/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3}' \
                 -DCUDA_ARCH_BIN='5.0;6.1;7.5;8.6' \
@@ -343,14 +345,15 @@ function build() {
                 -DWITH_CUFFT=ON \
                 -DENABLE_FAST_MATH=ON"
         else
-            DEFINES="$DEFINES \
+            export DEFINES="$DEFINES \
                 -DWITH_CUDA=OFF \
                 -DWITH_CUBLAS=OFF \
                 -DWITH_CUFFT=OFF"
         fi
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
-            DEFINES="${DEFINES} \
+            echoInfo "Building with OPENCV_STATIC"
+            export DEFINES="${DEFINES} \
             -DBUILD_WITH_STATIC_CRT=ON \
             -DUSE_STATIC_CRT=ON \
             -DBUILD_SHARED_LIBS=OFF"
@@ -358,7 +361,8 @@ function build() {
                 sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' ../CMakeLists.txt
             fi
         else
-            DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
+            echoInfo "Building OpenCV Debug"
+            export DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
             cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
@@ -391,6 +395,7 @@ function build() {
             rm -f CMakeCache.txt || true
         fi
 
+        echoInfo "Building OpenCV Release"
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
@@ -400,7 +405,7 @@ function build() {
             -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib/modules \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
-            -DCMAKE_CXX_FLAGS="-fno-omit-frame-pointer -DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             ${EXTRA_DEFS} \
             -DZLIB_ROOT=${ZLIB_ROOT} \
