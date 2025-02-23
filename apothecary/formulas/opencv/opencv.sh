@@ -202,6 +202,9 @@ function build() {
         echoInfo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echoInfo "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
+        if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+            rm -r build_${TYPE}_${PLATFORM}
+        fi
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
@@ -312,21 +315,20 @@ function build() {
                 -DWITH_GTK_2_X=OFF"
 
         if [[ "$ARCH" =~ ^(arm64ec|arm64)$ ]]; then  # ARM64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
                         -DCV_ENABLE_INTRINSICS=OFF \
                         -DCPU_BASELINE='NONE' \
                         -DCPU_DISPATCH='' \
                         -DWITH_NEON=OFF \
                         -DENABLE_NEON=OFF \
-                        -DPNG_ARM_NEON=OFF \
+                        -DPNG_ARM_NEON=off \
+                        -DPNG_INTEL_SSE=off \
                         -DBUILD_opencv_rgbd=OFF"
         else  # x86/x64 on Windows
-            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON \
-                        -DCV_ENABLE_INTRINSICS=OFF \
-                        -DCPU_BASELINE='NONE' \
-                        -DCPU_DISPATCH='' \
-                        -DPNG_ARM_NEON=OFF \
-                        -DPNG_INTEL_SSE=OFF"
+            EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=OFF \
+                        -DCV_ENABLE_INTRINSICS=ON \
+                        -DPNG_ARM_NEON=off \
+                        -DPNG_INTEL_SSE=off"
         fi
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
@@ -379,6 +381,14 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
             rm -f CMakeCache.txt *.a *.o *.lib *.js
+
+            cd ..
+            if [ -d "build_${TYPE}_${PLATFORM}" ]; then
+                rm -r build_${TYPE}_${PLATFORM}
+            fi
+            mkdir -p "build_${TYPE}_${PLATFORM}"
+            cd "build_${TYPE}_${PLATFORM}"
+            rm -f CMakeCache.txt || true
         fi
 
         cmake .. ${DEFINES} \
