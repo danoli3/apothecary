@@ -14,6 +14,7 @@ VER=4.11.0
 BUILD_ID=5
 DEFINES=""
 FRAMEWORKS=""
+FILE_VERSION=4110
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv
@@ -242,7 +243,6 @@ function build() {
                 -DBUILD_TIFF=OFF \
                 -DBUILD_JPEG=OFF \
                 -DWITH_OPENCLAMDFFT=OFF \
-                -DBUILD_WITH_STATIC_CRT=OFF \
                 -DBUILD_opencv_java=OFF \
                 -DBUILD_opencv_python=OFF \
                 -DBUILD_opencv_python2=OFF \
@@ -306,9 +306,6 @@ function build() {
                 -DWITH_OPENMP=OFF \
                 -DWITH_PVAPI=OFF \
                 -DWITH_GTK=OFF \
-                -DWITH_CUDNN=OFF \
-                -DWITH_CUFFT=OFF \
-                -DWITH_CUBLAS=OFF \
                 -DWITH_NVCUVID=OFF \
                 -DWITH_NVCUVENC=OFF \
                 -DENABLE_SOLUTION_FOLDERS=OFF \
@@ -351,6 +348,7 @@ function build() {
         else
             export DEFINES="$DEFINES \
                 -DWITH_CUDA=OFF \
+                -DWITH_CUDNN=OFF \
                 -DWITH_CUBLAS=OFF \
                 -DWITH_CUFFT=OFF"
         fi
@@ -366,7 +364,7 @@ function build() {
             fi
         else
             echoInfo "Building OpenCV Debug"
-            export DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
+            export DEFINES="${DEFINES} -DBUILD_WITH_STATIC_CRT=OFF -DUSE_STATIC_CRT=OFF -DBUILD_SHARED_LIBS=ON"
             cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
@@ -569,6 +567,46 @@ function build() {
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        CORE_DEFS="
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+        -DCMAKE_CXX_EXTENSIONS=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_INSTALL_PREFIX=Release \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY}"
+
+    DEFINES="
+        -DBUILD_DOCS=OFF \
+        -DENABLE_BUILD_HARDENING=ON \
+        -DBUILD_EXAMPLES=OFF \
+        -DBUILD_opencv_highgui=ON \
+        -DBUILD_opencv_imgcodecs=ON \
+        -DBUILD_opencv_stitching=ON \
+        -DBUILD_opencv_calib3d=ON \
+        -DBUILD_opencv_objdetect=ON \
+        -DBUILD_opencv_videoio=ON \
+        -DBUILD_opencv_videostab=ON \
+        -DOPENCV_ENABLE_NONFREE=OFF \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
+        -DWITH_FFMPEG=ON \
+        -DWITH_GSTREAMER=ON \
+        -DWITH_V4L=ON \
+        -DWITH_EIGEN=ON \
+        -DBUILD_TESTS=OFF \
+        -DWITH_OPENGL=OFF \
+        -DWITH_VULKAN=OFF \
+        -DWITH_OPENCL=OFF \
+        -DWITH_QT=OFF \
+        -DWITH_GTK=ON"
 
         if [ "${OPENCV_CUDA:-0}" == "1" ]; then
             CUDA_VERSION=${CUDA_VERSION:-12.8}
@@ -793,8 +831,8 @@ function copy() {
         OUTPUT_FOLDER=${BUILD_PLATFORM}
 
         if [ "${OPENCV_STATIC:-0}" = "1" ]; then
-            cp -v "build_${TYPE}_${PLATFORM}/lib/Release/${OUTPUT_FOLDER}/vc${VS_VER}/lib/"*.lib $1/lib/$TYPE/$PLATFORM
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            cp -v "build_${TYPE}_${PLATFORM}/Release/${OUTPUT_FOLDER}/vc${VS_VER}/staticlib/"*.lib $1/lib/$TYPE/$PLATFORM
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core${FILE_VERSION}.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
 
             mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
@@ -824,7 +862,7 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}/3rdparty/lib/Debug/"*.lib $1/lib/$TYPE/$PLATFORM/Debug
             cp -Rv "build_${TYPE}_${PLATFORM}/Release/etc/"* $1/etc
 
-            secure "$1/lib/$TYPE/$PLATFORM/opencv_core4110.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            secure "$1/lib/$TYPE/$PLATFORM/opencv_core${FILE_VERSION}.lib" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
         fi
 
