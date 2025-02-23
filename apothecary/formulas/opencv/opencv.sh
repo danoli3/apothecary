@@ -384,7 +384,9 @@ function build() {
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
             cmake --build . --target install --config Debug
-            mv Debug ..            
+            mv Debug ..
+            mv 3rdparty/lib ..
+
             rm -f CMakeCache.txt *.a *.o *.lib *.js
             cd ..
             if [ -d "build_${TYPE}_${PLATFORM}" ]; then
@@ -421,6 +423,7 @@ function build() {
 
         if [ -d "Debug" ]; then
             mv "Debug" build_${TYPE}_${PLATFORM}/Debug
+            mv lib build_${TYPE}_${PLATFORM}/3rdparty
         fi
 
     elif [ "$TYPE" == "android" ]; then
