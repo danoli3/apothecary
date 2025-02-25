@@ -12,7 +12,7 @@ FORMULA_DEPENDS=()
 GIT_URL=https://github.com/glfw/glfw
 VER=3.4
 GIT_BRANCH=$VER
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
