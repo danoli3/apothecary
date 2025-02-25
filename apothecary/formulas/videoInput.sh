@@ -66,6 +66,8 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
             -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
 
         cmake --build . --config Release -j${PARALLEL_MAKE}
@@ -80,6 +82,8 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} " \
             -DCMAKE_INSTALL_PREFIX=Debug \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
 
         cmake --build . --config Debug -j${PARALLEL_MAKE}
@@ -100,13 +104,15 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include"
 
         cmake ../libs/videoInput ${DEFS} \
-            -G "MSYS Makefiles" \
+            -G "Unix Makefiles" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_SYSTEM_NAME=MSYS \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_SYSTEM_PROCESSOR=${ARCH}
 
         cmake --build . --config Release -j${PARALLEL_MAKE}

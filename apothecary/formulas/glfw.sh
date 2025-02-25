@@ -78,7 +78,8 @@ function build() {
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             ${CMAKE_WIN_SDK} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
@@ -105,7 +106,8 @@ function build() {
             -DCMAKE_C_FLAGS="-fPIC ${FLAG_RELEASE}" \
             -DENABLE_ARC=OFF \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
@@ -124,6 +126,9 @@ function build() {
     elif [[ "$TYPE" =~ ^(linux)$ ]]; then
         if [ $CROSSCOMPILING -eq 1 ]; then
             source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
+            export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH
+            export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig
+            export PKG_CONFIG_SYSROOT_DIR=$SYSROOT
             if [[ "$PLATFORM" =~ ^arm64$ ]] && [ "$TYPE" = "linux" ]; then
                 echoInfo "Building GLFW for ARM64 Linux - Using Wayland/X11, skipping EGL/OpenGL ES"
                 export GLFW_WAYLAND=1
@@ -170,7 +175,8 @@ function build() {
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_C_FLAGS="-fPIC ${FLAG_RELEASE}" \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
@@ -199,11 +205,13 @@ function build() {
             -DGLFW_BUILD_EXAMPLES=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            $DEFINES
+            ${DEFINES}
 
         make clean
         make -j${PARALLEL_MAKE}

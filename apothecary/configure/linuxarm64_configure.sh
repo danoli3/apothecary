@@ -27,15 +27,17 @@ else
 fi
 
 if [[ "$CROSSCOMPILE" -eq 1 ]]; then
-    export ROOTFS="${SYSROOT_PATH}"
+    export ROOTFS="/arm64-rootfs"
     export TOOLCHAIN_ROOT="${SYSROOT_PATH}"
     echo "Using sysroot at ${SYSROOT_PATH}"
 else
     export ROOTFS="/"
-    export TOOLCHAIN_ROOT="/usr"
+    export TOOLCHAIN_ROOT=""
     echo "Using native rootfs at ${ROOTFS}"
 fi
 export SYSROOT=${ROOTFS}
+
+
 
 # if [ "${GCC_VERSION}" -eq 0 ]; then
 #     export GCC_VERSION="14.2.0"
@@ -96,6 +98,8 @@ echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
 echo "CROSS_ARCH: $CROSS_ARCH"
 echo "HOST_ARCH: $HOST_ARCH"
 echo "HOST_PLATFORM: $HOST_PLATFORM"
+echo "GCC Arch:"
+file /usr/bin/${CROSS_ARCH}-linux-gnu-gcc
 # echo "LDFLAGS : $LDFLAGS"
 # echo "CFLAGS : $CFLAGS"
 # echo "Path: [$PATH]"

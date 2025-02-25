@@ -97,6 +97,8 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -UCMAKE_CXX_FLAGS \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -128,7 +130,8 @@ function build() {
             -DPLATFORM=$PLATFORM \
             -DENABLE_BITCODE=OFF \
             -DENABLE_ARC=OFF \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF
 
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
@@ -163,7 +166,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=ON \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
@@ -179,6 +183,7 @@ function build() {
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
@@ -222,7 +227,8 @@ function build() {
             -DCMAKE_SYSTEM_PROCESSOR=$ARCH \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
@@ -255,7 +261,7 @@ function build() {
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include

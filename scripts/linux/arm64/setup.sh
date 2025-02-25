@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
+LINUX_RELEASE=24.04.2
+
 echo "=== Linux ARM64 cross setup ==="
 lsb_release -a
 
 sudo apt update -y
 sudo apt install -y \
+    debootstrap \
+    qemu-user-static \
+    binfmt-support \
+    python3-minimal \
+    python3-numpy \
     git \
     cmake \
     gawk \
@@ -16,12 +23,12 @@ sudo apt install -y \
     autoconf \
     flex \
     xz-utils \
-    crossbuild-essential-armhf \
-    crossbuild-essential-arm64
-
-sudo apt install -y \
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    binutils-aarch64-linux-gnu \
     python3-minimal \
-    python3-numpy
+    python3-numpy \
+    mesa-utils mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev
 
 # if [[ "$(uname -m)" == "x86_64" ]]; then
 #     wget https://ftp.gnu.org/gnu/gawk/gawk-5.3.1.tar.xz
@@ -37,21 +44,34 @@ sudo apt install -y \
 # Ensure the script is run as root
 if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root."
-    exit 1
 fi
 
-# Ubuntu version detection
-UBUNTU_VERSION=$(lsb_release -cs)  # e.g., "lunar" for Ubuntu 23.04
-
-# Check for valid Ubuntu version
+UBUNTU_VERSION=$(lsb_release -cs) 
 if [[ -z "$UBUNTU_VERSION" ]]; then
     echo "Error: Could not detect Ubuntu version. Ensure lsb-release is installed."
     exit 1
 fi
 if [[ "$(uname -m)" == "aarch64" ]]; then
     echo "Native aarch64 detected. No need to generate ARM64 /apt/sources. edits"
+    SYSROOT="/"
 else
-# Define output file path
+
+echo "downloading aarch64 linux base"
+IMAGE="ubuntu-base-$LINUX_RELEASE-base-arm64"
+wget https://cdimage.ubuntu.com/ubuntu-base/releases/noble/release/${IMAGE}.tar.gz
+mkdir arm64-rootfs
+sudo tar -xpf ${IMAGE}.tar.gz -C arm64-rootfs
+echo "===setup qemu==="
+if [ ! -f "/arm64-rootfs/usr/bin/qemu-aarch64-static" ]; then
+    echo "Copying qemu-aarch64-static into rootfs..."
+    sudo cp /usr/bin/qemu-aarch64-static arm64-rootfs/usr/bin/
+fi
+sudo mount --bind /dev arm64-rootfs/dev
+sudo mount --bind /proc arm64-rootfs/proc
+sudo mount --bind /sys arm64-rootfs/sys
+sudo chroot arm64-rootfs /bin/bash
+SYSROOT="arm64-rootfs"
+
 OUTPUT_FILE="/etc/apt/sources.list.d/arm64.sources"
 echo "making sources file arm64"
 
@@ -67,7 +87,6 @@ EOF
 
 # Output the result
 echo "Generated ARM64 .sources file at $OUTPUT_FILE"
-
 
 SOURCE_FILE="/etc/apt/sources.list.d/ubuntu.sources"
 awk '
@@ -85,8 +104,12 @@ awk '
 mv "${SOURCE_FILE}.tmp" "$SOURCE_FILE"
 echo "'Architectures: amd64' added where missing after 'Types: deb' in $SOURCE_FILE."
 
+
+fi #end if arm64 / cross
+
+if ! dpkg --print-foreign-architectures | grep -q "arm64"; then
+    sudo dpkg --add-architecture arm64
 fi
-sudo dpkg --add-architecture arm64
 dpkg --print-architecture
 dpkg --print-foreign-architectures
 # Update package lists
@@ -95,54 +118,72 @@ sudo apt-get update
 
 echo "Done! ARM64 and ARMHF architectures are ready."
 
+ARCH_SUFFIX=":arm64"
+if [[ "$(uname -m)" == "aarch64" ]]; then
+    ARCH_SUFFIX=""
+fi
+
 echo "Installing ARM64 packages..."
-apt-get install -y --no-install-recommends \
-    aptitude:arm64 \
+sudo apt-get install -y \
+    aptitude$ARCH_SUFFIX \
+    gfortran$ARCH_SUFFIX \
+    texinfo$ARCH_SUFFIX \
+    bison$ARCH_SUFFIX \
+    libncurses-dev$ARCH_SUFFIX \
+    unzip$ARCH_SUFFIX \
+    pkg-config$ARCH_SUFFIX \
+    flex$ARCH_SUFFIX \
+    openssl$ARCH_SUFFIX \
+    pigz$ARCH_SUFFIX \
+    autoconf$ARCH_SUFFIX \
+    automake$ARCH_SUFFIX \
+    figlet$ARCH_SUFFIX \
+    gperf$ARCH_SUFFIX \
+    libgl1-mesa-dev$ARCH_SUFFIX \
+    libglu1-mesa-dev$ARCH_SUFFIX \
+    freeglut3-dev$ARCH_SUFFIX \
+    libxrandr-dev$ARCH_SUFFIX \
+    libxinerama-dev$ARCH_SUFFIX \
+    libx11-dev$ARCH_SUFFIX \
+    libwayland-dev$ARCH_SUFFIX \
+    libxext-dev$ARCH_SUFFIX \
+    libxcursor-dev$ARCH_SUFFIX \
+    libxi-dev$ARCH_SUFFIX \
+    ccache$ARCH_SUFFIX \
+    libgles2-mesa-dev$ARCH_SUFFIX \
+    libgl1-mesa-dev$ARCH_SUFFIX \
+    libegl1-mesa-dev$ARCH_SUFFIX \
+    libxkbcommon-dev$ARCH_SUFFIX
+
+if [[ "$(uname -m)" != "aarch64" ]]; then  
+    if [[ -d "arm64-rootfs/" ]]; then
+        echo "Setting up Linux aarch64 toolchain inside rootfs..."
+        sudo mkdir -p /usr/aarch64-linux-gnu
+        sudo mkdir -p /arm64-rootfs/usr/aarch64-linux-gnu
+        # Link the toolchain inside rootfs (Linux aarch64)
+        sudo ln -s /arm64-rootfs/usr/bin/aarch64-linux-gnu-* /usr/aarch64-linux-gnu/
+        sudo ln -s /arm64-rootfs/usr/lib /usr/lib/aarch64-linux-gnu/
+        sudo ln -s /arm64-rootfs/usr/include /usr/aarch64-linux-gnu/include
+        echo "Toolchain linked for Linux aarch64 at /usr/aarch64-linux-gnu/"
+    else
+        echo "Error: /arm64-rootfs/ does not exist. Ensure rootfs is extracted."
+        exit 1
+    fi
+fi
+
+sudo apt install -y \
+    binfmt-support \
+    python3-minimal \
+    python3-numpy \
+    git \
+    cmake \
+    pkgconf \
+    build-essential \
+    ninja-build \
+    xz-utils \
     gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu \
-    gfortran:arm64 \
-    texinfo:arm64 \
-    bison:arm64 \
-    libncurses-dev:arm64 \
-    unzip:arm64 \
-    pkg-config:arm64 \
-    flex:arm64 \
-    openssl:arm64 \
-    pigz:arm64 \
-    autoconf:arm64 \
-    automake:arm64 \
-    figlet:arm64 \
-    gperf:arm64 \
-    libgl1-mesa-dev:arm64 \
-    libglu1-mesa-dev:arm64 \
-    freeglut3-dev:arm64 \
-    libxrandr-dev:arm64 \
-    libxinerama-dev:arm64 \
-    libx11-dev:arm64 \
-    libxext-dev:arm64 \
-    libxcursor-dev:arm64 \
-    libxi-dev:arm64 \
-    ccache:arm64 \
-    binutils-aarch64-linux-gnu:arm64 \
-    libgles2-mesa-dev:arm64
-
-# apt-get install -y gawk:arm64 --no-remove
-# if [[ "$(uname -m)" == "x86_64" ]]; then
-#     # issues with apt packages install manually
-# wget http://ftp.us.debian.org/debian/pool/main/g/gawk/gawk_5.2.1-2+b2_arm64.deb
-# sudo dpkg -i --force-architecture --force-depends gawk_5.2.1-2+b2_arm64.deb
-# fi
-
-
-# sudo apt-get install -y aptitude gawk gcc g++ gfortran texinfo bison libncurses-dev unzip pkg-config flex openssl pigz autoconf automake tar figlet xz-utils
-# sudo aptitude install -y gperf
-# sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxrandr-dev libxinerama-dev libx11-dev libxext-dev libxcursor-dev libxi-dev
-# sudo apt-get install -y ccache
-# sudo apt-get install gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
-
-# dpkg -L gcc-aarch64-linux-gnu
-# sudo apt install libgl1-mesa-dev libgles2-mesa-dev
-
+    g++-aarch64-linux-gnu
+    
 
 if [ -d "/usr/lib/x86_64-linux-gnu" ]; then
     find /usr/lib/x86_64-linux-gnu -name "libGL*"
@@ -153,19 +194,33 @@ if [ -d "/usr/lib/x86_64-linux-gnu" ]; then
         echo "No libGL* files found in /usr/lib/x86_64-linux-gnu"
         exit 1
     fi
-    echo -e "\n\033[1;32m==== Running ldd on libGL* files ====\033[0m"
+    echo -e "=== Running ldd on libGL* files ===="
     for file in $lib_files; do
-        echo -e "\n\033[1;34mFile: $file\033[0m"
+        echo -e "File: $file"
         ldd "$file" || echo "Error: Could not run ldd on $file"
     done
 fi
 if [ -d "/usr/lib/aarch64-linux-gnu" ]; then
     find /usr/lib/aarch64-linux-gnu -name "libGL*"
+    find /usr/lib/aarch64-linux-gnu -name "libwayland*"
 else
     echo "Directory /usr/lib/aarch64-linux-gnu does not exist."
 fi
 
-PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig \
-    PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu \
-    PKG_CONFIG_SYSROOT_DIR=/ \
-      pkg-config --list-all
+if [ -d "/usr/aarch64-linux-gnu/bin/pkg-config" ]; then
+    echo "Directory /usr/aarch64-linux-gnu/bin/pkg-config exists"
+     find /usr/aarch64-linux-gnu/bin/pkg-config -name "pkg-config*"
+else
+    echo "Directory /usr/aarch64-linux-gnu/bin/pkg-config does not exist."
+fi
+
+
+dpkg -l | grep g++-aarch64-linux-gnu
+dpkg -L libx11-dev:arm64 | grep libX11.so
+dpkg -L libxext-dev:arm64 | grep libXext.so
+
+export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH
+export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig
+export PKG_CONFIG_SYSROOT_DIR=${SYSROOT}
+pkg-config --list-all
+

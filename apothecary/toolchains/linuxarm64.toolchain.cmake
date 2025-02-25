@@ -11,7 +11,7 @@ if(NOT DEFINED GCC_VERSION)
         set(GCC_VERSION $ENV{GCC_VERSION})
     else()
         set(GCC_VERSION 14) # Default value
-        message(WARNING "GCC_VERSION not specified. Defaulting to GCC_VERSION=${GCC_VERSION}")
+        message(STATUS "GCC_VERSION not specified. Defaulting to GCC_VERSION=${GCC_VERSION}")
     endif()
 endif()
 
@@ -21,7 +21,7 @@ if(NOT DEFINED CROSS_CPU)
         set(CROSS_CPU $ENV{CROSS_CPU})
     else()
         set(CROSS_CPU "generic-armv8-a")
-        message(WARNING "CROSS_CPU not specified. Defaulting to CROSS_CPU=generic-armv8-a")
+        message(STATUS "CROSS_CPU not specified. Defaulting to CROSS_CPU=generic-armv8-a")
     endif()
 endif()
 
@@ -30,8 +30,13 @@ if(NOT DEFINED SYSROOT)
     if(DEFINED ENV{SYSROOT})
         set(SYSROOT $ENV{SYSROOT})
     else()
-        set(SYSROOT "/usr/aarch64-linux-gnu")
-        message(WARNING "SYSROOT not specified. Defaulting to SYSROOT=${SYSROOT}")
+        if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+            set(SYSROOT "/")  # Use native root
+            message(STATUS "Host is AArch64. Using native SYSROOT=${SYSROOT}")
+        else()
+            set(SYSROOT "/")  # Use cross-compilation root
+            message(STATUS "SYSROOT not specified. Defaulting to SYSROOT=${SYSROOT} for cross-compilation")
+        endif()
     endif()
 endif()
 
@@ -40,8 +45,13 @@ if(NOT DEFINED TOOLCHAIN_ROOT)
     if(DEFINED ENV{TOOLCHAIN_ROOT})
         set(TOOLCHAIN_ROOT $ENV{TOOLCHAIN_ROOT})
     else()
-        set(TOOLCHAIN_ROOT "/usr")
-        message(WARNING "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT}")
+        if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+            set(TOOLCHAIN_ROOT "/usr")  # Native AArch64 toolchain
+            message(STATUS "Host is AArch64. Using native TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT}")
+        else()
+            set(TOOLCHAIN_ROOT "/usr/aarch64-linux-gnu/")  # Cross-compilation toolchain
+            message(STATUS "TOOLCHAIN_ROOT not specified. Defaulting to TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} for cross-compilation")
+        endif()
     endif()
 endif()
 
@@ -50,8 +60,17 @@ if(NOT DEFINED GCC_PATH)
     if(DEFINED ENV{GCC_PATH})
         set(GCC_PATH $ENV{GCC_PATH}) # Use GCC_PATH from env
     else()
-        set(GCC_PATH "/usr/bin")
-        message(WARNING "GCC_PATH not specified. Defaulting to GCC_PATH=${GCC_PATH}")
+        if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+            set(GCC_PATH "/usr/bin")  # Native AArch64 GCC
+        else()
+            set(GCC_PATH "/usr/bin/aarch64-linux-gnu")  # Cross-compilation GCC
+            set(ENV{PKG_CONFIG_PATH} "/usr/aarch64-linux-gnu/lib/pkgconfig")
+            set(ENV{PKG_CONFIG_LIBDIR} "/usr/aarch64-linux-gnu/lib/pkgconfig")
+            set(PKG_CONFIG_PATH "/usr/aarch64-linux-gnu/lib/pkgconfig")
+            set(PKG_CONFIG_LIBDIR "/usr/aarch64-linux-gnu/lib/pkgconfig")
+            set(PKG_CONFIG_EXECUTABLE "/usr/aarch64-linux-gnu/bin/pkg-config")
+        endif()
+        message(STATUS "GCC_PATH not specified. Defaulting to GCC_PATH=${GCC_PATH}")
     endif()
 endif()
 
@@ -115,6 +134,9 @@ endif()
 if (EXISTS "${CMAKE_SYSROOT}/lib/aarch64-linux-gnu/")
     list(APPEND EXTRA_LINKS "-Wl,-rpath-link,${CMAKE_SYSROOT}/lib/aarch64-linux-gnu" "-L${CMAKE_SYSROOT}/lib/aarch64-linux-gnu")
 endif()
+if (EXISTS "/usr/lib/aarch64-linux-gnu/")
+    list(APPEND EXTRA_LINKS "-Wl,-rpath-link,/usr/lib/aarch64-linux-gnu" "-L/usr/lib/aarch64-linux-gnu")
+endif()
 
 set(CFLAGS "--sysroot=${SYSROOT} -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include -I/usr/include -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST")
 
@@ -126,6 +148,28 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS} -fPIC -O3 -Wall -Wextra -std=c
 set(CMAKE_EXE_LINKER_FLAGS "-fPIE -pie ${EXTRA_LINKS}")
 set(CMAKE_SHARED_LINKER_FLAGS "-shared -fPIC ${EXTRA_LINKS}")
 
+set(CMAKE_LIBRARY_PATH /usr/aarch64-linux-gnu/lib)
+set(CMAKE_INCLUDE_PATH /usr/aarch64-linux-gnu/include)
+
+set(OPENGL_FOUND TRUE)
+set(OPENGL_gl_LIBRARY "/usr/lib/aarch64-linux-gnu/libGL.so")
+set(OPENGL_opengl_LIBRARY "/usr/lib/aarch64-linux-gnu/libGL.so")
+set(OPENGL_glx_LIBRARY "/usr/lib/aarch64-linux-gnu/libGLX.so")
+set(GLES_LIBRARY "/usr/lib/aarch64-linux-gnu/libGLESv2.so")
+set(EGL_LIBRARY "/usr/lib/aarch64-linux-gnu/libEGL.so")
+
+set(X11_INCLUDE_DIR "/usr/aarch64-linux-gnu/include")
+set(X11_X11_LIB "/usr/lib/aarch64-linux-gnu/libX11.so")
+set(X11_Xext_LIB "/usr/lib/aarch64-linux-gnu/libXext.so")
+set(X11_Xrandr_LIB "/usr/lib/aarch64-linux-gnu/libXrandr.so")
+set(X11_Xinerama_LIB "/usr/lib/aarch64-linux-gnu/libXinerama.so")
+set(X11_Xcursor_LIB "/usr/lib/aarch64-linux-gnu/libXcursor.so")
+
+set(WAYLAND_INCLUDE_DIR "/usr/aarch64-linux-gnu/include")
+set(WAYLAND_CLIENT_LIB "/usr/lib/aarch64-linux-gnu/libwayland-client.so")
+set(WAYLAND_CURSOR_LIB "/usr/lib/aarch64-linux-gnu/libwayland-cursor.so")
+set(WAYLAND_EGL_LIB "/usr/lib/aarch64-linux-gnu/libwayland-egl.so")
+set(XKBCOMMON_LIB "/usr/lib/aarch64-linux-gnu/libxkbcommon.so")
 
 message(STATUS "Using GCC Version: ${GCC_VERSION}")
 message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")

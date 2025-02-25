@@ -105,7 +105,8 @@ function build() {
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=true
@@ -114,9 +115,13 @@ function build() {
     elif [ "$TYPE" == "msys2" ]; then
         echo "building $TYPE | $PLATFORM"
         echo "--------------------"
+        if [ $CROSSCOMPILING -eq 1 ]; then
+            DEFINES="${DEFINES} -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake"
+        fi
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.so
+
 
         DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
 			-DCMAKE_BUILD_TYPE=Release \
@@ -139,7 +144,8 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-            -DCMAKE_POSITION_INDEPENDENT_CODE=TRUE \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DCMAKE_VERBOSE_MAKEFILE=true
@@ -160,12 +166,12 @@ function copy() {
     if [ "$TYPE" == "linux" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libkissfft-float.a" $1/lib/$TYPE/$PLATFORM/libkiss.a
-        secure "$1/lib/$TYPE/$PLATFORM/libkiss.a" "libkiss.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libkiss.a" "kiss.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
     elif [ "$TYPE" == "msys2" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libkissfft-float.a" $1/lib/$TYPE/$PLATFORM/libkiss.a
-        secure "$1/lib/$TYPE/$PLATFORM/libkiss.a" "libkiss.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libkiss.a" "kiss.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -R "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
     else
         cp -v lib/$TYPE/libkiss.a $1/lib/$TYPE/libkiss.a

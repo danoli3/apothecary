@@ -1,16 +1,5 @@
 #!/bin/bash
-# set -e
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd $SCRIPT_DIR
-ROOT=$(
-    cd $(dirname "$0")
-    pwd -P
-)/../../../../../
-APOTHECARY_PATH=$ROOT/apothecary
-
 set -e
-
 echo "=== Linux ARM64 cross setup ==="
 lsb_release -a
 
@@ -18,17 +7,23 @@ sudo apt update -y
 sudo apt install -y \
     git \
     cmake \
+    gawk \
     pkgconf \
     build-essential \
     ninja-build \
-    gawk \
     automake \
     autoconf \
     flex \
+    xz-utils \
     crossbuild-essential-armhf \
     crossbuild-essential-arm64 \
     gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu
+    g++-aarch64-linux-gnu \
+    binutils-aarch64-linux-gnu \
+    debootstrap \
+    qemu-user-static \
+    binfmt-support
+
 
 sudo apt install -y \
     python3-minimal \
@@ -51,6 +46,14 @@ fi
 if [[ "$(uname -m)" == "aarch64" ]]; then
     echo "Native aarch64 detected. No need to generate ARM64 /apt/sources. edits"
 else
+
+sudo mount --bind /dev rpi-arm64-rootfs/dev
+sudo mount --bind /proc rpi-arm64-rootfs/proc
+sudo mount --bind /sys rpi-arm64-rootfs/sys
+
+sudo chroot rpi-arm64-rootfs /bin/bash
+
+
 # Define output file path
 OUTPUT_FILE="/etc/apt/sources.list.d/raspberrypi-arm64.sources"
 echo "Creating sources file for Raspberry Pi (ARM64) at $OUTPUT_FILE"
@@ -90,8 +93,10 @@ mv "${SOURCE_FILE}.tmp" "$SOURCE_FILE"
 echo "'Architectures: amd64' added where missing after 'Types: deb' in $SOURCE_FILE."
 
 fi
-sudo dpkg --add-architecture arm64
-sudo dpkg --add-architecture amd64
+
+if ! dpkg --print-foreign-architectures | grep -q "arm64"; then
+    sudo dpkg --add-architecture arm64
+fi
 dpkg --print-architecture
 dpkg --print-foreign-architectures
 
@@ -101,35 +106,48 @@ sudo apt-get update
 echo "Done! ARM64 and ARMHF architectures are ready."
 
 echo "Installing ARM64 packages..."
-apt-get install -y --no-install-recommends \
-    aptitude:arm64 \
-    gcc-aarch64-linux-gnu \
-    g++-aarch64-linux-gnu \
-    gfortran:arm64 \
-    texinfo:arm64 \
-    bison:arm64 \
-    libncurses-dev:arm64 \
-    unzip:arm64 \
-    pkg-config:arm64 \
-    flex:arm64 \
-    openssl:arm64 \
-    pigz:arm64 \
-    autoconf:arm64 \
-    automake:arm64 \
-    figlet:arm64 \
-    gperf:arm64 \
-    libgl1-mesa-dev:arm64 \
-    libglu1-mesa-dev:arm64 \
-    freeglut3-dev:arm64 \
-    libxrandr-dev:arm64 \
-    libxinerama-dev:arm64 \
-    libx11-dev:arm64 \
-    libxext-dev:arm64 \
-    libxcursor-dev:arm64 \
-    libxi-dev:arm64 \
-    ccache:arm64 \
-    binutils-aarch64-linux-gnu:arm64 \
-    libgles2-mesa-dev:arm64
+ARCH_SUFFIX=":arm64"
+if [[ "$(uname -m)" == "aarch64" ]]; then
+    ARCH_SUFFIX=""
+fi
+
+if [ -d "/raspbian/" ]; then
+    sudo mkdir -p /usr/aarch64-linux-gnu
+    sudo ln -s /raspbian/toolchain/bin/aarch64-linux-gnu-* /usr/aarch64-linux-gnu/
+    sudo ln -s /raspbian/toolchain/lib /usr/aarch64-linux-gnu/lib
+    sudo ln -s /raspbian/toolchain/include /usr/aarch64-linux-gnu/include
+else
+    echo "Error: /raspbian/ folder not found. Please check your installation."
+    exit 1
+fi
+
+echo "Installing ARM64 packages..."
+sudo apt-get install -y --no-install-recommends \
+    aptitude$ARCH_SUFFIX \
+    gfortran$ARCH_SUFFIX \
+    texinfo$ARCH_SUFFIX \
+    bison$ARCH_SUFFIX \
+    libncurses-dev$ARCH_SUFFIX \
+    unzip$ARCH_SUFFIX \
+    pkg-config$ARCH_SUFFIX \
+    flex$ARCH_SUFFIX \
+    openssl$ARCH_SUFFIX \
+    pigz$ARCH_SUFFIX \
+    autoconf$ARCH_SUFFIX \
+    automake$ARCH_SUFFIX \
+    figlet$ARCH_SUFFIX \
+    gperf$ARCH_SUFFIX \
+    libgl1-mesa-dev$ARCH_SUFFIX \
+    libglu1-mesa-dev$ARCH_SUFFIX \
+    freeglut3-dev$ARCH_SUFFIX \
+    libxrandr-dev$ARCH_SUFFIX \
+    libxinerama-dev$ARCH_SUFFIX \
+    libx11-dev$ARCH_SUFFIX \
+    libxext-dev$ARCH_SUFFIX \
+    libxcursor-dev$ARCH_SUFFIX \
+    libxi-dev$ARCH_SUFFIX \
+    ccache$ARCH_SUFFIX \
+    libgles2-mesa-dev$ARCH_SUFFIX
 
 
 if [ -d "/usr/lib/x86_64-linux-gnu" ]; then
