@@ -5,7 +5,7 @@
 # It is similar in speed with deflate but offers more dense compression.
 # https://github.com/google/brotli
 
-FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "linux")
+FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "linux" "android" )
 FORMULA_DEPENDS=()
 
 # define the version
@@ -21,10 +21,12 @@ GIT_TAG=v$VER
 function download() {
     . "$DOWNLOADER_SCRIPT"
     if [ "$TYPE" == "vs" ]; then
-        downloader ${GIT_URL}/archive/refs/tags/v${VER}.zip
-        unzip -q v${VER}.zip
-        mv brotli-${VER} brotli
-        rm -f v${VER}.zip
+        # downloader ${GIT_URL}/archive/refs/tags/v${VER}.zip
+        # unzip -q v${VER}.zip
+        # mv brotli-${VER} brotli
+        # rm -f v${VER}.zip
+        git clone "$GIT_URL.git" brotli
+        # https://github.com/google/brotli/issues/1105 # using git for VS due to my report fix on upstream
     else
         downloader ${GIT_URL}/archive/refs/tags/v${VER}.tar.gz
         tar -xf v${VER}.tar.gz
@@ -41,6 +43,21 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
+
+    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
+        result=$(load "brotli" | tail -n 1)
+        echoInfo "===Build $1 - Checking if Precompiled binary :[$result]==="
+        if [ $result -eq 1 ]; then
+            echoInfo "===Build \"$1\" Precompiled binary validated. Skipping updateFormula==="
+            return 0
+        else
+            echoInfo "===Build Precompiled not found or outdated. Continue updateFormula for \"$1\"=== "
+        fi
+    else
+        echoInfo "===Build  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for updateFormula \"$1\" ==="
+    fi
+
+
     if [ "$TYPE" == "vs" ]; then
         echo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echo "--------------------"
@@ -163,9 +180,7 @@ function build() {
         cd ..
     elif [[ "$TYPE" =~ ^(android)$ ]]; then
 
-        if [ $CROSSCOMPILING -eq 1 ]; then
-            source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
-        fi
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
@@ -181,13 +196,13 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DCMAKE_ANDROID_ARCH_ABI=$ABI \
             -DPLATFORM=$PLATFORM \
             -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
             -DANDROID_ABI=${ABI} \
             -DANDROID_API=${ANDROID_API} \
             -DANDROID_TOOLCHAIN=clang \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
-            -DURIPARSER_ENABLE_INSTALL=ON \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
@@ -196,7 +211,6 @@ function build() {
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_SYSTEM_NAME=$TYPE \
             -DBROTLI_DISABLE_TESTS=ON \
             -DBROTLI_BUILD_TOOLS=OFF \
