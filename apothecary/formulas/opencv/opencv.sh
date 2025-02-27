@@ -11,7 +11,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
 VER=4.11.0
-BUILD_ID=6
+BUILD_ID=7
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4110
@@ -903,8 +903,8 @@ function copy() {
         cp -R modules/*/include/opencv2/* $1/include/opencv2/
         cp -v build_${TYPE}_${PLATFORM}/Release/lib/*.a $1/lib/$TYPE/$PLATFORM
         cp -v build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/*.a $1/lib/$TYPE/$PLATFORM
+        rm $1/lib/$TYPE/$PLATFORM/libzlib.a
         secure "$1/lib/$TYPE/$PLATFORM/libopencv_core.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
-
     fi
     cp -v LICENSE $1/license/
 
