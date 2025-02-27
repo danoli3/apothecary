@@ -7,11 +7,11 @@
 # uses a CMake build system
 
 FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" "linux" )
-FORMULA_DEPENDS=("zlib" "libpng")
+FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
 VER=4.11.0
-BUILD_ID=5
+BUILD_ID=6
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4110
@@ -71,89 +71,90 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
         CORE_DEFS="
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_C_STANDARD=${C_STANDARD} \
-		-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
-		-DCMAKE_CXX_STANDARD_REQUIRED=ON \
-		-DCMAKE_CXX_EXTENSIONS=OFF \
-		-DBUILD_SHARED_LIBS=OFF \
-		-DCMAKE_INSTALL_PREFIX=Release \
-		-DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
-		-DCMAKE_INSTALL_INCLUDEDIR=include \
-		-DZLIB_ROOT=${ZLIB_ROOT} \
-		-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-		-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
-		-DPNG_ROOT=${LIBPNG_ROOT} \
-		-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
-		-DPNG_LIBRARY=${LIBPNG_LIBRARY}"
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_STANDARD=${C_STANDARD} \
+        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+        -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+        -DCMAKE_CXX_EXTENSIONS=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DCMAKE_INSTALL_PREFIX=Release \
+        -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+        -DCMAKE_INSTALL_INCLUDEDIR=include \
+        -DZLIB_ROOT=${ZLIB_ROOT} \
+        -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+        -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+        -DPNG_ROOT=${LIBPNG_ROOT} \
+        -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+        -DPNG_LIBRARY=${LIBPNG_LIBRARY}"
 
         DEFINES="
-		-DBUILD_DOCS=OFF \
-		-DENABLE_BUILD_HARDENING=ON \
-		-DBUILD_EXAMPLES=OFF \
-		-DBUILD_FAT_JAVA_LIB=OFF \
-		-DBUILD_JASPER=OFF \
-		-DBUILD_PACKAGE=OFF \
-		-DBUILD_opencv_java=OFF \
-		-DBUILD_opencv_python=OFF \
-		-DBUILD_opencv_python2=OFF \
-		-DBUILD_opencv_python3=OFF \
-		-DBUILD_opencv_apps=OFF \
-		-DBUILD_opencv_highgui=ON \
-		-DBUILD_opencv_imgcodecs=ON \
-		-DBUILD_opencv_stitching=ON \
-		-DBUILD_opencv_calib3d=ON \
-		-DBUILD_opencv_objdetect=ON \
-		-DOPENCV_ENABLE_NONFREE=OFF \
-		-DWITH_PNG=ON \
-		-DBUILD_PNG=OFF \
-		-DWITH_1394=OFF \
-		-DWITH_IMGCODEC_HDR=ON \
-		-DWITH_CARBON=OFF \
-		-DWITH_JPEG=OFF \
-		-DWITH_TIFF=ON \
-		-DWITH_FFMPEG=ON \
-		-DWITH_QUIRC=ON \
-		-DWITH_GIGEAPI=OFF \
-		-DBUILD_OBJC=ON \
-		-DWITH_CUDA=OFF \
-		-DWITH_METAL=ON
-		-DWITH_CUFFT=OFF \
-		-DWITH_JASPER=OFF \
-		-DWITH_LIBV4L=OFF \
-		-DWITH_IMAGEIO=OFF \
-		-DWITH_IPP=OFF \
-		-DWITH_OPENCL=OFF \
-		-DWITH_OPENNI=OFF \
-		-DWITH_OPENNI2=OFF \
-		-DWITH_QT=OFF \
-		-DWITH_QUICKTIME=OFF \
-		-DWITH_V4L=OFF \
-		-DWITH_PVAPI=OFF \
-		-DWITH_OPENEXR=OFF \
-		-DWITH_EIGEN=ON \
-		-DBUILD_TESTS=OFF \
-		-DWITH_LAPACK=OFF \
-		-DWITH_WEBP=OFF \
-		-DWITH_GPHOTO2=OFF \
-		-DWITH_VTK=OFF \
-		-DWITH_CAP_IOS=ON \
-		-DWITH_WEBP=ON \
-		-DWITH_GTK=OFF \
-		-DWITH_GTK_2_X=OFF \
-		-DWITH_MATLAB=OFF \
-		-DWITH_OPENVX=ON \
-		-DWITH_ADE=OFF \
-		-DWITH_TBB=OFF \
-		-DWITH_OPENGL=OFF \
-		-DWITH_GSTREAMER=OFF \
-		-DVIDEOIO_PLUGIN_LIST=gstreamer \
-		-DWITH_IPP=OFF \
-		-DWITH_IPP_A=OFF \
-		-DBUILD_ZLIB=OFF \
-		-DWITH_ITT=OFF \
-		-DWITH_CAROTENE=OFF \
-		-DBUILD_TESTS=OFF "
+        -DBUILD_DOCS=OFF \
+        -DENABLE_BUILD_HARDENING=ON \
+        -DBUILD_EXAMPLES=OFF \
+        -DBUILD_FAT_JAVA_LIB=OFF \
+        -DBUILD_JASPER=OFF \
+        -DBUILD_PACKAGE=OFF \
+        -DBUILD_opencv_java=OFF \
+        -DBUILD_opencv_python=OFF \
+        -DBUILD_opencv_python2=OFF \
+        -DBUILD_opencv_python3=OFF \
+        -DBUILD_opencv_apps=OFF \
+        -DBUILD_opencv_highgui=ON \
+        -DBUILD_opencv_imgcodecs=ON \
+        -DBUILD_opencv_stitching=ON \
+        -DBUILD_opencv_calib3d=ON \
+        -DBUILD_opencv_objdetect=ON \
+        -DBUILD_opencv_world=ON \
+        -DOPENCV_ENABLE_NONFREE=OFF \
+        -DWITH_PNG=ON \
+        -DBUILD_PNG=OFF \
+        -DWITH_1394=OFF \
+        -DWITH_IMGCODEC_HDR=ON \
+        -DWITH_CARBON=OFF \
+        -DWITH_JPEG=OFF \
+        -DWITH_TIFF=ON \
+        -DWITH_FFMPEG=ON \
+        -DWITH_QUIRC=ON \
+        -DWITH_GIGEAPI=OFF \
+        -DBUILD_OBJC=ON \
+        -DWITH_CUDA=OFF \
+        -DWITH_METAL=ON
+        -DWITH_CUFFT=OFF \
+        -DWITH_JASPER=OFF \
+        -DWITH_LIBV4L=OFF \
+        -DWITH_IMAGEIO=OFF \
+        -DWITH_IPP=OFF \
+        -DWITH_OPENCL=OFF \
+        -DWITH_OPENNI=OFF \
+        -DWITH_OPENNI2=OFF \
+        -DWITH_QT=OFF \
+        -DWITH_QUICKTIME=OFF \
+        -DWITH_V4L=OFF \
+        -DWITH_PVAPI=OFF \
+        -DWITH_OPENEXR=OFF \
+        -DWITH_EIGEN=ON \
+        -DBUILD_TESTS=OFF \
+        -DWITH_LAPACK=OFF \
+        -DWITH_WEBP=OFF \
+        -DWITH_GPHOTO2=OFF \
+        -DWITH_VTK=OFF \
+        -DWITH_CAP_IOS=ON \
+        -DWITH_WEBP=ON \
+        -DWITH_GTK=OFF \
+        -DWITH_GTK_2_X=OFF \
+        -DWITH_MATLAB=OFF \
+        -DWITH_OPENVX=ON \
+        -DWITH_ADE=OFF \
+        -DWITH_TBB=OFF \
+        -DWITH_OPENGL=OFF \
+        -DWITH_GSTREAMER=OFF \
+        -DVIDEOIO_PLUGIN_LIST=gstreamer \
+        -DWITH_IPP=OFF \
+        -DWITH_IPP_A=OFF \
+        -DBUILD_ZLIB=OFF \
+        -DWITH_ITT=OFF \
+        -DWITH_CAROTENE=OFF \
+        "
 
         if [[ "$ARCH" =~ ^(arm64|SIM_arm64|arm64_32)$ ]]; then
             # ARM64 targets: Enable NEON
@@ -222,8 +223,8 @@ function build() {
         FLAGS_DEBUG=$(echo $FLAGS_DEBUG | sed 's/-DUNICODE//g' | sed 's/-D_UNICODE//g')
 
         export DEFINES="
-				-DCMAKE_C_STANDARD=${C_STANDARD} \
-				-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+                -DCMAKE_C_STANDARD=${C_STANDARD} \
+                -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_INSTALL_PREFIX=install \
@@ -262,6 +263,7 @@ function build() {
                 -DBUILD_opencv_stitching=ON \
                 -DBUILD_opencv_calib3d=ON \
                 -DBUILD_PERF_TESTS=OFF \
+                -DBUILD_opencv_world=ON \
                 -DBUILD_JASPER=OFF \
                 -DBUILD_DOCS=OFF \
                 -DWITH_TIFF=OFF \
@@ -509,6 +511,7 @@ function build() {
             -DBUILD_opencv_ts=OFF \
             -DBUILD_opencv_videostab=OFF \
             -DBUILD_opencv_calib3d=ON \
+            -DBUILD_opencv_world=ON \
             -DWITH_MATLAB=OFF \
             -DWITH_CUDA=OFF \
             -DBUILD_SHARED_LIBS=OFF \
@@ -528,6 +531,7 @@ function build() {
             -DWITH_OPENEXR=OFF \
             -DWITH_1394=OFF \
             -DWITH_JPEG=OFF \
+            -DWITH_OPENJPEG=OFF \
             -DWITH_PNG=OFF \
             -DWITH_FFMPEG=OFF \
             -DWITH_OPENCL=OFF \
@@ -595,6 +599,7 @@ function build() {
         -DBUILD_opencv_videoio=ON \
         -DBUILD_opencv_videostab=ON \
         -DOPENCV_ENABLE_NONFREE=OFF \
+        -DBUILD_JPEG=OFF \
         -DWITH_PNG=ON \
         -DBUILD_PNG=OFF \
         -DWITH_FFMPEG=ON \
@@ -604,6 +609,7 @@ function build() {
         -DBUILD_TESTS=OFF \
         -DWITH_OPENGL=OFF \
         -DWITH_VULKAN=OFF \
+        -DWITH_OPENJPEG=OFF \
         -DWITH_OPENCL=OFF \
         -DWITH_QT=OFF \
         -DWITH_GTK=ON"
@@ -665,19 +671,7 @@ function build() {
         rm -f CMakeCache.txt || true
         rm -f CMakeCache.txt *.a *.o *.a
 
-        $EMSDK/upstream/emscripten/emcmake cmake .. \
-            -B build \
-            -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-            -DCMAKE_C_STANDARD=${C_STANDARD} \
-            -DCMAKE_CXX_STANDARD=17 \
-            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
-            -DCMAKE_C_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
-            -DCMAKE_CXX_EXTENSIONS=ON \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_BUILD_TYPE="Release" \
-            -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DCPU_BASELINE='WASM_SIMD' \
+        DEFINES="-DCPU_BASELINE='WASM_SIMD' \
             -DCPU_DISPATCH='' \
             -DCV_ENABLE_INTRINSICS=ON \
             -DCV_TRACE=OFF \
@@ -721,6 +715,9 @@ function build() {
             -DBUILD_opencv_superres=OFF \
             -DBUILD_opencv_ts=OFF \
             -DBUILD_opencv_calib3d=ON \
+            -DBUILD_opencv_world=ON \
+            -DBUILD_JPEG=OFF \
+            -DBUILD_IPP_IW=OFF \
             -DWITH_MATLAB=OFF \
             -DWITH_CUDA=OFF \
             -DWITH_TIFF=OFF \
@@ -747,6 +744,7 @@ function build() {
             -DWITH_PTHREADS_PF=OFF \
             -DWITH_OPENNI=OFF \
             -DWITH_OPENNI2=OFF \
+            -DWITH_OPENJPEG=OFF \
             -DWITH_QT=OFF \
             -DWITH_QUICKTIME=OFF \
             -DWITH_V4L=OFF \
@@ -772,8 +770,21 @@ function build() {
             -DWASM=ON \
             -DBUILD_TESTS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DBUILD_WASM_INTRIN_TESTS=OFF \
-            -DBUILD_PERF_TESTS=OFF \
+            -DBUILD_WASM_INTRIN_TESTS=OFF"
+
+        $EMSDK/upstream/emscripten/emcmake cmake .. \
+            -B build \
+            ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
+            -DCMAKE_C_FLAGS="-I/${EMSDK}/upstream/emscripten/system/lib/libcxxabi/include/ ${FLAG_RELEASE} -msimd128" \
+            -DCMAKE_CXX_EXTENSIONS=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_BUILD_TYPE="Release" \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -784,11 +795,8 @@ function build() {
             -DPNG_ROOT=${LIBPNG_ROOT} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
-        # -G 'Unix Makefiles'
 
         cmake --build build --target install --config Release
-        # $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
-        # $EMSDK/upstream/emscripten/emmake make install
     fi
 
 }
