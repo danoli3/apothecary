@@ -11,8 +11,8 @@ FORMULA_TYPES=("osx" "vs" "linux")
 FORMULA_DEPENDS=("openssl" "zlib" )
 
 # define the version
-VER=1.14.4
-BUILD_ID=1
+VER=1.14.1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
@@ -51,14 +51,15 @@ function prepare() {
         git reset --hard $SHA
     fi
 
-    if [ "$TYPE" != "linux" ] && [ "$TYPE" != "ios" ] && [ "$TYPE" != "tvos" ] && [ $FORMULA_DEPENDS_MANUAL -ne 1 ]; then
-        # manually prepare dependencies
-        apothecaryDependencies download
-        apothecaryDependencies prepare
-        # Build and copy all dependencies in preparation
-        apothecaryDepend build openssl
-        apothecaryDepend copy openssl
-    fi
+    apothecaryDepend download zlib
+    apothecaryDepend prepare zlib
+    apothecaryDepend build zlib
+    apothecaryDepend copy zlib
+
+    apothecaryDepend download openssl
+    apothecaryDepend prepare openssl
+    apothecaryDepend build openssl
+    apothecaryDepend copy openssl
 
     # make backups of the ios config files since we need to edit them
     if [[ "$TYPE" == "ios" || "$TYPE" == "tvos" ]]; then
@@ -86,26 +87,6 @@ function prepare() {
         # Fix for making debug and release, making just release
         sed -i "" "s|all_static: static_debug static_release|all_static: static_release|" build/rules/compile
 
-    elif [ "$TYPE" == "vs" ]; then
-
-        apothecaryDepend prepare zlib
-        apothecaryDepend build zlib
-        apothecaryDepend copy zlib
-
-        apothecaryDepend prepare openssl
-        apothecaryDepend build openssl
-        apothecaryDepend copy openssl
-
-    elif [ "$TYPE" == "linux" ]; then
-
-        apothecaryDepend prepare zlib
-        apothecaryDepend build zlib
-        apothecaryDepend copy zlib
-
-        apothecaryDepend prepare openssl
-        apothecaryDepend build openssl
-        apothecaryDepend copy openssl
-
     elif [ "$TYPE" == "android" ]; then
         installAndroidToolchain
         if patch -p0 -u -N --dry-run --silent <$FORMULA_DIR/android.patch 2>/dev/null; then
@@ -121,9 +102,26 @@ function prepare() {
 # executed inside the lib src dir
 function build() {
     LIBS_ROOT=$(realpath $LIBS_DIR)
+    DEFINES="-DPOCO_STATIC=YES \
+        -DENABLE_DATA=OFF \
+        -DPOCO_ENABLE_TESTS=OFF \
+        -DPOCO_ENABLE_SAMPLES=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DENABLE_CPPUNIT=OFF \
+        -DENABLE_DATA=OFF \
+        -DENABLE_DATA_SQLITE=OFF \
+        -DENABLE_DATA_ODBC=OFF \
+        -DENABLE_DATA_MYSQL=OFF \
+        -DENABLE_PAGECOMPILER=OFF \
+        -DENABLE_PAGECOMPILER_FILE2PAGE=OFF \
+        -DENABLE_POCODOC=OFF \
+        -DENABLE_PROGEN=OFF \
+        -DENABLE_DATA_SQLITE=OFF \
+        -DENABLE_DATA_ODBC=OFF \
+        -DENABLE_PDF=ON \
+        -DENABLE_MONGODB=OFF"
     local BUILD_OPTS="--no-tests --no-samples --static --omit=CppUnit,CppUnit/WinTestRunner,Data,Data/SQLite,Data/ODBC,Data/MySQL,PageCompiler,PageCompiler/File2Page,CppParser,PDF,PocoDoc,ProGen,MongoDB"
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        BUILD_OPTS="-DPOCO_STATIC=YES -DENABLE_DATA=OFF -DENABLE_DATA_SQLITE=OFFF -DENABLE_DATA_ODBC=OFF -DENABLE_DATA_MYSQL=OFF -DENABLE_PAGECOMPILER=OFF -DENABLE_PAGECOMPILER_FILE2PAGE=OFF -DENABLE_MONGODB=OFF"
 
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
@@ -132,7 +130,9 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
-        DEFINES="${BUILD_OPTS} \
+        rm -f CMakeCache.txt *.a *.o
+
+        DEFINES="${DEFINES} \
             -DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -158,15 +158,17 @@ function build() {
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
+            -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DOPENSSL_USE_STATIC_LIBS=YES
+            -DOPENSSL_USE_STATIC_LIBS=YES \
+            -GXcode
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
 
@@ -190,13 +192,15 @@ function build() {
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
 
+        rm -f CMakeCache.txt *.a *.o *.lib
+
         LIBS_ROOT=$(realpath $LIBS_DIR)
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
-        DEFINES="${BUILD_OPTS} \
+        DEFINES="${DEFINES} \
             -DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -258,7 +262,10 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
-        DEFINES="${BUILD_OPTS} \
+        rm -f CMakeCache.txt *.a *.o
+
+
+        DEFINES="${DEFINES} \
             -DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -268,9 +275,11 @@ function build() {
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DENABLE_NETSSL_WIN=OFF \
+            -DENABLE_JWT=OFF \
+            -DENABLE_CRYPTO=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include"
         cmake .. ${DEFINES} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -288,8 +297,7 @@ function build() {
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DOPENSSL_USE_STATIC_LIBS=YES
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
     fi
@@ -300,20 +308,18 @@ function copy() {
 
     # headers
     mkdir -pv $1/include/Poco
-    cp -Rv Crypto/include/Poco/Crypto $1/include/Poco
+    # cp -Rv Crypto/include/Poco/Crypto $1/include/Poco
     cp -Rv Data/include/Poco/Data $1/include/Poco
     cp -Rv Data/SQLite/include/Poco/Data $1/include/Poco
     cp -Rv Foundation/include/Poco/* $1/include/Poco
     cp -Rv JSON/include/Poco/JSON $1/include/Poco
     cp -Rv MongoDB/include/Poco/MongoDB $1/include/Poco
-    cp -Rv Net/include/Poco/Net $1/include/Poco
-    cp -Rv NetSSL_OpenSSL/include/Poco/Net/* $1/include/Poco/Net
+    # cp -Rv Net/include/Poco/Net $1/include/Poco
+    # cp -Rv NetSSL_OpenSSL/include/Poco/Net/* $1/include/Poco/Net
     cp -Rv SevenZip/include/Poco/SevenZip $1/include/Poco
     cp -Rv Util/include/Poco/Util $1/include/Poco
     cp -Rv XML/include/Poco/* $1/include/Poco
     cp -Rv Zip/include/Poco/Zip $1/include/Poco
-
-    rm -rf $1/lib/$TYPE
     mkdir -p $1/lib/$TYPE
 
     # libs
@@ -321,7 +327,7 @@ function copy() {
         mkdir -p $1/include
         mkdir -p $1/lib/$TYPE
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM/
         . "$SECURE_SCRIPT"
         secure "$1/lib/$TYPE/$PLATFORM/poco.a" "poco.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
@@ -331,8 +337,9 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${ARCH}/Release/include/" $1/
         cp -v "build_${TYPE}_${ARCH}/Release/lib/"*.lib $1/lib/$TYPE/$PLATFORM/
-        # poco needs some dlls
-        cp -v "build_${TYPE}_${ARCH}/Release/bin/"*.dll $1/lib/$TYPE/$PLATFORM/
+        if ls "build_${TYPE}_${ARCH}/Release/bin/"*.dll 1>/dev/null 2>&1; then
+            cp -v "build_${TYPE}_${ARCH}/Release/bin/"*.dll "$1/lib/$TYPE/$PLATFORM/"
+        fi
     elif [ "$TYPE" == "msys2" ]; then
         cp -vf lib/MinGW/i686/*.a $1/lib/$TYPE
         #cp -vf lib/MinGW/x86_64/*.a $1/lib/$TYPE
