@@ -152,11 +152,6 @@ function build() {
         if [ $MULTITHREADED_TYPE == "MD" ]; then
 			sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' ../CMakeLists.txt
         fi
-
-		DEFINES="${DEFINES} \
-		-DBUILD_WITH_STATIC_CRT=ON \
-		-DUSE_STATIC_CRT=ON \
-		-DBUILD_SHARED_LIBS=OFF"
 		
 		cmake .. ${DEFINES} \
 			-A "${PLATFORM}" \
@@ -165,6 +160,8 @@ function build() {
 			-DCMAKE_BUILD_TYPE=Debug \
 			-DCMAKE_INSTALL_PREFIX=Debug \
 			-DCMAKE_INSTALL_LIBDIR="lib" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DUSE_STATIC_CRT=ON \
 			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
 			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
 			-DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
@@ -187,6 +184,8 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DUSE_STATIC_CRT=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
