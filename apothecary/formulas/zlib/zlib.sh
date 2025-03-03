@@ -86,7 +86,7 @@ function build() {
             -G "${GENERATOR_NAME}" \
             -A "${PLATFORM}" \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
-            -D BUILD_SHARED_LIBS=ON \
+            -D BUILD_SHARED_LIBS=OFF \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
