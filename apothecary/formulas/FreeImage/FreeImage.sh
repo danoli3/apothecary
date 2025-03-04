@@ -298,8 +298,11 @@ function build() {
             -G "${GENERATOR_NAME}"
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
 
+        cd ..
+
         mkdir -p "build_${TYPE}_${ARCH}_debug"
         cd "build_${TYPE}_${ARCH}_debug"
+        rm -f CMakeCache.txt *.a *.o *.lib
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
         cmake .. ${DEFS} \
@@ -318,7 +321,7 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
 
-        cmake --build . --target install --config Debug
+        cmake --build . --target install --config Debug -j${PARALLEL_MAKE}
         cd ..
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p build_$TYPE
@@ -426,7 +429,7 @@ function copy() {
         cp Source/FreeImage.h $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${ARCH}_release/Release/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImage.lib
-        cp -v "build_${TYPE}_${ARCH}_deebug/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
+        cp -v "build_${TYPE}_${ARCH}_debug/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
         secure $1/lib/$TYPE/$PLATFORM/FreeImage.lib FreeImage.pkl
     elif [ "$TYPE" == "android" ]; then
         cp Source/FreeImage.h $1/include
