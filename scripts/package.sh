@@ -9,6 +9,11 @@ ROOT=$(
 LOCAL_ROOT=$ROOT
 APOTHECARY_PATH=$ROOT/apothecary
 
+GCC="${GCC:-}"
+OPT="${OPT:-}"
+GCC="${GCC:+_$GCC}"
+OPT="${OPT:+_$OPT}"
+
 if [ -z "${NO_FORCE+x}" ]; then
     export FORCE="-f"
 else
@@ -100,7 +105,6 @@ if [ -z "${RELEASE+x}" ]; then
 else
     CUR_BRANCH="$RELEASE"
 fi
-GCC=${GCC:-}
 if [ -z "$LIBS" ]; then
     echo "Error: LIBS is empty. Nothing to package."
     exit 1
@@ -112,7 +116,7 @@ echo "Release: [$RELEASE]"
 echo "TARGET: [$TARGET]"
 echo "Current Branch: [$CUR_BRANCH]"
 echo "Current ARCH: [$ARCH]"
-echo "Current PBUNDLE: [$PBUNDLE]"
+echo "Current PBUNDLE: [$PBUNDLE] OPT:[$OPT]"
 
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.tar.bz2
 if [ "$TARGET" == "linux" ]; then
@@ -153,9 +157,9 @@ elif [ "$TARGET" == "vs" ]; then
         fi
     fi
     if [ -n "$PBUNDLE" ]; then
-        TARBALL="openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}_${PBUNDLE}.zip"
+        TARBALL="openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}${OPT}_${PBUNDLE}.zip"
     else
-        TARBALL="openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.zip"
+        TARBALL="openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}${OPT}.zip"
     fi
     echo "TARBALL: [$TARBALL]"
     if [ "${EXIT_BEFORE}" == "1" ]; then

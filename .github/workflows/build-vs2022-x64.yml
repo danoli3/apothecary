@@ -44,6 +44,7 @@ jobs:
     strategy:
       matrix:
         bundle: [1,2]
+        multithreaded: [ "MD", "MT" ]
     defaults:
       run:
         shell: msys2 {0}
@@ -191,17 +192,20 @@ jobs:
       run: scripts/build.sh
       env:
         BUNDLE: ${{ matrix.bundle }}
+        MULTITHREADED_TYPE: ${{ matrix.multithreaded }}
     - name: Package
       #if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
       working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: scripts/package.sh
       env:
         BUNDLE: ${{ matrix.bundle }}
+        OPT: ${{ matrix.multithreaded }}
     - name: Upload binaries as Artifact
       #if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' )
       uses: actions/upload-artifact@v4
       env:
         release: ${{ env.RELEASE }}
+        OPT: ${{ matrix.multithreaded }}
       with:
         name: libs-${{ env.RELEASE }}-${{ env.TARGET }}-${{ env.ARCH }}-${{ matrix.bundle }}
         path: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ matrix.bundle }}.zip
@@ -217,6 +221,6 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ env.RELEASE }}
         draft: false
-        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ matrix.bundle }}.zip
+        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ env.OPT }}_${{ matrix.bundle }}.zip
 
 
