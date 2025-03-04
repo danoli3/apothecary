@@ -168,6 +168,7 @@ function build() {
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             ${CMAKE_WIN_SDK} \
+            ${CMAKE_VS_MT_DEBUG} \
             -G "${GENERATOR_NAME}" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_INSTALL_PREFIX=Debug \
@@ -195,6 +196,8 @@ function build() {
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             ${CMAKE_WIN_SDK} \
+            ${CMAKE_VS_MT_RELEASE} \
+            ${MT_TYPE_DEFINES} \
             -G "${GENERATOR_NAME}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \

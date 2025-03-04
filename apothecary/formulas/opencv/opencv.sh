@@ -357,8 +357,6 @@ function build() {
 
 		echoInfo "Building with OPENCV_STATIC"
 		export DEFINES="${DEFINES} \
-		-DBUILD_WITH_STATIC_CRT=OFF \
-		-DUSE_STATIC_CRT=OFF \
 		-DBUILD_SHARED_LIBS=OFF"
 		if [ $MULTITHREADED_TYPE == "MD" ]; then
 			sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' ../CMakeLists.txt
@@ -368,6 +366,8 @@ function build() {
 		cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
+            ${CMAKE_VS_MT_DEBUG} \
+            ${MT_TYPE_DEFINES} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_INSTALL_PREFIX=Debug \
             -DCMAKE_BUILD_TYPE="Debug" \
@@ -404,6 +404,8 @@ function build() {
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
+            ${CMAKE_VS_MT_RELEASE} \
+            ${MT_TYPE_DEFINES} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE="Release" \

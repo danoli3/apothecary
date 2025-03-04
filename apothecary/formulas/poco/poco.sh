@@ -234,6 +234,7 @@ function build() {
             -DCMAKE_INSTALL_INCLUDEDIR=include"
 
         cmake .. ${DEFINES} \
+            ${CMAKE_VS_MT_RELEASE} \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -252,6 +253,7 @@ function build() {
    
 
         cmake .. ${DEFINES} \
+            ${CMAKE_VS_MT_DEBUG} \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_INSTALL_PREFIX=Debug \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
