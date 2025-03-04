@@ -255,8 +255,8 @@ function build() {
         echo "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN platform: $PLATFORM"
         echo "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-        mkdir -p "build_${TYPE}_${ARCH}"
-        cd "build_${TYPE}_${ARCH}"
+        mkdir -p "build_${TYPE}_${ARCH}_release"
+        cd "build_${TYPE}_${ARCH}_release"
         rm -f CMakeCache.txt *.a *.o *.lib
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
@@ -274,6 +274,7 @@ function build() {
 			-DBUILD_OPENEXR=OFF \
 			-DBUILD_WEBP=OFF \
 			-DBUILD_JXR=OFF \
+            ${MT_TYPE_DEFINES} \
 			-DENABLE_VISIBILITY=OFF \
 			-DPNG_ROOT=${LIBPNG_ROOT} \
 			-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
@@ -296,6 +297,9 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
         cmake --build . --target install --config Release -j${PARALLEL_MAKE}
+
+        mkdir -p "build_${TYPE}_${ARCH}_debug"
+        cd "build_${TYPE}_${ARCH}_debug"
 
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}"
         cmake .. ${DEFS} \
@@ -421,8 +425,8 @@ function copy() {
         mkdir -p $1/lib/$TYPE
         cp Source/FreeImage.h $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${ARCH}/Release/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImage.lib
-        cp -v "build_${TYPE}_${ARCH}/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
+        cp -v "build_${TYPE}_${ARCH}_release/Release/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImage.lib
+        cp -v "build_${TYPE}_${ARCH}_deebug/Debug/FreeImage.lib" $1/lib/$TYPE/$PLATFORM/FreeImageD.lib
         secure $1/lib/$TYPE/$PLATFORM/FreeImage.lib FreeImage.pkl
     elif [ "$TYPE" == "android" ]; then
         cp Source/FreeImage.h $1/include
@@ -466,8 +470,11 @@ function clean() {
             rm -r build_${TYPE}_${PLATFORM}
         fi
     elif [ "$TYPE" == "vs" ]; then
-        if [ -d "build_${TYPE}_${PLATFORM}" ]; then
-            rm -r build_${TYPE}_${PLATFORM}
+        if [ -d "build_${TYPE}_${PLATFORM}_release" ]; then
+            rm -r build_${TYPE}_${PLATFORM}_release
+        fi
+         if [ -d "build_${TYPE}_${PLATFORM}_debug" ]; then
+            rm -r build_${TYPE}_${PLATFORM}_debug
         fi
     else
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
