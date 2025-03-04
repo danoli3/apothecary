@@ -11,12 +11,14 @@ FORMULA_DEPENDS=("zlib")
 
 # define the version
 VER=5.4.3
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/assimp/assimp
 GIT_TAG=
+
+DEFAULT_VS_STATIC=1
 
 # download the source code and unpack it into LIB_NAME
 function download() {
@@ -128,10 +130,6 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/${PLATFORM}/zlib.lib"
 
-        mkdir -p "build_${TYPE}_${PLATFORM}"
-        cd "build_${TYPE}_${PLATFORM}"
-        find ./ -name "*.o" -type f -delete
-        rm -f CMakeCache.txt || true
         DEFINES="
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -149,33 +147,50 @@ function build() {
             DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
         fi
 
-        if [ $MULTITHREADED_TYPE == "MD" ]; then
-			sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' ../CMakeLists.txt
+        if [ "${ASSIMP_STATIC:-${DEFAULT_VS_STATIC}}" = "1" ]; then
+            DEFINES="${DEFINES} \
+            ${MT_TYPE_DEFINES} \
+            -DBUILD_SHARED_LIBS=OFF"
+            if [ $MULTITHREADED_TYPE == "MD" ]; then
+                sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' CMakeLists.txt
+            fi
+        else
+            DEFINES="${DEFINES} \
+            ${MT_TYPE_DEFINES} \
+            -DBUILD_SHARED_LIBS=ON"
         fi
-		
-		cmake .. ${DEFINES} \
-			-A "${PLATFORM}" \
-			${CMAKE_WIN_SDK} \
-			-G "${GENERATOR_NAME}" \
-			-DCMAKE_BUILD_TYPE=Debug \
-			-DCMAKE_INSTALL_PREFIX=Debug \
-			-DCMAKE_INSTALL_LIBDIR="lib" \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DUSE_STATIC_CRT=ON \
-			-DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-			-DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-			-DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-			-DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
-			-DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-			-DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
-			-DASSIMP_BUILD_ZLIB=OFF \
-			-DZLIB_ROOT=${ZLIB_ROOT} \
-			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
-			-DZLIB_LIBRARY=${ZLIB_LIBRARY}
-		cmake --build . --config Debug -j${PARALLEL_MAKE}
-		
-		rm -f CMakeCache.txt || true
+
+        mkdir -p "build_${TYPE}_${PLATFORM}_debug"
+        cd "build_${TYPE}_${PLATFORM}_debug"
+        find ./ -name "*.o" -type f -delete
+        rm -f CMakeCache.txt || true        
+
+        cmake .. ${DEFINES} \
+            -A "${PLATFORM}" \
+            ${CMAKE_WIN_SDK} \
+            -G "${GENERATOR_NAME}" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=Debug \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_CXX_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_C_FLAGS_DEBUG="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_DEBUG} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DASSIMP_BUILD_ZLIB=OFF \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY}
+            cmake --build . --config Debug -j${PARALLEL_MAKE}
+            rm -f CMakeCache.txt || true
+
+        cd ..
+        mkdir -p "build_${TYPE}_${PLATFORM}_release"
+        cd "build_${TYPE}_${PLATFORM}_release"
+         find ./ -name "*.o" -type f -delete
+        rm -f CMakeCache.txt || true 
 
         cmake .. ${DEFINES} \
             -A "${PLATFORM}" \
@@ -184,8 +199,6 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DUSE_STATIC_CRT=ON \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} " \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -293,7 +306,6 @@ function build() {
             -DANDROID_API=${ANDROID_API} \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
-            -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -fvisibility-inlines-hidden -std=c++${CPP_STANDARD} -frtti ${FLAG_RELEASE}" \
@@ -421,21 +433,20 @@ function copy() {
     # libs
     mkdir -p $1/lib/$TYPE
     if [ "$TYPE" == "vs" ]; then
-        cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
-        mkdir -p $1/lib/$TYPE/$PLATFORM/
-        if [ "${ASSIMP_STATIC:-0}" = "1" ]; then
-            cp -v "build_${TYPE}_${PLATFORM}/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/libassimp.lib
+        cp -v -r build_${TYPE}_${PLATFORM}_release/include/* $1/include
+        mkdir -p $1/lib/$TYPE/$PLATFORM/Release
+        mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
+        if [ "${ASSIMP_STATIC:-${DEFAULT_VS_STATIC}}" = "1" ]; then
+            cp -v "build_${TYPE}_${PLATFORM}_release/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/libassimp.lib
+            cp -v "build_${TYPE}_${PLATFORM}_debug/lib/Debug/assimp-vc${VC_VERSION}-mtd.lib" $1/lib/$TYPE/$PLATFORM/libassimpD.lib
             secure "$1/lib/$TYPE/$PLATFORM/libassimp.lib" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         else
-            mkdir -p $1/lib/$TYPE/$PLATFORM/Debug
-            mkdir -p $1/lib/$TYPE/$PLATFORM/Release
-            # cp -v "build_${TYPE}_${PLATFORM}/bin/Release/assimp-vc${VC_VERSION}-mt.dll" $1/lib/$TYPE/$PLATFORM/Release/assimp-vc${VC_VERSION}-mt.dll
-            # cp -v "build_${TYPE}_${PLATFORM}/bin/Debug/assimp-vc${VC_VERSION}-mtd.dll" $1/lib/$TYPE/$PLATFORM/Debug/assimp-vc${VC_VERSION}-mtd.dll
-            cp -v "build_${TYPE}_${PLATFORM}/lib/Debug/assimp-vc${VC_VERSION}-mtd.lib" $1/lib/$TYPE/$PLATFORM/Debug/libassimpD.lib
-            cp -v "build_${TYPE}_${PLATFORM}/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib
+            cp -v "build_${TYPE}_${PLATFORM}_release/bin/Release/assimp-vc${VC_VERSION}-mt.dll" $1/lib/$TYPE/$PLATFORM/Release/assimp-vc${VC_VERSION}-mt.dll
+            cp -v "build_${TYPE}_${PLATFORM}_debug/bin/Debug/assimp-vc${VC_VERSION}-mtd.dll" $1/lib/$TYPE/$PLATFORM/Debug/assimp-vc${VC_VERSION}-mtd.dll
+            cp -v "build_${TYPE}_${PLATFORM}_debug/lib/Debug/assimp-vc${VC_VERSION}-mtd.lib" $1/lib/$TYPE/$PLATFORM/Debug/libassimpD.lib
+            cp -v "build_${TYPE}_${PLATFORM}_release/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib
             secure "$1/lib/$TYPE/$PLATFORM/libassimp.lib" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         fi
-
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux|msys2)$ ]]; then
         cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
