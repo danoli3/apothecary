@@ -11,7 +11,7 @@ FORMULA_DEPENDS=("zlib")
 
 # define the version
 VER=5.4.3
-BUILD_ID=2
+BUILD_ID=4
 DEFINES=""
 
 # tools for git use
@@ -147,13 +147,16 @@ function build() {
             DEFINES="$DEFINES -DASSIMP_NO_EXPORT=ON"
         fi
 
+        if [ $MULTITHREADED_TYPE == "MD" ]; then
+            sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' CMakeLists.txt
+        else
+            sed -i 's/\/MT/\/MD/g; s/\/MDd/\/MTd/g' CMakeLists.txt
+        fi
+
         if [ "${ASSIMP_STATIC:-${DEFAULT_VS_STATIC}}" = "1" ]; then
             DEFINES="${DEFINES} \
             ${MT_TYPE_DEFINES} \
             -DBUILD_SHARED_LIBS=OFF"
-            if [ $MULTITHREADED_TYPE == "MD" ]; then
-                sed -i 's/\/MT/\/MD/g; s/\/MTd/\/MDd/g' CMakeLists.txt
-            fi
         else
             DEFINES="${DEFINES} \
             ${MT_TYPE_DEFINES} \
