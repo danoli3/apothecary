@@ -481,7 +481,9 @@ function build() {
         -DOPENCV_ENABLE_NONFREE=OFF \
         -DWITH_PNG=ON \
         -DBUILD_OPENEXR=OFF \
+        -DWITH_OPENEXR=OFF \
         -DBUILD_OPENJPEG=OFF \
+        -DWITH_OPENJPEG=OFF \
         -DBUILD_PNG=OFF \
         -DWITH_1394=OFF \
         -DWITH_IMGCODEC_HDR=ON \
