@@ -25,7 +25,7 @@ function download() {
     # mv zlib-$VER zlib
     # rm -f zlib-$VER.tar.gz
 
-    git clone --depth 1 --branch $GIT_TAG $GIT_URL zlib
+    git clone --depth 1 --branch $GIT_TAG https://github.com/madler/zlib.git zlib
 }
 
 # prepare the build environment, executed inside the lib src dir
