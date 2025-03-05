@@ -298,7 +298,7 @@ function build() {
                 -DWITH_OPENCL_SVM=OFF \
                 -DWITH_LAPACK=OFF \
                 -DBUILD_ZLIB=ON \
-                -DWITH_ZLIB=OFF \
+                -DWITH_ZLIB=ON \
                 -DWITH_DIRECTX=ON \
                 -DWITH_MSMF=ON \
                 -DWITH_DSHOW=ON \
@@ -378,9 +378,6 @@ function build() {
             -DCMAKE_SYSTEM_PROCESSOR="${PLATFORM}" \
             ${EXTRA_DEFS} \
             ${CMAKE_WIN_SDK} \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DBUILD_PNG=OFF \
             -DPNG_ROOT=${LIBPNG_ROOT} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
@@ -415,9 +412,6 @@ function build() {
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             ${EXTRA_DEFS} \
-            -DZLIB_ROOT=${ZLIB_ROOT} \
-            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
-            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
             -DBUILD_PNG=OFF \
             -DPNG_ROOT=${LIBPNG_ROOT} \
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
