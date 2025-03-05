@@ -11,7 +11,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
 VER=4.11.0
-BUILD_ID=9
+BUILD_ID=8
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4110
@@ -91,10 +91,6 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
-        -DBUILD_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_PYTHON_EXAMPLES=OFF \
-        -DINSTALL_C_EXAMPLES=OFF \
         -DBUILD_FAT_JAVA_LIB=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_PACKAGE=OFF \
@@ -111,6 +107,8 @@ function build() {
         -DBUILD_opencv_world=ON \
         -DOPENCV_ENABLE_NONFREE=OFF \
         -DWITH_PNG=ON \
+        -DBUILD_TIFF=OFF \
+        -DBUILD_OPENJPEG=OFF \
         -DBUILD_PNG=OFF \
         -DWITH_1394=OFF \
         -DWITH_IMGCODEC_HDR=ON \
@@ -131,6 +129,7 @@ function build() {
         -DWITH_OPENCL=OFF \
         -DWITH_OPENNI=OFF \
         -DWITH_OPENNI2=OFF \
+        -DBUILD_OPENEXR=OFF \
         -DWITH_QT=OFF \
         -DWITH_QUICKTIME=OFF \
         -DWITH_V4L=OFF \
@@ -215,9 +214,9 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
 
-        #ZLIB_ROOT="$LIBS_ROOT/zlib/"
-        #ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        #ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
@@ -247,6 +246,7 @@ function build() {
                 -DBUILD_WITH_DEBUG_INFO=OFF \
                 -DBUILD_TIFF=OFF \
                 -DBUILD_JPEG=OFF \
+                -DBUILD_OPENJPEG=OFF \
                 -DWITH_OPENCLAMDFFT=OFF \
                 -DBUILD_opencv_java=OFF \
                 -DBUILD_opencv_python=OFF \
@@ -463,15 +463,11 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
-        -DBUILD_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_PYTHON_EXAMPLES=OFF \
-        -DINSTALL_C_EXAMPLES=OFF \
+        -DBUILD_TESTS=OFF \
         -DBUILD_FAT_JAVA_LIB=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_PACKAGE=OFF \
         -DBUILD_opencv_java=OFF \
-        -DBUILD_opencv_java_android=OFF \
         -DBUILD_opencv_python=OFF \
         -DBUILD_opencv_python2=OFF \
         -DBUILD_opencv_python3=OFF \
@@ -484,11 +480,14 @@ function build() {
         -DBUILD_opencv_world=ON \
         -DOPENCV_ENABLE_NONFREE=OFF \
         -DWITH_PNG=ON \
+        -DBUILD_OPENEXR=OFF \
+        -DBUILD_OPENJPEG=OFF \
         -DBUILD_PNG=OFF \
         -DWITH_1394=OFF \
         -DWITH_IMGCODEC_HDR=ON \
         -DWITH_JPEG=OFF \
-        -DWITH_TIFF=ON \
+        -DWITH_TIFF=OFF \
+        -DBUILD_TIFF=OFF \
         -DWITH_FFMPEG=ON \
         -DWITH_QUIRC=ON \
         -DWITH_GIGEAPI=OFF \
@@ -508,7 +507,6 @@ function build() {
         -DWITH_PVAPI=OFF \
         -DWITH_OPENEXR=OFF \
         -DWITH_EIGEN=ON \
-        -DBUILD_TESTS=OFF \
         -DWITH_LAPACK=OFF \
         -DWITH_WEBP=OFF \
         -DWITH_GPHOTO2=OFF \
@@ -606,10 +604,6 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
-        -DBUILD_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_ANDROID_EXAMPLES=OFF \
-        -DINSTALL_PYTHON_EXAMPLES=OFF \
-        -DINSTALL_C_EXAMPLES=OFF \
         -DBUILD_opencv_highgui=ON \
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
@@ -619,6 +613,10 @@ function build() {
         -DBUILD_opencv_videostab=ON \
         -DOPENCV_ENABLE_NONFREE=OFF \
         -DBUILD_JPEG=OFF \
+        -DBUILD_OPENJPEG=OFF \
+        -DBUILD_OPENEXR=OFF \
+        -DWITH_TIFF=OFF \
+        -DBUILD_TIFF=OFF \
         -DWITH_PNG=ON \
         -DBUILD_PNG=OFF \
         -DWITH_FFMPEG=ON \
@@ -697,10 +695,6 @@ function build() {
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DBUILD_DOCS=OFF \
             -DBUILD_EXAMPLES=OFF \
-            -DBUILD_ANDROID_EXAMPLES=OFF \
-            -DINSTALL_ANDROID_EXAMPLES=OFF \
-            -DINSTALL_PYTHON_EXAMPLES=OFF \
-            -DINSTALL_C_EXAMPLES=OFF \
             -DBUILD_FAT_JAVA_LIB=OFF \
             -DBUILD_JASPER=OFF \
             -DBUILD_PACKAGE=OFF \
@@ -739,10 +733,13 @@ function build() {
             -DBUILD_opencv_calib3d=ON \
             -DBUILD_opencv_world=ON \
             -DBUILD_JPEG=OFF \
+            -BUILD_OPENJPEG=OFF \
+            -DBUILD_OPENEXR=OFF \
             -DBUILD_IPP_IW=OFF \
             -DWITH_MATLAB=OFF \
             -DWITH_CUDA=OFF \
             -DWITH_TIFF=OFF \
+            -DBUILD_TIFF=OFF \
             -DWITH_OPENEXR=OFF \
             -DWITH_OPENGL=ON \
             -DWITH_OPENVX=ON \
@@ -914,7 +911,7 @@ function copy() {
         echo "Listing 3rd party libraries in build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"
         ls -lah "build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"
 
-        
+
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"*.a $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/"*.dylib $1/lib/$TYPE/$PLATFORM 2>/dev/null || true
