@@ -8,7 +8,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.3.1
-BUILD_ID=3
+BUILD_ID=4
 DEFINES=""
 FRAMEWORKS=""
 
@@ -78,6 +78,14 @@ function build() {
         echoVerbose "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
 
+        ZLIB_STATIC=${ZLIB_STATIC:-1}
+
+        if [ "${ZLIB_STATIC}" = 1 ]; then
+            DEFINES="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF"
+        else
+            DEFINES="-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON"
+        fi
+
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.lib *.o *.a
@@ -86,14 +94,13 @@ function build() {
             -G "${GENERATOR_NAME}" \
             -A "${PLATFORM}" \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
-            -D BUILD_SHARED_LIBS=OFF \
+            ${DEFINES} \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
@@ -113,6 +120,8 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -D BUILD_SHARED_LIBS=OFF \
+            -DZLIB_BUILD_STATIC=ON \
+            -DZLIB_BUILD_SHARED=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
@@ -159,6 +168,8 @@ function build() {
             -DANDROID_ABI=${ABI} \
             -DANDROID_API=${ANDROID_API} \
             -DANDROID_TOOLCHAIN=clang \
+            -DZLIB_BUILD_STATIC=ON \
+            -DZLIB_BUILD_SHARED=OFF \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -182,6 +193,8 @@ function build() {
             -D BUILD_SHARED_LIBS=OFF \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
+            -DZLIB_BUILD_STATIC=ON \
+            -DZLIB_BUILD_SHARED=OFF \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -214,7 +227,8 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            ${MT_TYPE_DEFINES} \
+            -DZLIB_BUILD_STATIC=ON \
+            -DZLIB_BUILD_SHARED=OFF \
             -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
@@ -248,6 +262,8 @@ function build() {
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DZLIB_BUILD_STATIC=ON \
+            -DZLIB_BUILD_SHARED=OFF \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
