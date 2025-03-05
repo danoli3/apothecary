@@ -942,12 +942,12 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM
         echo "Listing libraries in build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/"
         ls -lah "build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/"
-        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/native/jni/include/opencv2" "$LIB_DEST_DIR/include/"
-        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/libopencv_world.a" "$LIB_DEST_DIR/lib/$TYPE/$PLATFORM/" 
-        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/3rdparty/libs/"*.a "$LIB_DEST_DIR/lib/$TYPE/$PLATFORM/" 
-        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/"* "$LIB_DEST_DIR/etc/"
-        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/licenses/"* "$LIB_DEST_DIR/license/"
-        cp -v "LICENSE" "$LIB_DEST_DIR/license/"
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/native/jni/include/opencv2" "$1/include/"
+        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/libopencv_world.a" "$1/lib/$TYPE/$PLATFORM/" 
+        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/3rdparty/libs/"*.a "$1/lib/$TYPE/$PLATFORM/" 
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/"* "$1/etc/"
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/licenses/"* "$1/license/"
+        cp -v "LICENSE" "$1/license/"
 
         secure "$1/lib/$TYPE/$PLATFORM/libopencv_world.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "emscripten" ]; then
