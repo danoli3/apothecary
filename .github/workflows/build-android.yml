@@ -43,13 +43,12 @@ jobs:
       matrix:
         ARCH: [armv7, arm64, x86_64]
         SDK: ["35.0.0"]
-        NDK: ["27.2.12479018"] #"26.3.11579264",
+        NDK: ["28.0.13004108"]
         API: ["24"]
     env:
       ARCH: ${{ matrix.ARCH }}
       SDK: ${{ matrix.SDK }}
       NDK: ${{ matrix.NDK }}
-      NDK_ROOT: ${{ matrix.NDK }}
       ANDROID_API: ${{ matrix.API }}
     steps:
       - uses: actions/checkout@v4.2.2

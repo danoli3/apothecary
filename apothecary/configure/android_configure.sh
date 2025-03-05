@@ -19,7 +19,15 @@ export ANDROID_ABI=$1
 export BUILD_SYSTEM=${2:-make}
 
 export TOOLCHAIN_ROOT="${APOTHECARY_LEVEL}/android"
-export NDK_ROOT="${ANDROID_NDK_ROOT}"
+
+if [ "${NDK:-}" == "27.2.12479018" ]; then 
+    export NDK_ROOT="${ANDROID_NDK_ROOT:-}"
+elif [ "${NDK:-}" == "28.0.13004108" ]; then 
+    export NDK_ROOT="${ANDROID_NDK_LATEST_HOME:-}"
+else
+    echo "Error: NDK path variable not set" >&2
+    exit 1
+fi
 
 export HOST_ARCH=$(uname -m)
 case "$(uname)" in
