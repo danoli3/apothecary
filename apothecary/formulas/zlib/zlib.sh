@@ -32,6 +32,7 @@ function prepare() {
     # . "$DOWNLOADER_SCRIPT"
     # downloader https://github.com/danoli3/zlib/raw/patch-1/CMakeLists.txt
     cp -v "$FORMULA_DIR"/*.txt ./
+    cp -v "$FORMULA_DIR"/zlibConfig.cmake.in ./zlibConfig.cmake.in
 
 }
 
