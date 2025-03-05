@@ -77,15 +77,12 @@ function build() {
         echoVerbose "building $TYPE | $ARCH | $VS_VER | vs: $VS_VER_GEN"
         echoVerbose "--------------------"
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
-
         ZLIB_STATIC=${ZLIB_STATIC:-1}
-
         if [ "${ZLIB_STATIC}" = 1 ]; then
-            DEFINES="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF"
+            DEFINES="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         else
-            DEFINES="-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON"
+            DEFINES="-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         fi
-
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
         rm -f CMakeCache.txt *.lib *.o *.a
@@ -116,12 +113,12 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
+        DEFINES="-DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         cmake .. \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
             -D BUILD_SHARED_LIBS=OFF \
-            -DZLIB_BUILD_STATIC=ON \
-            -DZLIB_BUILD_SHARED=OFF \
+            ${DEFINES} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
@@ -160,6 +157,7 @@ function build() {
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF"
+        DEFINES="${DEFINES} -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
@@ -168,8 +166,7 @@ function build() {
             -DANDROID_ABI=${ABI} \
             -DANDROID_API=${ANDROID_API} \
             -DANDROID_TOOLCHAIN=clang \
-            -DZLIB_BUILD_STATIC=ON \
-            -DZLIB_BUILD_SHARED=OFF \
+            ${DEFINES} \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -185,6 +182,7 @@ function build() {
         mkdir -p build_${TYPE}_${PLATFORM}
         cd build_${TYPE}_${PLATFORM}
         rm -f CMakeCache.txt *.a *.o *.js
+        DEFINES="${DEFINES} -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         $EMSDK/upstream/emscripten/emcmake cmake .. \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
@@ -193,8 +191,7 @@ function build() {
             -D BUILD_SHARED_LIBS=OFF \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
-            -DZLIB_BUILD_STATIC=ON \
-            -DZLIB_BUILD_SHARED=OFF \
+            ${DEFINES} \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -230,12 +227,13 @@ function build() {
             -DZLIB_BUILD_STATIC=ON \
             -DZLIB_BUILD_SHARED=OFF \
             -DBUILD_SHARED_LIBS=OFF"
+        DEFINES="${DEFINES} -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DZLIB_BUILD_EXAMPLES=OFF \
+            ${DEFINES} \
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_SYSTEM_NAME=$TYPE \
             -DCMAKE_INSTALL_PREFIX=Release \
@@ -266,6 +264,7 @@ function build() {
             -DZLIB_BUILD_SHARED=OFF \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF"
+        DEFINES="${DEFINES} -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
@@ -274,7 +273,7 @@ function build() {
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
             -DCMAKE_INSTALL_LIBDIR="lib" \
-            -DZLIB_BUILD_EXAMPLES=OFF \
+            ${DEFINES} \
             -DSKIP_EXAMPLE=ON \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
