@@ -297,7 +297,7 @@ function copy() {
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a
         secure "$1/lib/$TYPE/$PLATFORM/zlib.a" "zlib.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
-        cp -vR "build_${TYPE}_${PLATFORM}/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -312,7 +312,7 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "build_${TYPE}_${ARCH}/Release/z.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib >/dev/null 2>&1
         secure "$1/lib/$TYPE/$PLATFORM/zlib.lib" "zlib.lib" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
-        cp -vR "build_${TYPE}_${ARCH}/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
+        cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -327,7 +327,7 @@ function copy() {
         cp -RT "build_${TYPE}_${ABI}/Release/include/" $1/include
         secure "$1/lib/$TYPE/${PLATFORM}/zlib.a" "zlib.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
-        cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/${PLATFORM}/zlib.pc
+        cp -v "build_${TYPE}_$PLATFORM/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/${PLATFORM}/zlib.pc
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -342,7 +342,7 @@ function copy() {
         mkdir -p $1/lib/$TYPE/$PLATFORM
         cp -v "build_${TYPE}_$PLATFORM/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a
         secure "$1/lib/$TYPE/$PLATFORM/zlib.a" "zlib.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
-        cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
+        cp -v "build_${TYPE}_$PLATFORM/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
@@ -358,7 +358,7 @@ function copy() {
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include/ >/dev/null 2>&1
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a >/dev/null 2>&1
         secure "$1/lib/$TYPE/$PLATFORM/zlib.a" "zlib.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
-        cp -v "build_${TYPE}_$PLATFORM/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
+        cp -v "build_${TYPE}_$PLATFORM/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
 
         PKG_FILE="$1/lib/$TYPE/$PLATFORM/zlib.pc"
         sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
