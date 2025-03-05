@@ -9,7 +9,7 @@ FORMULA_DEPENDS=()
 # define the version
 VER=1.3.1
 BUILD_ID=4
-DEFINES=""
+DEFINES="-DZLIB_PREFIX=ofzlib"
 FRAMEWORKS=""
 
 # tools for git use
@@ -80,9 +80,9 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         ZLIB_STATIC=${ZLIB_STATIC:-1}
         if [ "${ZLIB_STATIC}" = 1 ]; then
-            DEFINES="-DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
+            DEFINES="${DEFINES} -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         else
-            DEFINES="-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
+            DEFINES="${DEFINES} -DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DZLIB_BUILD_STATIC=OFF -DZLIB_BUILD_SHARED=ON -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         fi
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
@@ -114,7 +114,7 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
-        DEFINES="-DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
+        DEFINES="${DEFINES} -DZLIB_BUILD_STATIC=ON -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_TESTING=OFF"
         cmake .. \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
@@ -131,7 +131,7 @@ function build() {
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
-            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${FLAG_RELEASE} " \
+            -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 -D_POSIX_C_SOURCE=200809L ${FLAG_RELEASE} " \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
             -DPLATFORM=$PLATFORM \
@@ -310,7 +310,7 @@ function copy() {
     elif [ "$TYPE" == "vs" ]; then
         cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ >/dev/null 2>&1
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${ARCH}/Release/z.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib >/dev/null 2>&1
+        cp -v "build_${TYPE}_${ARCH}/Release/zs.lib" $1/lib/$TYPE/$PLATFORM/zlib.lib >/dev/null 2>&1
         secure "$1/lib/$TYPE/$PLATFORM/zlib.lib" "zlib.lib" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         cp -vR "build_${TYPE}_${ARCH}/Release/lib/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/
 
