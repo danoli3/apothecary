@@ -940,25 +940,16 @@ function copy() {
 
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM
+        echo "Listing libraries in build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/"
+        ls -lah "build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/"
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/native/jni/include/opencv2" "$LIB_DEST_DIR/include/"
+        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/staticlibs/libopencv_world.a" "$LIB_DEST_DIR/lib/$TYPE/$PLATFORM/" 
+        cp -v "build_${TYPE}_${PLATFORM}/Release/sdk/native/3rdparty/libs/"*.a "$LIB_DEST_DIR/lib/$TYPE/$PLATFORM/" 
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/"* "$LIB_DEST_DIR/etc/"
+        cp -rv "build_${TYPE}_${PLATFORM}/Release/sdk/etc/licenses/"* "$LIB_DEST_DIR/license/"
+        cp -v "LICENSE" "$LIB_DEST_DIR/license/"
 
-        echo "Listing libraries in build_${TYPE}_${PLATFORM}/Release/lib/"
-        ls -lah "build_${TYPE}_${PLATFORM}/Release/lib/"
-
-        echo "Listing 3rd party libraries in build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"
-        ls -lah "build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"
-
-
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/opencv4/3rdparty/"*.a $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/"*.a $1/lib/$TYPE/$PLATFORM
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/"*.dylib $1/lib/$TYPE/$PLATFORM 2>/dev/null || true
-
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/opencv4/" $1/include/
-
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/share/opencv4/"* $1/etc
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/share/licenses/"* $1/license
-        cp -v LICENSE $1/license/
-
-        secure "$1/lib/$TYPE/$PLATFORM/libopencv_core.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libopencv_world.a" "opencv.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "emscripten" ]; then
         mkdir -p $1/include/opencv2
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include/
