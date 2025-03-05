@@ -11,7 +11,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
 VER=4.11.0
-BUILD_ID=8
+BUILD_ID=9
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4110
@@ -91,6 +91,10 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
+        -DBUILD_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_PYTHON_EXAMPLES=OFF \
+        -DINSTALL_C_EXAMPLES=OFF \
         -DBUILD_FAT_JAVA_LIB=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_PACKAGE=OFF \
@@ -211,9 +215,9 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt || true
 
-        ZLIB_ROOT="$LIBS_ROOT/zlib/"
-        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+        #ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        #ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        #ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
@@ -459,10 +463,15 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
+        -DBUILD_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_PYTHON_EXAMPLES=OFF \
+        -DINSTALL_C_EXAMPLES=OFF \
         -DBUILD_FAT_JAVA_LIB=OFF \
         -DBUILD_JASPER=OFF \
         -DBUILD_PACKAGE=OFF \
         -DBUILD_opencv_java=OFF \
+        -DBUILD_opencv_java_android=OFF \
         -DBUILD_opencv_python=OFF \
         -DBUILD_opencv_python2=OFF \
         -DBUILD_opencv_python3=OFF \
@@ -597,6 +606,10 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
+        -DBUILD_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_ANDROID_EXAMPLES=OFF \
+        -DINSTALL_PYTHON_EXAMPLES=OFF \
+        -DINSTALL_C_EXAMPLES=OFF \
         -DBUILD_opencv_highgui=ON \
         -DBUILD_opencv_imgcodecs=ON \
         -DBUILD_opencv_stitching=ON \
@@ -684,6 +697,10 @@ function build() {
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DBUILD_DOCS=OFF \
             -DBUILD_EXAMPLES=OFF \
+            -DBUILD_ANDROID_EXAMPLES=OFF \
+            -DINSTALL_ANDROID_EXAMPLES=OFF \
+            -DINSTALL_PYTHON_EXAMPLES=OFF \
+            -DINSTALL_C_EXAMPLES=OFF \
             -DBUILD_FAT_JAVA_LIB=OFF \
             -DBUILD_JASPER=OFF \
             -DBUILD_PACKAGE=OFF \
