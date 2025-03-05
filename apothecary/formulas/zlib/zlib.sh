@@ -9,7 +9,7 @@ FORMULA_DEPENDS=()
 # define the version
 VER=1.3.1
 BUILD_ID=4
-DEFINES="-DZLIB_PREFIX=ofzlib"
+DEFINES="-DZLIB_PREFIX=ofzlib -D_LARGEFILE64_SOURCE=1"
 FRAMEWORKS=""
 
 # tools for git use
