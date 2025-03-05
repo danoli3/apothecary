@@ -20,10 +20,12 @@ GIT_TAG=v$VER
 function download() {
     . "$DOWNLOADER_SCRIPT"
 
-    downloader ${GIT_URL}
-    tar -xf zlib-$VER.tar.gz
-    mv zlib-$VER zlib
-    rm -f zlib-$VER.tar.gz
+    # downloader ${GIT_URL}
+    # tar -xf zlib-$VER.tar.gz
+    # mv zlib-$VER zlib
+    # rm -f zlib-$VER.tar.gz
+
+    git clone --depth 1 --branch $GIT_TAG $GIT_URL zlib
 }
 
 # prepare the build environment, executed inside the lib src dir
