@@ -112,6 +112,7 @@ elif [[ "$TARGET" =~ ^(android)$ ]]; then
         "freetype"
         "FreeImage"
         "assimp"
+        "opencv"
     )
 elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 
