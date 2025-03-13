@@ -84,6 +84,9 @@ function build() {
     rm -rf build_${TYPE}_${ARCH}
     mkdir -p "build_${TYPE}_${ARCH}"
 
+    export DEPOT_TOOLS_UPDATE=0
+    export PATH="$PWD/depot_tools:$PATH"
+
     BUILD_TESTS=${BUILD_TESTS:-false}
     angle_enable_d3d9=false
     angle_enable_d3d11=false
@@ -175,7 +178,7 @@ function build() {
     echoInfo "Generating GN build files in out/angle with arguments:"
     gn --version
     ninja --version
-    gn gen out/angle --args="$GN_ARGS"
+    ./depot_tools/gn gen "build_${TYPE}_${ARCH}" --args="$GN_ARGS"
     if [ $? -ne 0 ]; then
         echo "GN generation failed"
         exit 1
