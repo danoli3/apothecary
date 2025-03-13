@@ -858,6 +858,7 @@ if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
   TVOS_LATEST_SDK=$(xcrun -sdk appletvos --show-sdk-version >/dev/null || echo "SDKNotInstalled")
   XROS_MIN_SDK_VER=1.1
   WATCHOS_MIN_SDK_VER=6.0
+  export ARCH_IS_SIMULATOR="false"
 fi
 
 
@@ -873,10 +874,12 @@ if [ "$TYPE" = "ios" ]; then
     export PLATFORM="OS"
   elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
     export PLATFORM="SIMULATOR64"
+    export ARCH_IS_SIMULATOR="true"
   elif [ $ARCH == "arm64" ] ; then
     export PLATFORM="OS64"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATORARM64"
+    export ARCH_IS_SIMULATOR="true"
   fi
 fi
 
@@ -890,10 +893,12 @@ if [ "$TYPE" = "tvos" ]; then
   export FLAG_RELEASE="-Os -fvisibility=hidden"
   if [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
     export PLATFORM="SIMULATOR_TVOS"
+    export ARCH_IS_SIMULATOR="true"
   elif [ $ARCH == "arm64" ] ; then
     export PLATFORM="TVOS"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATORARM64_TVOS"
+    export ARCH_IS_SIMULATOR="true"
   fi
 fi
 
@@ -903,8 +908,10 @@ if [ "$TYPE" = "watchos" ]; then
     export PLATFORM="WATCHOS"
   elif [ $ARCH == "x86_64" ] ; then
     export PLATFORM="SIMULATOR_WATCHOS"
+    export ARCH_IS_SIMULATOR="true"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATORARM64_WATCHOS"
+    export ARCH_IS_SIMULATOR="true"
   else
     echoError "watchOS incorrect ARCH:[$ARCH]"
   fi
@@ -916,8 +923,10 @@ if [ "$TYPE" = "xros" ]; then
     export PLATFORM="VISIONOS"
   elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
     export PLATFORM="SIMULATOR64_VISIONOS"
+    export ARCH_IS_SIMULATOR="true"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATOR_VISIONOS"
+    export ARCH_IS_SIMULATOR="true"
   fi
 fi
 
