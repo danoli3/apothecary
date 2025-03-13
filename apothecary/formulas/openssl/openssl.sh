@@ -3,7 +3,7 @@
 # openssl
 
 # define the version
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux")
+FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
 VER=3.4.1
@@ -124,6 +124,7 @@ function build() {
         # 	# Patch Configure to build for tvOS, not iOS
         # 	# LANG=C sed -i -- 's/D\_REENTRANT\:iOS/D\_REENTRANT\:tvOS/' "./openssl/Configure"
         # fi
+
         DEFINES="${DEFINES} \
             -DNO_FORK=ON \
             -DOPENSSL_OCSP=OFF \
@@ -159,16 +160,12 @@ function build() {
             -DENABLE_VISIBILITY=OFF
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
-
         cd "Release/lib/"
-
         # Rename with prefixes (including library origin to avoid duplicates)
         mkdir -p crypto
         mkdir -p ssl
-
         mv libcrypto.a crypto/libcrypto.a
         mv libssl.a ssl/libssl.a
-
         cd crypto
         ar -x libcrypto.a
         for f in *.o; do mv "$f" "openssl_${ARCH}_crypto_$f"; done
@@ -180,7 +177,6 @@ function build() {
         done
         ar rcs "../libcrypto.a" openssl_${ARCH}_crypto_*.o
         cd ../ssl
-
         ar -x libssl.a
         for f in *.o; do mv "$f" "openssl_${ARCH}_ssl_$f"; done
          for obj in *.o; do
@@ -191,13 +187,88 @@ function build() {
         done
         ar rcs "../libssl.a" openssl_${ARCH}_ssl_*.o
         cd ..
-
         echo "Verifying libcrypto.:"
         lipo -info "libcrypto.a"
         echo "Verifying libssl.a"
         lipo -info "libssl.a"
         rm -rf crypto ssl
+        cd ..
 
+    elif [[ "$TYPE" =~ ^(android)$ ]]; then
+
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
+
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+        echo "building $TYPE | $PLATFORM"
+        echo "--------------------"
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        DEFINES="${DEFINES} \
+            -DNO_FORK=ON \
+            -DOPENSSL_OCSP=OFF \
+            -DOPENSSL_CMP=OFF \
+            "
+        rm -f CMakeCache.txt *.a *.o
+        DEFINES="${DEFINES} -DLIBRARY_SUFFIX=${ARCH} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
+        cmake .. \
+            ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DPLATFORM=$PLATFORM \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
+            -DBUILD_TESTING=OFF \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
+            -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
+            -DPLATFORM=$PLATFORM \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DENABLE_VISIBILITY=OFF
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd "Release/lib/"
+        mkdir -p crypto
+        mkdir -p ssl
+        mv libcrypto.a crypto/libcrypto.a
+        mv libssl.a ssl/libssl.a
+        cd crypto
+        ar -x libcrypto.a
+        for f in *.o; do mv "$f" "openssl_${ARCH}_crypto_$f"; done
+        for obj in *.o; do
+            if [ -z "$(nm "$obj")" ]; then
+                echo "Removing empty object file: $obj"
+                rm -f "$obj"
+            fi
+        done
+        ar rcs "../libcrypto.a" openssl_${ARCH}_crypto_*.o
+        cd ../ssl
+        ar -x libssl.a
+        for f in *.o; do mv "$f" "openssl_${ARCH}_ssl_$f"; done
+         for obj in *.o; do
+            if [ -z "$(nm "$obj")" ]; then
+                echo "Removing empty object file: $obj"
+                rm -f "$obj"
+            fi
+        done
+        ar rcs "../libssl.a" openssl_${ARCH}_ssl_*.o
+        cd ..
+        rm -rf crypto ssl
         cd ..
 
     elif [ "$TYPE" == "vs" ]; then
@@ -258,123 +329,6 @@ function build() {
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
         cd ..
-    elif [ "$TYPE" == "android" ]; then
-
-        if [ -f "$LIBS_DIR/openssl/$TYPE/$ABI/libssl.a" ]; then
-            echo "Build Already exists at $LIBS_DIR/openssl/$TYPE/ skipping"
-            return
-        fi
-        source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
-        #wget -nv https://wiki.openssl.org/images/7/70/Setenv-android.sh
-        # source ./setenv-android.sh
-        echo "NDK_ROOT: $NDK_ROOT"
-
-        export RELEASE=2.6.37
-        export SYSTEM=android
-        export ARCH=arm
-        export CROSS_COMPILE="arm-linux-androideabi-"
-        export ANDROID_SYSROOT="$SYSROOT"
-        #export SYSROOT="$ANDROID_SYSROOT"
-        export NDK_SYSROOT="$ANDROID_SYSROOT"
-        export ANDROID_NDK_SYSROOT="$ANDROID_SYSROOT"
-        #export ANDROID_API="$ANDROID_API"
-
-        # CROSS_COMPILE and ANDROID_DEV are DFW (Don't Fiddle With). Its used by OpenSSL build system.
-        # export CROSS_COMPILE="arm-linux-androideabi-"
-        export ANDROID_DEV="$ANDROID_NDK_ROOT/platforms/$ANDROID_API/$ABI/usr"
-        export HOSTCC=clang
-
-        export ANDROID_TOOLCHAIN="$TOOLCHAIN"
-
-        # Fix NDK 23 Issue with sysroot for old make
-        cp $DEEP_TOOLCHAIN_PATH/crtbegin_dynamic.o $SYSROOT/usr/lib/crtbegin_dynamic.o
-        cp $DEEP_TOOLCHAIN_PATH/crtbegin_so.o $SYSROOT/usr/lib/crtbegin_so.o
-        cp $DEEP_TOOLCHAIN_PATH/crtend_android.o $SYSROOT/usr/lib/crtend_android.o
-        cp $DEEP_TOOLCHAIN_PATH/crtend_so.o $SYSROOT/usr/lib/crtend_so.o
-
-        VERBOSE=1
-        if [ ! -z "$VERBOSE" ] && [ "$VERBOSE" != "0" ]; then
-            echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
-            echo "ANDROID_ARCH: $ABI"
-            # echo "ANDROID_EABI: $_ANDROID_EABI"
-            echo "ANDROID_API: $ANDROID_API"
-            echo "ANDROID_SYSROOT: $ANDROID_SYSROOT"
-            echo "ANDROID_TOOLCHAIN: $ANDROID_TOOLCHAIN"
-            #echo "FIPS_SIG: $FIPS_SIG"
-            #echo "CROSS_COMPILE: $CROSS_COMPILE"
-            echo "ANDROID_DEV: $ANDROID_DEV"
-        fi
-
-        #cp $FORMULA_DIR/Setenv-android.sh ./Setenv-android.sh
-        #chmod 755 ./Setenv-android.sh
-        #./setenv-android.sh
-
-        perl -pi -e 's/install: all install_docs install_sw/install: install_docs install_sw/g' Makefile.org
-
-        export BUILD_TO_DIR=build_$ABI
-        CURRENTPATH=$(pwd)
-        mkdir -p BUILD_TO_DIR
-        rm -f CMakeCache.txt *.a *.o
-        echo "Build Dir $BUILD_TO_DIR"
-        export PATH="$TOOLCHAIN_PATH:$DEEP_TOOLCHAIN_PATH:$PATH"
-        # echo "./Config:"
-        # ./config --prefix=$CURRENTPATH/$BUILD_TO_DIR --openssldir=$CURRENTPATH/$BUILD_TO_DIR no-ssl2 no-ssl3 no-comp no-hw no-engine shared
-        #./Configure android-arm64
-
-        # cp $FORMULA_DIR/openssl-cmake/CMakeLists.txt $CURRENTPATH/
-        # cp $FORMULA_DIR/openssl-cmake/crypto/* $CURRENTPATH/crypto/
-        # mkdir -p $CURRENTPATH/cmake/
-        # cp $FORMULA_DIR/openssl-cmake/cmake/* $CURRENTPATH/cmake/
-        # cp $FORMULA_DIR/openssl-cmake/ssl/CMakeLists.txt $CURRENTPATH/ssl/
-
-        echo $(pwd)
-        # cp crypto/comp/comp.h include/openssl/
-        # cp crypto/engine/engine.h include/
-
-        BUILD_OPTS="-DOPENSSL_NO_DEPRECATED -DOPENSSL_NO_COMP -DOPENSSL_NO_EC_NISTP_64_GCC_128 -DOPENSSL_NO_ENGINE -DOPENSSL_NO_GMP -DOPENSSL_NO_JPAKE -DOPENSSL_NO_LIBUNBOUND -DOPENSSL_NO_MD2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SCTP -DOPENSSL_NO_SSL_TRACE -DOPENSSL_NO_SSL2 -DOPENSSL_NO_SSL3 -DOPENSSL_NO_STORE -DOPENSSL_NO_UNIT_TEST -DOPENSSL_NO_WEAK_SSL_CIPHERS"
-
-        if [ "$ABI" = "armeabi-v7a" ]; then
-            KERNEL_BITS=32
-            export CONFIGURE="android-arm"
-            #PATH=$ANDROID_NDK_ROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/$HOST_PLATFORM/bin:$PATH
-        elif [ "$ABI" = "armeabi" ]; then
-            KERNEL_BITS=32
-            export CONFIGURE="android-arm"
-            #PATH=$ANDROID_NDK_ROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin:$PATH
-        elif [ $ABI = "arm64-v8a" ]; then
-            KERNEL_BITS=64
-            export CONFIGURE="android-arm64"
-            #PATH=$ANDROID_NDK_ROOT/toolchains/aarch64-linux-android-4.9/prebuilt/aarch64-$HOST_PLATFORM/bin:$PATH
-        elif [ "$ABI" = "x86_64" ]; then
-            KERNEL_BITS=32
-            export CONFIGURE="android-x86_64"
-        elif [ "$ABI" = "x86" ]; then
-            KERNEL_BITS=32
-            export CONFIGURE="android-x86"
-        fi
-
-        echo "PATH:$PATH"
-        #export PATH=-I${SYSROOT}/usr/lib/
-        export OUTPUT_DIR=
-        echo "./Configure: $DEEP_TOOLCHAIN_PATH/usr/lib/"
-        FLAGS="no-asm  no-async shared no-dso no-comp no-deprecated no-md2 no-rc5 no-rfc3779 no-unit-test no-sctp no-ssl-trace no-ssl2 no-ssl3 no-engine no-weak-ssl-ciphers -w -std=c${C_STANDARD} -ldl -shared -lc -L$DEEP_TOOLCHAIN_PATH -L$TOOLCHAIN/lib/gcc/$ANDROID_POSTFIX/4.9.x/"
-        ./Configure $CONFIGURE -D__ANDROID_API__=$ANDROID_API $FLAGS --prefix="$CURRENTPATH/$BUILD_TO_DIR" --openssldir="$CURRENTPATH/$BUILD_TO_DIR"
-
-        #perl configdata.pm --dump
-        #make
-
-        make clean
-        make AR=$AR depend
-        echo "Make Depend Complete"
-        make all
-
-        mkdir -p build/$TYPE/$ABI
-        cp -rv *.a build/$TYPE/$ABI
-
-        rm $SYSROOT/usr/lib/crtbegin_dynamic.o
-        rm $SYSROOT/usr/lib/crtbegin_so.o
-        rm $SYSROOT/usr/lib/crtend_android.o
-        rm $SYSROOT/usr/lib/crtend_so.o
 
     elif [ "$TYPE" == "linux" ]; then
 
@@ -483,6 +437,8 @@ function copy() {
         cp -f "build_${TYPE}_${ARCH}/Release/lib/libcrypto.lib" $1/lib/$TYPE/$PLATFORM/libcrypto.lib
         cp -f "build_${TYPE}_${ARCH}/Release/lib/libssl.lib" $1/lib/$TYPE/$PLATFORM/libssl.lib
 
+        cp -Rv "build_${TYPE}_${ARCH}/Release/lib/cmake" "$1/lib/$TYPE/$PLATFORM/cmake/"
+
         secure "$1/lib/$TYPE/$PLATFORM/libssl.lib" "openssl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         secure "$1/lib/$TYPE/$PLATFORM/libcrypto.lib" "crypto.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
 
@@ -514,11 +470,46 @@ function copy() {
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${1}/lib/$TYPE/$PLATFORM"
 
     elif [ "$TYPE" == "android" ]; then
-        if [ -d $1/lib/$TYPE/$ABI ]; then
-            rm -r $1/lib/$TYPE/$ABI
-        fi
-        mkdir -p $1/lib/$TYPE/$ABI
-        cp -rv build/$TYPE/$ABI/*.a $1/lib/$TYPE/$ABI/
+        mkdir -p $1/include
+        mkdir -p $1/lib/$TYPE
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        echo "cppy: build_${TYPE}_${PLATFORM}/Release/lib/libcrypto.a"
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libcrypto.a" $1/lib/$TYPE/$PLATFORM/libcrypto.a
+        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libssl.a" $1/lib/$TYPE/$PLATFORM/libssl.a
+
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/cmake" "$1/lib/$TYPE/$PLATFORM/cmake/"
+
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include" $1/
+
+        secure "$1/lib/$TYPE/$PLATFORM/libssl.a" "openssl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libcrypto.a" "crypto.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/openssl.pc" $1/lib/$TYPE/$PLATFORM/openssl.pc
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libcrypto.pc" $1/lib/$TYPE/$PLATFORM/libcrypto.pc
+        cp -vR "build_${TYPE}_${PLATFORM}/Release/lib/pkgconfig/libssl.pc" $1/lib/$TYPE/$PLATFORM/libssl.pc
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/openssl.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/libcrypto.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
+
+        PKG_FILE="$1/lib/$TYPE/$PLATFORM/libssl.pc"
+        sed -i.bak "s|^prefix=.*|prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^exec_prefix=.*|exec_prefix=${1}|" "$PKG_FILE"
+        sed -i.bak "s|^libdir=.*|libdir=${1}/lib/${TYPE}/${PLATFORM}/|" "$PKG_FILE"
+        sed -i.bak "s|^includedir=.*|includedir=${1}/include|" "$PKG_FILE"
+        rm -v "$PKG_FILE.bak"
+
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:$1/lib/$TYPE/$PLATFORM"
     fi
 
     # copy license file

@@ -6,7 +6,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos")
+FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "android")
 FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
@@ -180,76 +180,130 @@ function build() {
 
     elif [ "$TYPE" == "android" ]; then
 
-        source $APOTHECARY_DIR/configure/android_configure.sh $ABI make
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
-        export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH/openssl
-        local BUILD_TO_DIR=$BUILD_DIR/curl/build/$TYPE/$ABI
-        export OPENSSL_LIBRARIES=$OPENSSL_PATH/lib/$TYPE/$ABI
+        export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
+        OPENSSL_ROOT="$LIBS_ROOT/openssl/"
+        OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
+        OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
+        OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
+        USE_SECURE_TRANSPORT=OFF
+        CURL_ENABLE_SSL=ON
+        SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
+            -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
+            -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_LIBRARY_CRYPT} \
+            -DOPENSSL_SSL_LIBRARY=${OPENSSL_LIBRARY} \
+            -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a;${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
 
-        if [ "$ARCH" == "armv7" ]; then
-            export HOST=armv7a-linux-android
-        elif [ "$ARCH" == "arm64" ]; then
-            export HOST=aarch64-linux-android
-        elif [ "$ARCH" == "x86" ]; then
-            export HOST=x86-linux-android
-        elif [ "$ARCH" == "x86_64" ]; then
-            export HOST=x86_64-linux-android
-        fi
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
-        export NDK=$ANDROID_PLATFORM
-        export HOST_TAG=$HOST_PLATFORM
-        export MIN_SDK_VERSION=21
-        export SSL_DIR=$OPENSSL_LIBRARIES
+        LIBBROTLI_ROOT="$LIBS_ROOT/brotli/"
+        LIBBROTLI_INCLUDE_DIR="$LIBS_ROOT/brotli/include"
 
-        export OUTPUT_DIR=$OPENSSL_LIBRARIES
-        mkdir -p build
-        mkdir -p build/$TYPE
-        mkdir -p build/$TYPE/$ABI
-        # export DESTDIR="$BUILD_TO_DIR"
+        LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlicommon.a"
+        LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlienc.a"
+        LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
 
-        export CFLAGS="-std=c${C_STANDARD}"
-        export CXXFLAGS="-D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API} $MAKE_INCLUDES_CFLAGS -std=c++${CPP_STANDARD}"
-        # export LIBS="-L${OPENSSL_PATH}/lib/${TYPE}/${ABI}/libssl.a -L${OPENSSL_PATH}/lib/${TYPE}/${ABI}/libcrypto.a " # this dont work annoying
-        export LDFLAGS=" ${LIBS} -shared -stdlib=libc++ -L$DEEP_TOOLCHAIN_PATH -L$TOOLCHAIN/lib/gcc/$ANDROID_POSTFIX/4.9.x/ "
+        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OPENSSL_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
-        cp $DEEP_TOOLCHAIN_PATH/crtbegin_dynamic.o $SYSROOT/usr/lib/crtbegin_dynamic.o
-        cp $DEEP_TOOLCHAIN_PATH/crtbegin_so.o $SYSROOT/usr/lib/crtbegin_so.o
-        cp $DEEP_TOOLCHAIN_PATH/crtend_android.o $SYSROOT/usr/lib/crtend_android.o
-        cp $DEEP_TOOLCHAIN_PATH/crtend_so.o $SYSROOT/usr/lib/crtend_so.o
+        echo "building curl $TYPE | $PLATFORM"
+        echo "--------------------"
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.a *.o *.lib
+        DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
+        cmake .. ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
+            -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DENABLE_STRICT_TRY_COMPILE=ON \
+            -DHAVE_GETPASS_R=0 \
+            -DCURL_USE_LIBSSH2=OFF \
+            -DCURL_USE_LIBPSL=OFF \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
+            -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
+            -DCURL_STATICLIB=ON \
+            -DBUILD_STATIC_LIBS=ON \
+            -DENABLE_UNICODE=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DHAVE__FSEEKI64=OFF \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_USE_SYSTEM_CURL=OFF \
+            -DENABLE_ARC=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCURL_DISABLE_LDAP=ON \
+            -DENABLE_VISIBILITY=OFF \
+            ${SSL_DEFS} \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DZLIB_LIBRARIES=${ZLIB_LIBRARY} \
+            -DENABLE_ARES=OFF \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DENABLE_UNIX_SOCKETS=OFF \
+            -DHAVE_LIBSOCKET=OFF \
+            -DCURL_ENABLE_SSL=${CURL_ENABLE_SSL} \
+            -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
+            -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
+            -DUSE_NGHTTP2=OFF \
+            -DCURL_DISABLE_POP3=ON \
+            -DCURL_CA_FALLBACK=ON \
+            -DCURL_DISABLE_IMAP=ON \
+            -DENABLE_WEBSOCKETS=ON \
+            -DENABLE_UNIX_SOCKETS=ON \
+            -DCURL_BROTLI=ON \
+            -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLIDEC_LIBRARY=${LIBBROTLI_DEC_LIB} \
+            -DBROTLICOMMON_LIBRARY=${LIBBROTLI_LIBRARY} \
+            -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
+            -DBROTLI_LIBRARIES="${LIBBROTLI_LIBRARY} ;${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB}" \
+            -DUSE_LIBIDN2=OFF \
+            -DENABLE_VERBOSE=ON \
+            -DENABLE_THREADED_RESOLVER=ON \
+            -DENABLE_IPV6=ON
 
-        cp ${OPENSSL_PATH}/lib/${TYPE}/${ABI}/libssl.a ${OPENSSL_PATH}/lib/libssl.a # this works!
-        cp ${OPENSSL_PATH}/lib/${TYPE}/${ABI}/libcrypto.a ${OPENSSL_PATH}/lib/libcrypto.a
+        echo "--------- CMakeCache.txt Content ---------"
+        cat CMakeCache.txt
+        echo "------------------------------------------"
 
-        echo "OPENSSL_PATH: $OPENSSL_PATH"
 
-        PATH="${PATH};${OPENSSL_PATH}/lib/${TYPE}"
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
 
-        ./configure \
-            --host=$HOST \
-            --with-openssl=$OPENSSL_PATH \
-            --with-pic \
-            --enable-static \
-            --disable-shared \
-            --disable-verbose \
-            --disable-threaded-resolver \
-            --enable-ipv6 \
-            --without-nghttp2 \
-            --without-libidn2 \
-            --disable-ldap \
-            --disable-ldaps \
-            --prefix=$BUILD_DIR/curl/build/$TYPE/$ABI
-
-        # sed -i "s/#define HAVE_GETPWUID_R 1/\/\* #undef HAVE_GETPWUID_R \*\//g" lib/curl_config.h
-        make -j${PARALLEL_MAKE}
-        make install
-
-        rm $SYSROOT/usr/lib/crtbegin_dynamic.o
-        rm $SYSROOT/usr/lib/crtbegin_so.o
-        rm $SYSROOT/usr/lib/crtend_android.o
-        rm $SYSROOT/usr/lib/crtend_so.o
-
-        rm ${OPENSSL_PATH}/lib/libssl.a
-        rm ${OPENSSL_PATH}/lib/libcrypto.a
+        cd "Release/lib/"
+            # Rename with prefixes (including library origin to avoid duplicates)
+            mkdir -p curl
+            mv libcurl.a curl/libcurl.a
+            cd curl
+            ar -x libcurl.a
+            for f in *.o; do mv "$f" "curl_${ARCH}_$f"; done
+            for obj in *.o; do
+                if [ -z "$(nm "$obj")" ]; then
+                    echo "Removing empty object file: $obj"
+                    rm -f "$obj"
+                fi
+            done
+            ar rcs "../libcurl.a" curl_${ARCH}_*.o
+            rm -rf curl
+            cd ../..
+        cd ..
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
@@ -360,13 +414,10 @@ function build() {
             -DENABLE_THREADED_RESOLVER=ON \
             -DENABLE_IPV6=ON
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
-
-         cd "Release/lib/"
-
+        cd "Release/lib/"
             # Rename with prefixes (including library origin to avoid duplicates)
             mkdir -p curl
             mv libcurl.a curl/libcurl.a
-
             cd curl
             ar -x libcurl.a
             for f in *.o; do mv "$f" "curl_${ARCH}_$f"; done
@@ -377,17 +428,11 @@ function build() {
                 fi
             done
             ar rcs "../libcurl.a" curl_${ARCH}_*.o
-
-
-
             echo "Verifying libcurl.a.:"
             lipo -info "libcurl.a"
-
             rm -rf curl
             cd ../..
-
         cd ..
-
     else
         echo "building other for $TYPE"
         if [ $CROSSCOMPILING -eq 1 ]; then
@@ -436,9 +481,10 @@ function copy() {
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a" $1/lib/$TYPE/$PLATFORM/curl.a
         secure "$1/lib/$TYPE/$PLATFORM/curl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "android" ]; then
-        mkdir -p $1/lib/$TYPE/$ABI
-        cp -Rv build/$TYPE/$ABI/include/* $1/include/curl/
-        cp -Rv build/$TYPE/$ABI/lib/libcurl.a $1/lib/$TYPE/$PLATFORM/libcurl.a
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include
+        mkdir -p $1/bin
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a" $1/lib/$TYPE/$PLATFORM/libcurl.a
         secure "$1/lib/$TYPE/$PLATFORM/libcurl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     fi
     # copy license file
@@ -451,7 +497,7 @@ function copy() {
 
 # executed inside the lib src dir
 function clean() {
-    if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten)$ ]]; then
+    if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|emscripten|android)$ ]]; then
         if [ -d "build_${TYPE}_${PLATFORM}" ]; then
             rm -r build_${TYPE}_${PLATFORM}
         fi
