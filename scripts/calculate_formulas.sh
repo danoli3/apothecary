@@ -66,6 +66,7 @@ FORMULAS=(
     "cairo"
     "fmt"
     "metalangle"
+    "angle"
 )
 
 if [[ "$TARGET" =~ ^(linux)$ ]]; then
@@ -87,6 +88,7 @@ if [[ "$TARGET" =~ ^(linux)$ ]]; then
         "FreeImage"
         "fmt"
         "uriparser"
+        "angle"
     )
     if [[ "$TARCH" =~ ^(64|arm64|x86_64)$ ]]; then
         FORMULAS+=(
@@ -116,6 +118,7 @@ elif [[ "$TARGET" =~ ^(android)$ ]]; then
         "opencv"
         "openssl"
         "curl"
+        "angle"
     )
 elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
 
@@ -166,6 +169,7 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
     fi
     if [ "$TBUNDLE" == "3" ] || [ "$TBUNDLE" == "0" ]; then
         FORMULAS+=(
+            "angle"
             "fmt"
             "openssl"
             "curl"
@@ -206,6 +210,7 @@ elif [ "$TARGET" == "vs" ]; then
     fi
     if [ "$TBUNDLE" == "2" ] || [ "$TBUNDLE" == "0" ]; then
         FORMULAS+=(
+            "angle"
             "fmt"
             "openssl"
             "curl"
