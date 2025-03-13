@@ -45,9 +45,9 @@ function prepare() {
     fi
     export "PATH=$PWD/depot_tools:$PATH"
 
-    if [[ "$TYPE" =~ ^(linux)$ ]]; then
-        ./build/install-build-deps.sh
-    fi
+    # if [[ "$TYPE" =~ ^(linux)$ ]]; then
+    #     ./build/install-build-deps.sh
+    # fi
 }
 
 function load() {
@@ -81,8 +81,9 @@ function build() {
         echoInfo "===Build Not using cache: [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE] for updateFormula \"angle\"==="
     fi
 
-    rm -rf out/angle
-    mkdir -p out/angle
+    rm -rf build_${TYPE}_${ARCH}
+    mkdir -p "build_${TYPE}_${ARCH}"
+
     BUILD_TESTS=${BUILD_TESTS:-false}
     angle_enable_d3d9=false
     angle_enable_d3d11=false
@@ -143,15 +144,11 @@ function build() {
         android)
             EXTRA_GN_ARGS="
                 dcheck_always_on=true
-                enable_run_ios_unittests_with_xctest=true
                 is_component_build=false
                 is_debug=false
                 angle_assert_always_on=true
                 symbol_level=1
             "
-            if [ ${ARCH_IS_SIMULATOR-:"false"} == "true" ]; then
-                EXTRA_GN_ARGS="${EXTRA_GN_ARGS} target_environment=\"simulator\""
-            fi
             ;;
     esac
 
@@ -176,14 +173,9 @@ function build() {
         GN_ARGS="$GN_ARGS $DEFINES"
     fi
     echoInfo "Generating GN build files in out/angle with arguments:"
-    where python
-    which python3
     gn --version
     ninja --version
-
-    #autoninja --args="$GN_ARGS" -C out/angle
-
-    #gn gen out/angle --args="$GN_ARGS"
+    gn gen out/angle --args="$GN_ARGS"
     if [ $? -ne 0 ]; then
         echo "GN generation failed"
         exit 1
@@ -196,33 +188,25 @@ function build() {
     fi
 }
 
-# Copy built files and headers to the destination libs directory.
 function copy() {
     mkdir -p "$1/include"
     . "$SECURE_SCRIPT"
-
-    # Copy header files from the ANGLE source.
     if [ -d angle/include ]; then
         cp -Rv angle/include/* "$1/include/"
     else
         echo "Warning: angle/include not found!"
     fi
-
     mkdir -p "$1/lib/$TYPE/$PLATFORM/"
-    # Copy built static libraries.
-    # Adjust the source paths if your GN build produces the libs in a different location.
-    if [ -f out/angle/libEGL.a ]; then
-        cp -v out/angle/libEGL.a "$1/lib/$TYPE/$PLATFORM/libEGL.a"
+    if [ -f build_${TYPE}_${ARCH}/libEGL.a ]; then
+        cp -v build_${TYPE}_${ARCH}/libEGL.a "$1/lib/$TYPE/$PLATFORM/libEGL.a"
     else
-        echo "Warning: out/angle/libEGL.a not found!"
+        echo "Warning: build_${TYPE}_${ARCH}/libEGL.a not found!"
     fi
-    if [ -f out/angle/libGLESv2.a ]; then
-        cp -v out/angle/libGLESv2.a "$1/lib/$TYPE/$PLATFORM/libGLESv2.a"
+    if [ -f build_${TYPE}_${ARCH}/libGLESv2.a ]; then
+        cp -v build_${TYPE}_${ARCH}/libGLESv2.a "$1/lib/$TYPE/$PLATFORM/libGLESv2.a"
     else
-        echo "Warning: out/angle/libGLESv2.a not found!"
+        echo "Warning: build_${TYPE}_${ARCH}libGLESv2.a not found!"
     fi
-
-    # Copy license file.
     if [ -d "$1/license" ]; then
         rm -rf "$1/license"
     fi
