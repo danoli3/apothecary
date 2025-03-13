@@ -181,7 +181,7 @@ function build() {
         exit 1
     fi
     echoInfo "Building ANGLE with Ninja..."
-    ninja -C out/angle -j${PARALLEL_MAKE}
+    ninja -C "build_${TYPE}_${ARCH}" -j${PARALLEL_MAKE}
     if [ $? -ne 0 ]; then
         echo "Ninja build failed"
         exit 1
