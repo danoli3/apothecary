@@ -85,7 +85,12 @@ function build() {
     mkdir -p "build_${TYPE}_${ARCH}"
 
     export DEPOT_TOOLS_UPDATE=0
-    export PATH="$PWD/depot_tools:$PATH"
+    if [[ ":$PATH:" != *":$PWD/depot_tools:"* ]]; then
+        export PATH="$PWD/depot_tools:$PATH"
+        echo "Added depot_tools to PATH"
+    else
+        echo "depot_tools is already in PATH"
+    fi
 
     BUILD_TESTS=${BUILD_TESTS:-false}
     angle_enable_d3d9=false
@@ -136,10 +141,10 @@ function build() {
             EXTRA_GN_ARGS="
                 dcheck_always_on=true
                 enable_run_ios_unittests_with_xctest=true
-                is_component_build=false
-                is_debug=false
-                symbol_level=1
-            "
+                is_component_build=${is_component_build}
+                is_debug=${is_debug}
+                angle_assert_always_on=${angle_assert_always_on}
+                symbol_level=1"
             if [ ${ARCH_IS_SIMULATOR-:"false"} == "true" ]; then
                 EXTRA_GN_ARGS="${EXTRA_GN_ARGS} target_environment=\"simulator\""
             fi
@@ -147,11 +152,10 @@ function build() {
         android)
             EXTRA_GN_ARGS="
                 dcheck_always_on=true
-                is_component_build=false
-                is_debug=false
-                angle_assert_always_on=true
-                symbol_level=1
-            "
+                is_component_build=${is_component_build}
+                is_debug=${is_debug}
+                angle_assert_always_on=${angle_assert_always_on}
+                symbol_level=1"
             ;;
     esac
 
@@ -171,20 +175,20 @@ function build() {
         ${EXTRA_GN_ARGS}
     "
     DEFINES="${GN_ARGS}"
+    GN_ARGS=$(echo "$GN_ARGS" | tr -s '\n' ' ' | sed 's/  */ /g')
+    GN_ARGS=$(echo "$GN_ARGS" | sed 's/\s\s*/ /g' | sed 's/\s*=\s*/=/g' | sed 's/\s*$//')
     echoInfo "GN Args: [${GN_ARGS}]"
-    if [ -n "$DEFINES" ]; then
-        GN_ARGS="$GN_ARGS $DEFINES"
-    fi
-    echoInfo "Generating GN build files in out/angle with arguments:"
-    gn --version
-    ninja --version
-    ./depot_tools/gn gen "build_${TYPE}_${ARCH}" --args="$GN_ARGS"
+    echoInfo "gn --version: [$(gn --version)]"
+    echoInfo "ninja --version: [$(ninja --version)]"
+    echoInfo "Generating GN build files in [build_${TYPE}_${ARCH}]"
+    gn gen "build_${TYPE}_${ARCH}" --args="$GN_ARGS"
+    ninja -C "build_${TYPE}_${ARCH}" -j${PARALLEL_MAKE}
     if [ $? -ne 0 ]; then
         echo "GN generation failed"
         exit 1
     fi
     echoInfo "Building ANGLE with Ninja..."
-    ninja -C "build_${TYPE}_${ARCH}" -j${PARALLEL_MAKE}
+    
     if [ $? -ne 0 ]; then
         echo "Ninja build failed"
         exit 1
