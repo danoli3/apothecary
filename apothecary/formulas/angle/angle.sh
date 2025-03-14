@@ -19,12 +19,128 @@ GIT_URL=https://github.com/google/angle/archive/refs/heads/$VER_FULL.tar.gz
 GIT_TAG=v$VER
 
 function download() {
-    . "$DOWNLOADER_SCRIPT"
-    downloader ${GIT_URL}
-    tar -xf $VER.tar.gz
-    mv "angle-chromium-$VER" angle
-    rm -f $VER.tar.gz
+#     . "$DOWNLOADER_SCRIPT"
+#     downloader ${GIT_URL}
+#     tar -xf $VER.tar.gz
+#     mv "angle-chromium-$VER" angle
+#     rm -f $VER.tar.gz
+
+    if [ -d "angle" ]; then
+        echo "Removing existing ANGLE directory..."
+        rm -rf angle
+    fi
+
+    echo "Cloning ANGLE repository from ${GIT_URL}..."
+    
+    # Clone the repository with submodules
+    git clone --recursive --depth=1 --branch "$VER_FULL" https://github.com/google/angle.git
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to clone ANGLE repository!"
+        exit 1
+    fi
+
+    cd angle || exit
+
+    echo "Checking out branch/tag: $VER_FULL..."
+    git fetch --tags
+    git checkout "$VER_FULL"
+
+    # # Ensure submodules are fully updated
+    # echo "Updating ANGLE submodules..."
+    # git submodule update --init --recursive
+
+    case "$TYPE" in
+        vs)  # Windows (Direct3D, Vulkan)
+            REQUIRED_SUBMODULES=(
+                "build"
+                "buildtools"
+                "third_party/dawn"
+                "third_party/glslang/src"
+                "third_party/vulkan-headers/src"
+                "third_party/vulkan-loader/src"
+                "third_party/vulkan-tools/src"
+                "third_party/vulkan-validation-layers/src"
+                "third_party/vulkan_memory_allocator"
+                "tools/python"
+            )
+            ;;
+        osx|ios|tvos|xros|catos|watchos)  # Apple platforms (Metal, OpenGL)
+            REQUIRED_SUBMODULES=(
+                "build"
+                "buildtools"
+                "third_party/dawn"
+                "third_party/glslang/src"
+                "third_party/EGL-Registry/src"
+                "third_party/OpenGL-Registry/src"
+                "third_party/spirv-tools/src"
+                "tools/python"
+                "tools/clang"
+            )
+            ;;
+        android)  # Android (Vulkan, GLES)
+            REQUIRED_SUBMODULES=(
+                "build"
+                "buildtools"
+                "third_party/android_build_tools"
+                "third_party/android_deps"
+                "third_party/android_platform"
+                "third_party/android_sdk"
+                "third_party/dawn"
+                "third_party/glslang/src"
+                "third_party/vulkan-headers/src"
+                "third_party/vulkan-loader/src"
+                "third_party/vulkan-tools/src"
+                "third_party/vulkan-validation-layers/src"
+                "third_party/vulkan_memory_allocator"
+                "tools/python"
+                "tools/clang"
+                "tools/android"
+            )
+            ;;
+        linux)  # Linux (OpenGL, Vulkan)
+            REQUIRED_SUBMODULES=(
+                "build"
+                "buildtools"
+                "third_party/dawn"
+                "third_party/glslang/src"
+                "third_party/EGL-Registry/src"
+                "third_party/OpenGL-Registry/src"
+                "third_party/spirv-tools/src"
+                "third_party/wayland"
+                "third_party/libdrm/src"
+                "tools/python"
+            )
+            ;;
+        emscripten)  # WebAssembly (WebGL)
+            REQUIRED_SUBMODULES=(
+                "build"
+                "buildtools"
+                "third_party/dawn"
+                "third_party/glslang/src"
+                "third_party/EGL-Registry/src"
+                "third_party/OpenGL-Registry/src"
+                "third_party/spirv-tools/src"
+                "tools/python"
+            )
+            ;;
+        *)
+            echo "Unsupported TYPE: $TYPE"
+            exit 1
+            ;;
+    esac
+
+    echo "Initializing required submodules..."
+    for submodule in "${REQUIRED_SUBMODULES[@]}"; do
+        git submodule update --init --recursive "$submodule"
+    done
+
+    cd ..
+
 }
+
+
+
 
 function prepare() {
     # If needed, copy any patch files or configuration scripts.
@@ -84,6 +200,12 @@ function build() {
     rm -rf build_${TYPE}_${ARCH}
     mkdir -p "build_${TYPE}_${ARCH}"
 
+    rm -rf out/Debug
+    mkdir -p "out/Debug"
+
+    rm -rf out/Release
+    mkdir -p "out/Release"
+
     export DEPOT_TOOLS_UPDATE=0
     if [[ ":$PATH:" != *":$PWD/depot_tools:"* ]]; then
         export PATH="$PWD/depot_tools:$PATH"
@@ -102,6 +224,7 @@ function build() {
     angle_enable_essl=true
     angle_enable_glsl=true
     angle_enable_cl=false
+    is_clang=true
 
     is_component_build=false
     is_debug=false
@@ -111,6 +234,7 @@ function build() {
         vs)
             angle_enable_d3d11=true
             angle_enable_vulkan=true
+            is_clang=false
             ;;
         osx)
             angle_enable_metal=true
@@ -181,18 +305,17 @@ function build() {
     echoInfo "gn --version: [$(gn --version)]"
     echoInfo "ninja --version: [$(ninja --version)]"
     echoInfo "Generating GN build files in [build_${TYPE}_${ARCH}]"
-    gn gen "build_${TYPE}_${ARCH}" --args="$GN_ARGS"
-    ninja -C "build_${TYPE}_${ARCH}" -j${PARALLEL_MAKE}
-    if [ $? -ne 0 ]; then
-        echo "GN generation failed"
-        exit 1
+   
+    if [ $TYPE == "vs" ]; then
+        gn gen out/Debug --sln=angle-debug --ide=vs2022
+    else
+        gn gen --args=$GN_ARGS out/Debug
     fi
-    echoInfo "Building ANGLE with Ninja..."
+
+    autoninja -C out/Debug
+
+    #ninja -C "out/Debug" -j${PARALLEL_MAKE}
     
-    if [ $? -ne 0 ]; then
-        echo "Ninja build failed"
-        exit 1
-    fi
 }
 
 function copy() {
@@ -223,5 +346,8 @@ function copy() {
 
 # Clean the GN build output.
 function clean() {
-    rm -rf out/angle
+    if [ -d "build_${TYPE}_${ARCH}" ]; then
+        echo "Removing existing build directory: build_${TYPE}_${ARCH}"
+        rm -rf "build_${TYPE}_${ARCH}"
+    fi
 }
