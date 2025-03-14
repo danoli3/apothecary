@@ -47,93 +47,95 @@ function download() {
     git checkout "$VER_FULL"
 
     # # Ensure submodules are fully updated
-    # echo "Updating ANGLE submodules..."
-    # git submodule update --init --recursive
+    echo "Updating ANGLE submodules..."
+    git submodule update --init --recursive
+    LIMIT_SUBS=false
+    if [ "$LIMIT_SUBS" == true ]; then
+        case "$TYPE" in
+            vs)  # Windows (Direct3D, Vulkan)
+                REQUIRED_SUBMODULES=(
+                    "build"
+                    "buildtools"
+                    "third_party/dawn"
+                    "third_party/glslang/src"
+                    "third_party/vulkan-headers/src"
+                    "third_party/vulkan-loader/src"
+                    "third_party/vulkan-tools/src"
+                    "third_party/vulkan-validation-layers/src"
+                    "third_party/vulkan_memory_allocator"
+                    "tools/python"
+                )
+                ;;
+            osx|ios|tvos|xros|catos|watchos)  # Apple platforms (Metal, OpenGL)
+                REQUIRED_SUBMODULES=(
+                    "build"
+                    "buildtools"
+                    "third_party/dawn"
+                    "third_party/glslang/src"
+                    "third_party/EGL-Registry/src"
+                    "third_party/OpenGL-Registry/src"
+                    "third_party/spirv-tools/src"
+                    "tools/python"
+                    "tools/clang"
+                )
+                ;;
+            android)  # Android (Vulkan, GLES)
+                REQUIRED_SUBMODULES=(
+                    "build"
+                    "buildtools"
+                    "third_party/android_build_tools"
+                    "third_party/android_deps"
+                    "third_party/android_platform"
+                    "third_party/android_sdk"
+                    "third_party/dawn"
+                    "third_party/glslang/src"
+                    "third_party/vulkan-headers/src"
+                    "third_party/vulkan-loader/src"
+                    "third_party/vulkan-tools/src"
+                    "third_party/vulkan-validation-layers/src"
+                    "third_party/vulkan_memory_allocator"
+                    "tools/python"
+                    "tools/clang"
+                    "tools/android"
+                )
+                ;;
+            linux)  # Linux (OpenGL, Vulkan)
+                REQUIRED_SUBMODULES=(
+                    "build"
+                    "buildtools"
+                    "third_party/dawn"
+                    "third_party/glslang/src"
+                    "third_party/EGL-Registry/src"
+                    "third_party/OpenGL-Registry/src"
+                    "third_party/spirv-tools/src"
+                    "third_party/wayland"
+                    "third_party/libdrm/src"
+                    "tools/python"
+                )
+                ;;
+            emscripten)  # WebAssembly (WebGL)
+                REQUIRED_SUBMODULES=(
+                    "build"
+                    "buildtools"
+                    "third_party/dawn"
+                    "third_party/glslang/src"
+                    "third_party/EGL-Registry/src"
+                    "third_party/OpenGL-Registry/src"
+                    "third_party/spirv-tools/src"
+                    "tools/python"
+                )
+                ;;
+            *)
+                echo "Unsupported TYPE: $TYPE"
+                exit 1
+                ;;
+        esac
 
-    case "$TYPE" in
-        vs)  # Windows (Direct3D, Vulkan)
-            REQUIRED_SUBMODULES=(
-                "build"
-                "buildtools"
-                "third_party/dawn"
-                "third_party/glslang/src"
-                "third_party/vulkan-headers/src"
-                "third_party/vulkan-loader/src"
-                "third_party/vulkan-tools/src"
-                "third_party/vulkan-validation-layers/src"
-                "third_party/vulkan_memory_allocator"
-                "tools/python"
-            )
-            ;;
-        osx|ios|tvos|xros|catos|watchos)  # Apple platforms (Metal, OpenGL)
-            REQUIRED_SUBMODULES=(
-                "build"
-                "buildtools"
-                "third_party/dawn"
-                "third_party/glslang/src"
-                "third_party/EGL-Registry/src"
-                "third_party/OpenGL-Registry/src"
-                "third_party/spirv-tools/src"
-                "tools/python"
-                "tools/clang"
-            )
-            ;;
-        android)  # Android (Vulkan, GLES)
-            REQUIRED_SUBMODULES=(
-                "build"
-                "buildtools"
-                "third_party/android_build_tools"
-                "third_party/android_deps"
-                "third_party/android_platform"
-                "third_party/android_sdk"
-                "third_party/dawn"
-                "third_party/glslang/src"
-                "third_party/vulkan-headers/src"
-                "third_party/vulkan-loader/src"
-                "third_party/vulkan-tools/src"
-                "third_party/vulkan-validation-layers/src"
-                "third_party/vulkan_memory_allocator"
-                "tools/python"
-                "tools/clang"
-                "tools/android"
-            )
-            ;;
-        linux)  # Linux (OpenGL, Vulkan)
-            REQUIRED_SUBMODULES=(
-                "build"
-                "buildtools"
-                "third_party/dawn"
-                "third_party/glslang/src"
-                "third_party/EGL-Registry/src"
-                "third_party/OpenGL-Registry/src"
-                "third_party/spirv-tools/src"
-                "third_party/wayland"
-                "third_party/libdrm/src"
-                "tools/python"
-            )
-            ;;
-        emscripten)  # WebAssembly (WebGL)
-            REQUIRED_SUBMODULES=(
-                "build"
-                "buildtools"
-                "third_party/dawn"
-                "third_party/glslang/src"
-                "third_party/EGL-Registry/src"
-                "third_party/OpenGL-Registry/src"
-                "third_party/spirv-tools/src"
-                "tools/python"
-            )
-            ;;
-        *)
-            echo "Unsupported TYPE: $TYPE"
-            exit 1
-            ;;
-    esac
-
-    echo "Initializing required submodules..."
-    for submodule in "${REQUIRED_SUBMODULES[@]}"; do
-        git submodule update --init --recursive "$submodule"
-    done
+        echo "Initializing required submodules..."
+        for submodule in "${REQUIRED_SUBMODULES[@]}"; do
+            git submodule update --init --recursive "$submodule"
+        done
+    fi
 
     cd ..
 
@@ -160,6 +162,9 @@ function prepare() {
         fi
     fi
     export "PATH=$PWD/depot_tools:$PATH"
+
+    python3 scripts/bootstrap.py
+    gclient sync
 
     # if [[ "$TYPE" =~ ^(linux)$ ]]; then
     #     ./build/install-build-deps.sh
@@ -307,12 +312,14 @@ function build() {
     echoInfo "Generating GN build files in [build_${TYPE}_${ARCH}]"
    
     if [ $TYPE == "vs" ]; then
-        gn gen out/Debug --sln=angle-debug --ide=vs2022
+        gn gen out/Debug --sln=angle-debug --ide=vs2022 --args='$GN_ARGS' out/Debug
+        autoninja -C out/Debug
     else
-        gn gen --args=$GN_ARGS out/Debug
+        gn gen --args='$GN_ARGS' out/Release
+        ninja -j 10 -k1 -C out/Release
     fi
 
-    autoninja -C out/Debug
+    
 
     #ninja -C "out/Debug" -j${PARALLEL_MAKE}
     
