@@ -140,7 +140,7 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
             "rtAudio"
             "tess2"
             "uriparser"
-            "metalangle"
+            #"metalangle"
             "cairo"
         )
     fi
