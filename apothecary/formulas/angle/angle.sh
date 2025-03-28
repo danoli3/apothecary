@@ -163,7 +163,21 @@ function prepare() {
     fi
     export "PATH=$PWD/depot_tools:$PATH"
 
-    python3 scripts/bootstrap.py
+    if command -v python3 &>/dev/null; then
+        PYTHON_BIN="python3"
+    elif command -v python &>/dev/null; then
+        PYTHON_BIN="python"
+    elif command -v py &>/dev/null; then
+        PYTHON_BIN="py -3"
+    else
+        echo "Error: Python 3 is not installed or not in PATH."
+        exit 1
+    fi
+
+    # Run Python script using detected Python binary
+    echo "Using Python binary: $PYTHON_BIN"
+    $PYTHON_BIN scripts/bootstrap.py
+    
     gclient sync
 
     # if [[ "$TYPE" =~ ^(linux)$ ]]; then
@@ -310,16 +324,122 @@ function build() {
     echoInfo "gn --version: [$(gn --version)]"
     echoInfo "ninja --version: [$(ninja --version)]"
     echoInfo "Generating GN build files in [build_${TYPE}_${ARCH}]"
-   
-    if [ $TYPE == "vs" ]; then
-        gn gen out/Debug --sln=angle-debug --ide=vs2022 --args='$GN_ARGS' out/Debug
-        autoninja -C out/Debug
-    else
-        gn gen --args='$GN_ARGS' out/Release
-        ninja -j 10 -k1 -C out/Release
-    fi
 
-    
+    if [ "$TYPE" == "android" ]; then
+        source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
+
+        mkdir -p "build_${TYPE}_${ABI}"
+        cd "build_${TYPE}_${ABI}"
+        rm -f CMakeCache.txt *.a *.o
+
+        DEFINES="-DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF"
+        cmake .. ${DEFINES} \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
+            -DPLATFORM=$PLATFORM \
+            -DANDROID_ABI=${ABI} \
+            -DANDROID_API=${ANDROID_API} \
+            -DANDROID_TOOLCHAIN=clang \
+            -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+        mkdir -p "build_${TYPE}_${PLATFORM}"
+        cd "build_${TYPE}_${PLATFORM}"
+        rm -f CMakeCache.txt *.a *.o
+        cmake .. \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DDEPLOYMENT_TARGET=${MIN_SDK_VER} \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
+            -DPLATFORM=$PLATFORM \
+            -DENABLE_BITCODE=OFF \
+            -DENABLE_ARC=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DENABLE_VISIBILITY=OFF
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
+    elif [ "$TYPE" == "emscripten" ]; then
+        mkdir -p build_${TYPE}_${PLATFORM}
+        cd build_${TYPE}_${PLATFORM}
+        rm -f CMakeCache.txt *.a *.o *.js
+        $EMSDK/upstream/emscripten/emcmake cmake .. \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
+            -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+            -DLINK_FLAGS="${LINK_FLAGS}" \
+            -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE} \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_FLAGS=" ${FLAG_RELEASE}" \
+            -DCMAKE_C_FLAGS="${FLAG_RELEASE}" \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -G 'Unix Makefiles'
+        $EMSDK/upstream/emscripten/emmake make -j${PARALLEL_MAKE}
+        $EMSDK/upstream/emscripten/emmake make install
+        cd ..
+    elif [ "$TYPE" == "vs" ]; then
+        echoVerbose "Building ANGLE for vs | $ARCH | VS: $VS_VER_GEN"
+        echoVerbose "--------------------"
+        GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
+        mkdir -p "build_${TYPE}_${ARCH}"
+        cd "build_${TYPE}_${ARCH}"
+        rm -f CMakeCache.txt *.lib *.o *.a
+
+        cmake .. -G "${GENERATOR_NAME}" -A "${PLATFORM}" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_STANDARD=${C_STANDARD} \
+            -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
+            -DCMAKE_INSTALL_INCLUDEDIR=include \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
+            -DANGLE_ENABLE_D3D11=ON \   # Enable Direct3D 11 backend (typical for Windows)
+            -DANGLE_ENABLE_VULKAN=OFF \  # Disable Vulkan backend if not needed
+            -DANGLE_ENABLE_GL=OFF         # Disable OpenGL backend, if desired
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+        cd ..
+    else
+        make install
+    fi
+   
+
+    # if [ $TYPE == "vs" ]; then
+    #     gn gen out/Debug --sln=angle-debug --ide=vs2022 --args='$GN_ARGS' out/Debug
+    #     autoninja -C out/Debug
+    # else
+    #     gn gen --args='$GN_ARGS' out/Release
+    #     ninja -j 10 -k1 -C out/Release
+    # fi
+
 
     #ninja -C "out/Debug" -j${PARALLEL_MAKE}
     
