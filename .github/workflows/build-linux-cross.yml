@@ -42,7 +42,9 @@ jobs:
     strategy:
         matrix:
           cfg:
-          - {target: linux, arch: arm64, gcc: gcc14}
+          - {target: linux, arch: arm64, gcc: gcc10}
+          - {target: linux, arch: armv6l, gcc: gcc10}
+          - {target: linux, arch: armv7l, gcc: gcc10}
           # - {target: linux, arch: jetson, gcc: gcc14}
     env:
       TARGET: ${{matrix.cfg.target}}
@@ -81,6 +83,21 @@ jobs:
       run: scripts/build.sh
       env:
         BUNDLE: ${{ matrix.bundle }}
+
+    - name: Relocate Linux64 library directories
+      run: |
+        echo "=== Before relocation: lib directory structure ==="
+        find . -type d -path "*/lib/linux/64" || echo "No lib/linux/64 directories found."
+        # Move each lib/linux/64 directory to lib/linux64
+        for dir in $(find . -type d -path "*/lib/linux/64"); do
+          dest="$(echo "$dir" | sed 's#/lib/linux/64$#/lib/linux64#')"
+          echo "Moving $dir -> $dest"
+          mkdir -p "$(dirname "$dest")"          # ensure parent lib directory exists
+          mv "$dir" "$dest"                     # rename "64" directory to "linux64"
+        done
+        echo "=== After relocation: lib directory structure ==="
+        find . -type d -path "*/lib/linux64" || echo "No lib/linux64 directories found."
+
     - name: Package
       if: (github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding'))
       working-directory: ${{ env.GITHUB_WORKSPACE }}
