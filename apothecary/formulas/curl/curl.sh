@@ -406,6 +406,7 @@ function build() {
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_DISABLE_LDAP=ON \
             -DENABLE_VISIBILITY=OFF \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
             ${SSL_DEFS} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
