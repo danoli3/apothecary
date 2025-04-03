@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 project(tess2)
 file(GLOB SRCS "Source/*.cpp" "Source/*.c")
 file(GLOB SRCS_INCL "Source/*.h" "Source/*.hpp")
