@@ -14,7 +14,7 @@ concurrency:
 
 env:
   TARGET: "emscripten"
-  EMSDK_VERSION: "4.0.4"
+  EMSDK_VERSION: "4.0.7"
   USE_ARTIFACT: true
   PTHREADS_ENABLED: 1
   NO_FORCE: 1
@@ -50,7 +50,7 @@ jobs:
           git clone https://github.com/emscripten-core/emsdk.git $HOME/emsdk
           cd $HOME/emsdk
           ./emsdk install ${{ env.EMSDK_VERSION }}
-          ./emsdk activate ${{ env.EMSDK_VERSION }}
+          ./emsdk activate ${{ env.EMSDK_VERSION }}å
           echo "EMSDK_PATH=$HOME/emsdk" >> $GITHUB_ENV
           echo "EMSCRIPTEN=$HOME/emsdk/upstream/emscripten" >> $GITHUB_ENV
           echo 'export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"' >> $HOME/.bashrc
