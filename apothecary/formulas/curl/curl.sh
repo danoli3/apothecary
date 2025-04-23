@@ -340,8 +340,6 @@ function build() {
         #     CURL_ENABLE_SSL=ON
         #     SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
         #         -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
-        #-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-        #    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
         #         -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
         # else
             # disabled for tvOS SSL
@@ -409,6 +407,7 @@ function build() {
             -DCURL_DISABLE_LDAP=ON \
             -DENABLE_VISIBILITY=OFF \
             -DCURL_DISABLE_ZSTD=ON \
+            -DCURL_ZSTD=OFF \
             ${SSL_DEFS} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
@@ -424,7 +423,8 @@ function build() {
             -DCMAKE_MACOSX_BUNDLE=OFF \
             -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
             -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
-            -DUSE_NGHTTP2=ON \
+            -DUSE_NGHTTP2=OFF \
+            -DUSE_NGTCP2=OFF \
             -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_POP3=ON \
             -DCURL_CA_FALLBACK=ON \
@@ -438,7 +438,7 @@ function build() {
             -DBROTLIDEC_LIBRARY=${LIBBROTLI_DEC_LIB} \
             -DBROTLICOMMON_LIBRARY=${LIBBROTLI_LIBRARY} \
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
-            -DBROTLI_LIBRARIES="${LIBBROTLI_LIBRARY};${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB}" \
+            -DBROTLI_LIBRARIES="${LIBBROTLI_LIBRARY} ;${LIBBROTLI_DEC_LIB};${LIBBROTLI_ENC_LIB}" \
             -DUSE_LIBIDN2=OFF \
             -DENABLE_VERBOSE=ON \
             -DENABLE_THREADED_RESOLVER=ON \
