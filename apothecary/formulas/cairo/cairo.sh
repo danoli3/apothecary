@@ -19,11 +19,11 @@ FORMULA_DEPENDS=("zlib" "libpng" "pixman" "freetype")
 # as we set some env vars for osx the depends need to know about
 FORMULA_DEPENDS_MANUAL=1
 
-VER=1.18.0
+VER=1.18.4
 BUILD_ID=1
 DEFINES=""
 
-SHA1=fae6760ed0772681ddc60c603c9bb525ac74f000
+SHA1="0331eaa0ec3b0dfe859b6d966e572dfaac7d1d90"
 
 # tools for git use
 GIT_URL=http://anongit.freedesktop.org/git/cairo
