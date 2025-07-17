@@ -6,10 +6,10 @@
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
-VER=3.4.1
-VERDIR=3.4.0
+VER=3.5.1
+VERDIR=3.5.0
 VER_TAG="3.4"
-SHA1=d3469baf41823a28ad71aae12b2fbb9fe3b19a0d
+SHA1=c2473d27ebfd33e1e08f9fbf1ef303f848edd8dd
 SHA256=002a2d6b30b58bf4bea46c43bdd96365aaf8daa6c428782aa4feee06da197df3
 
 BUILD_ID=2
