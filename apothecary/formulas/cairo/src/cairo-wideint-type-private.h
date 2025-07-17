@@ -47,11 +47,9 @@
 # include <inttypes.h>
 #elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
-#else
-#error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(HAVE_STDINT_H)
   typedef __int8 int8_t;
   typedef unsigned __int8 uint8_t;
   typedef __int16 int16_t;
@@ -60,10 +58,11 @@
   typedef unsigned __int32 uint32_t;
   typedef __int64 int64_t;
   typedef unsigned __int64 uint64_t;
+#endif
+
 # ifndef HAVE_UINT64_T
 #  define HAVE_UINT64_T 1
 # endif
-#endif
 
 #ifndef INT16_MIN
 # define INT16_MIN	(-32767-1)
