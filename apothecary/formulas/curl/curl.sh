@@ -11,9 +11,9 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
-VER=8.13.0
-VER_D=8_13_0
-SHA1="07d4eae21a532e6b9736009bcb96140e6f03abc7"
+VER=8.15.0
+VER_D=8_15_0
+SHA1="5b4e79489e2d24da13d2fa75897f69ca5fff741e"
 BUILD_ID=1
 DEFINES=""
 USE_OPENSSL=ON
@@ -373,6 +373,7 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.lib
+    
         cmake .. \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
