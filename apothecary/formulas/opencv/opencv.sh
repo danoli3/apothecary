@@ -10,11 +10,11 @@ FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" "li
 FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
-VER=4.11.0
+VER=4.12.0
 BUILD_ID=8
 DEFINES=""
 FRAMEWORKS=""
-FILE_VERSION=4110
+FILE_VERSION=4120
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv
@@ -565,7 +565,8 @@ function build() {
         if [[ "$ABI" =~ ^(armeabi-v7a|arm64-v8a)$ ]]; then # Enable NEON with VFPv3
             EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='NEON;VFPV3' -DCPU_DISPATCH=''"
         else
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='SSE2' -DCPU_DISPATCH='SSE4_1;SSE4_2'"
+            #EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE='SSE2' -DCPU_DISPATCH='SSE4_1;SSE4_2'"
+            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF "
         fi
 
         cmake .. ${CORE_DEFS} ${DEFINES} \
@@ -828,7 +829,7 @@ function build() {
             -DBUILD_WASM_INTRIN_TESTS=OFF"
 
         $EMSDK/upstream/emscripten/emcmake cmake .. \
-            -B build \
+            -B . \
             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -851,7 +852,7 @@ function build() {
             -DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY}
 
-        cmake --build build --target install --config Release
+        cmake --build . --target install --config Release
     fi
 
 }
