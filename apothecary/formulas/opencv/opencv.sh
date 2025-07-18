@@ -640,7 +640,6 @@ function build() {
         -DWITH_TIFF=OFF \
         -DBUILD_JPEG=OFF \
         -DWITH_JPEG=OFF \
-        -DBUILD_OPENJPEG=OFF \
         -DWITH_OPENJPEG=OFF \
         -DBUILD_OPENJPEG=OFF \
         -DBUILD_OPENEXR=OFF \
@@ -768,9 +767,8 @@ function build() {
             -DWITH_TIFF=OFF \
             -DBUILD_JPEG=OFF \
             -DWITH_JPEG=OFF \
-            -DBUILD_OPENJPEG=OFF \
             -DWITH_OPENJPEG=OFF \
-            -BUILD_OPENJPEG=OFF \
+            -DBUILD_OPENJPEG=OFF \
             -DBUILD_OPENEXR=OFF \
             -DBUILD_IPP_IW=OFF \
             -DWITH_MATLAB=OFF \
