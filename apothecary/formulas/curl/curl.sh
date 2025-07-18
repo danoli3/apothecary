@@ -11,11 +11,12 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
-VER=8.11.0
-VER_D=8_11_0
-SHA1=9648c31756362343f1a0daba881e189d6fe8b4f4
+VER=8.15.0
+VER_D=8_15_0
+SHA1="5b4e79489e2d24da13d2fa75897f69ca5fff741e"
 BUILD_ID=1
 DEFINES=""
+USE_OPENSSL=ON
 
 # tools for git use
 GIT_URL=https://github.com/curl/curl
@@ -37,6 +38,9 @@ function download() {
         echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
     fi
     rm curl*.tar.gz
+
+    curl -LO https://curl.se/ca/cacert.pem
+    mv cacert.pem curl/cacert.pem
 
 }
 
@@ -71,6 +75,9 @@ function prepare() {
     fi
     echo "prepared"
 
+
+
+
 }
 
 # executed inside the lib src dir
@@ -83,6 +90,8 @@ function build() {
         local OF_LIBS_OPENSSL_ABS_PATH=$(realpath $OF_LIBS_OPENSSL)
         export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH
     fi
+
+    local CACERT_PATH=$(realpath ./cacert.pem)
 
     if [ "$TYPE" == "vs" ]; then
         export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
@@ -114,6 +123,18 @@ function build() {
         LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
         LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
 
+        if [ "$USE_OPENSSL" == "ON" ]; then
+            OPENSSL_DEFS="-DCURL_USE_OPENSSL=ON \
+                -DUSE_OPENSSL=ON \
+                -DCURL_CA_FALLBACK=ON \
+                -DCURL_CA_BUNDLE=$CACERT_PATH \
+                -DCURL_CA_EMBED=$CACERT_PATH"
+            CACERT_PATH=$(realpath "${CACERT_PATH}")
+            OPENSSL_DEFS="${OPENSSL_DEFS} -DCURL_CA_BUNDLE=${CACERT_PATH} -DCURL_CA_EMBED=${CACERT_PATH}"
+        else
+            OPENSSL_DEFS="-DCURL_USE_OPENSSL=OFF -DUSE_OPENSSL=OFF -DCURL_USE_SCHANNEL=ON"
+        fi
+
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig;${PKG_CONFIG_PATH};${OF_LIBS_OPENSSL}/lib/$TYPE/$PLATFORM;${ZLIB_ROOT}/lib/$TYPE/$PLATFORM;${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
         DEFS="-DLIBRARY_SUFFIX=${ARCH} \
@@ -121,7 +142,7 @@ function build() {
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_CXX_EXTENSIONS=OFF
+            -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
@@ -140,11 +161,13 @@ function build() {
             -DBUILD_STATIC_LIBS=ON \
             -DBUILD_STATIC_CURL=ON \
             -DCURL_STATICLIB=ON \
+            -DCURL_USE_LIBPSL=OFF \
             -DBUILD_STATIC_LIBS=ON \
             -DUSE_LIBIDN2=OFF \
             -DENABLE_UNICODE=ON \
-            -DCURL_USE_OPENSSL=ON \
+            ${OPENSSL_DEFS} \
             -DUSE_SSLEAY=ON \
+            -DUSE_NGHTTP2=ON \
             -DUSE_OPENSSL=ON \
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -193,6 +216,7 @@ function build() {
             -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
             -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_LIBRARY_CRYPT} \
             -DOPENSSL_SSL_LIBRARY=${OPENSSL_LIBRARY} \
+            -DCURL_CA_BUNDLE=$CACERT_PATH \
             -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a;${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
@@ -205,7 +229,6 @@ function build() {
         LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlicommon.a"
         LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlienc.a"
         LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
-
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OPENSSL_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
         echo "building curl $TYPE | $PLATFORM"
@@ -237,6 +260,7 @@ function build() {
             -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
             -DCURL_STATICLIB=ON \
             -DBUILD_STATIC_LIBS=ON \
+            -DCURL_CA_FALLBACK=ON \
             -DENABLE_UNICODE=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
@@ -263,9 +287,8 @@ function build() {
             -DCURL_ENABLE_SSL=${CURL_ENABLE_SSL} \
             -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
             -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
-            -DUSE_NGHTTP2=OFF \
+            -DUSE_NGHTTP2=ON \
             -DCURL_DISABLE_POP3=ON \
-            -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_IMAP=ON \
             -DENABLE_WEBSOCKETS=ON \
             -DENABLE_UNIX_SOCKETS=ON \
@@ -307,18 +330,18 @@ function build() {
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-        if [[ ! "$TYPE" =~ ^(tvos|catos|watchos)$ ]]; then
-            export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
-            OPENSSL_ROOT="$LIBS_ROOT/openssl/"
-            OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
-            OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
-            OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
-            USE_SECURE_TRANSPORT=OFF
-            CURL_ENABLE_SSL=ON
-            SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
-                -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
-                -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
-        else
+        # if [[ ! "$TYPE" =~ ^(tvos|catos|watchos)$ ]]; then
+        #     export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
+        #     OPENSSL_ROOT="$LIBS_ROOT/openssl/"
+        #     OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
+        #     OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
+        #     OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
+        #     USE_SECURE_TRANSPORT=OFF
+        #     CURL_ENABLE_SSL=ON
+        #     SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
+        #         -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
+        #         -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
+        # else
             # disabled for tvOS SSL
             OPENSSL_ROOT="$LIBS_ROOT"
             OPENSSL_INCLUDE_DIR=""
@@ -330,7 +353,7 @@ function build() {
             CURL_ENABLE_SSL=OFF
             SSL_DEFS=""
 
-        fi
+        # fi
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
@@ -350,10 +373,12 @@ function build() {
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.lib
+    
         cmake .. \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+            -DCURL_CA_BUNDLE="$CACERT_PATH" \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
@@ -382,6 +407,8 @@ function build() {
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_DISABLE_LDAP=ON \
             -DENABLE_VISIBILITY=OFF \
+            -DCURL_DISABLE_ZSTD=ON \
+            -DCURL_ZSTD=OFF \
             ${SSL_DEFS} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
@@ -398,12 +425,16 @@ function build() {
             -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
             -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
             -DUSE_NGHTTP2=OFF \
+            -DUSE_NGTCP2=OFF \
+            -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_POP3=ON \
             -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_IMAP=ON \
             -DENABLE_WEBSOCKETS=ON \
             -DENABLE_UNIX_SOCKETS=ON \
             -DCURL_BROTLI=ON \
+            -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_FIND_ROOT_PATH="${LIBS_ROOT}" \
             -DBROTLI_INCLUDE_DIRS=${LIBBROTLI_INCLUDE_DIR} \
             -DBROTLIDEC_LIBRARY=${LIBBROTLI_DEC_LIB} \
             -DBROTLICOMMON_LIBRARY=${LIBBROTLI_LIBRARY} \

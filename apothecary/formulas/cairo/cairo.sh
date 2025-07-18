@@ -19,11 +19,11 @@ FORMULA_DEPENDS=("zlib" "libpng" "pixman" "freetype")
 # as we set some env vars for osx the depends need to know about
 FORMULA_DEPENDS_MANUAL=1
 
-VER=1.18.0
+VER=1.18.4
 BUILD_ID=1
 DEFINES=""
 
-SHA1=fae6760ed0772681ddc60c603c9bb525ac74f000
+SHA1="0a54ce94df6e9db9b9d55ada2ef58b6c47861fde"
 
 # tools for git use
 GIT_URL=http://anongit.freedesktop.org/git/cairo
@@ -37,18 +37,22 @@ function download() {
 
     . "$DOWNLOADER_SCRIPT"
 
-    downloader ${URL}/cairo-$VER.tar.xz
-    tar -xJf cairo-$VER.tar.xz
-    CHECKSHA=$(shasum -a 1 cairo-$VER.tar.xz | cut -d ' ' -f1)
-    rm cairo-$VER.tar.xz
+    local TARBALL="cairo-${VER}.tar"
+
+    downloader "${GIT_LAB}.tar"
+
+    CHECKSHA=$(shasum -a 1 "${TARBALL}" | cut -d ' ' -f1)
     if [ "$CHECKSHA" != "$SHA1" ]; then
         echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-        exit
+        exit 1
     else
         echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
     fi
 
-    mv "cairo-$VER" cairo
+    tar -xf "${TARBALL}"
+    rm "${TARBALL}"
+
+    mv "cairo-${VER}" cairo
 
     # if [ "$TYPE" == "vs" ] ; then
     # 	downloader ${GIT_LAB}.zip
