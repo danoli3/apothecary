@@ -14,7 +14,7 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 VER=8.15.0
 VER_D=8_15_0
 SHA1="5b4e79489e2d24da13d2fa75897f69ca5fff741e"
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 USE_OPENSSL=ON
 
@@ -91,7 +91,7 @@ function build() {
         export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH
     fi
 
-    local CACERT_PATH=$(realpath ./cacert.pem)
+    local CACERT_PATH="./cacert.pem"
 
     if [ "$TYPE" == "vs" ]; then
         export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
@@ -127,9 +127,9 @@ function build() {
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=ON \
                 -DUSE_OPENSSL=ON \
                 -DCURL_CA_FALLBACK=ON \
-                -DCURL_CA_BUNDLE=$CACERT_PATH \
-                -DCURL_CA_EMBED=$CACERT_PATH"
-            CACERT_PATH=$(realpath "${CACERT_PATH}")
+                -DCURL_CA_BUNDLE=${CACERT_PATH} \
+                -DCURL_CA_EMBED=${CACERT_PATH}"
+            CACERT_PATH="${CACERT_PATH}"
             OPENSSL_DEFS="${OPENSSL_DEFS} -DCURL_CA_BUNDLE=${CACERT_PATH} -DCURL_CA_EMBED=${CACERT_PATH}"
         else
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=OFF -DUSE_OPENSSL=OFF -DCURL_USE_SCHANNEL=ON"
@@ -330,30 +330,29 @@ function build() {
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-        # if [[ ! "$TYPE" =~ ^(tvos|catos|watchos)$ ]]; then
-        #     export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
-        #     OPENSSL_ROOT="$LIBS_ROOT/openssl/"
-        #     OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
-        #     OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
-        #     OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
-        #     USE_SECURE_TRANSPORT=OFF
-        #     CURL_ENABLE_SSL=ON
-        #     SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
-        #         -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
-        #         -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
-        # else
-            # disabled for tvOS SSL
+        if [[ "$TYPE" =~ ^(osx|ios|xros|catos|watchos)$ ]]; then
+            export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
+            OPENSSL_ROOT="$LIBS_ROOT/openssl/"
+            OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
+            OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
+            OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
+            export USE_SECURE_TRANSPORT="OFF"
+            CURL_ENABLE_SSL="ON"
+            SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
+                -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
+                -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
+        else
+            # Use SecureTransport on platforms that don't support OpenSSL
             OPENSSL_ROOT="$LIBS_ROOT"
             OPENSSL_INCLUDE_DIR=""
             OPENSSL_LIBRARY=""
             OPENSSL_LIBRARY_CRYPT=""
-            USE_SECURE_TRANSPORT=ON
+            export USE_SECURE_TRANSPORT="ON"
             OPENSSL_PATH=""
             OF_LIBS_OPENSSL_ABS_PATH=""
-            CURL_ENABLE_SSL=OFF
+            CURL_ENABLE_SSL="OFF"
             SSL_DEFS=""
-
-        # fi
+        fi
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
@@ -378,7 +377,7 @@ function build() {
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCURL_CA_BUNDLE="$CACERT_PATH" \
+            -DCURL_CA_BUNDLE="${CACERT_PATH}" \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
