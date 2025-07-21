@@ -40,6 +40,7 @@ function download() {
     rm curl*.tar.gz
 
     curl -LO https://curl.se/ca/cacert.pem
+    cp cacert.pem curl/src/cacert.pem
     mv cacert.pem curl/cacert.pem
 
 }
@@ -94,6 +95,7 @@ function build() {
     local CACERT_PATH="./cacert.pem"
 
     if [ "$TYPE" == "vs" ]; then
+         local CACERT_PATH=$(realpath "./cacert.pem")
         export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
         export OPENSSL_WINDOWS_PATH=$(cygpath -w ${OF_LIBS_OPENSSL_ABS_PATH} | sed "s/\\\/\\\\\\\\/g")
 
@@ -105,7 +107,10 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
+        cp ../cacert.pem ./cacert.pem
         rm -f CMakeCache.txt *.a *.o *.lib
+
+
 
         OPENSSL_ROOT="$LIBS_ROOT/openssl/"
         OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
