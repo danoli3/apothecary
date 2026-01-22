@@ -165,7 +165,7 @@ function build() {
             -DCMAKE_INSTALL_BINARY_DIR=lib \
             -DCMAKE_INSTALL_FULL_LIBDIR=lib \
             -DPLATFORM=$PLATFORM \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_SYSTEM_NAME=$TYPE \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \

@@ -166,7 +166,7 @@ function build() {
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DGCC_VERSION=${GCC_VERSION} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DBUILD_SHARED_LIBS=OFF \

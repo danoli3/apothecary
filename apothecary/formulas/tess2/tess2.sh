@@ -223,7 +223,7 @@ function build() {
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DGCC_VERSION=${GCC_VERSION} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DENABLE_VISIBILITY=OFF \
             -DCMAKE_INSTALL_INCLUDEDIR=include \

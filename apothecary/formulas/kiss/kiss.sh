@@ -88,7 +88,7 @@ function build() {
             -DKISSFFT_OPENMP=OFF \
             -DKISSFFT_PKGCONFIG=ON"
         cmake .. ${DEFINES} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE}" \
@@ -116,7 +116,7 @@ function build() {
         echo "building $TYPE | $PLATFORM"
         echo "--------------------"
         if [ $CROSSCOMPILING -eq 1 ]; then
-            DEFINES="${DEFINES} -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake"
+            DEFINES="${DEFINES} -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake"
         fi
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"

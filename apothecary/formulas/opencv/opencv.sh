@@ -677,7 +677,7 @@ function build() {
         fi
 
         cmake .. {CORE_DEFS} ${DEFINES} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DPLATFORM=$PLATFORM \

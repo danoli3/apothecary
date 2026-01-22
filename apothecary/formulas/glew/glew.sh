@@ -138,7 +138,7 @@ function build() {
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
             -DCMAKE_BUILD_TYPE=Release \
             -DGCC_VERSION=${GCC_VERSION} \
-            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
+            -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}.${DISTRO}.${PLATFORM}.toolchain.cmake \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \

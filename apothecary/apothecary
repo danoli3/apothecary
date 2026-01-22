@@ -393,6 +393,10 @@ if [ -z "${ARCH+x}" ]; then
   ARCH=64
 fi
 
+if [ -z "${DISTRO+x}" ]; then
+  DISTRO=ubuntu
+fi
+
 # verbose mode bool
 if [ -z "${A_VERBOSE+x}" ]; then
   export A_VERBOSE=0
