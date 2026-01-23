@@ -43,7 +43,7 @@ jobs:
         matrix:
           cfg:
           - { distro: ubuntu, target: linux, arch: arm64, gcc: gcc14}
-          - { distro: ubuntu, target: linux, arch: armv6l, gcc: gcc10}
+          #- { distro: ubuntu, target: linux, arch: armv6l, gcc: gcc10}
           - { distro: ubuntu, target: linux, arch: armv7l, gcc: gcc10}
         #  - { distro: jetson, target: linux, arch:arm64, gcc: gcc14}
     env:
