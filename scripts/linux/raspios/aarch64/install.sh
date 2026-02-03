@@ -116,6 +116,8 @@ if [ -d "/raspbian/" ]; then
     sudo ln -s /raspbian/toolchain/bin/aarch64-linux-gnu-* /usr/aarch64-linux-gnu/
     sudo ln -s /raspbian/toolchain/lib /usr/aarch64-linux-gnu/lib
     sudo ln -s /raspbian/toolchain/include /usr/aarch64-linux-gnu/include
+elif grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then
+    echo "on raspberrypi"
 else
     echo "Error: /raspbian/ folder not found. Please check your installation."
     exit 1
