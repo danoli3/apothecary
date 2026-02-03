@@ -147,7 +147,9 @@ sudo apt-get install -y --no-install-recommends \
     libxcursor-dev$ARCH_SUFFIX \
     libxi-dev$ARCH_SUFFIX \
     ccache$ARCH_SUFFIX \
-    libgles2-mesa-dev$ARCH_SUFFIX
+    libgles2-mesa-dev$ARCH_SUFFIX \
+    wayland-protocols$ARCH_SUFFIX \
+    libwayland-dev$ARCH_SUFFIX
 
 
 if [ -d "/usr/lib/x86_64-linux-gnu" ]; then
