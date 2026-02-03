@@ -90,10 +90,28 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-    - name: Install Visual Studio 2026
+    - name: Install Visual Studio 2026 Build Tools
       run: |
-        winget install --id Microsoft.VisualStudio.2026.Community --silent --accept-package-agreements --accept-source-agreements
-        shell: powershell
+        $url = "https://aka.ms/vs/18/release/vs_buildtools.exe"
+        $installer = "$env:TEMP\vs_buildtools.exe"
+        
+        Write-Host "Downloading Visual Studio 2026 Build Tools..."
+        Invoke-WebRequest -Uri $url -OutFile $installer
+        
+        Write-Host "Installing Visual Studio 2026..."
+        Start-Process -FilePath $installer -ArgumentList `
+          "--quiet", `
+          "--wait", `
+          "--norestart", `
+          "--nocache", `
+          "--add", "Microsoft.VisualStudio.Workload.VCTools", `
+          "--add", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", `
+          "--add", "Microsoft.VisualStudio.Component.Windows11SDK.26100" `
+          -Wait -PassThru
+        
+        Write-Host "Installation complete"
+      shell: pwsh
+      timeout-minutes: 30
     - name: Scripts Install
       run: ./scripts/vs/install.sh
     - name: 'Download artifacts'
