@@ -371,7 +371,7 @@ while getopts t:a:b:d:s:j:m:c:hgvxfpewy opt ; do
        VERBOSE_MAKEFILE=YES
        ;;
     e) # use visual enterprise
-       export VS_TYPE=Enterprise ;;
+       export VS_TYPE=Community ;;
     f) # force download
        export FORCE_DOWNLOAD=1 ;;
     y) # use pthreads
