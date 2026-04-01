@@ -41,7 +41,7 @@ jobs:
   build-vs2026-64:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     strategy:
       matrix:
         bundle: [1,2]
@@ -91,32 +91,6 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-    - name: Install Visual Studio 2026 Build Tools
-      run: |
-        $exitCode = 0
-        choco install visualstudio2026buildtools `
-          --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --includeRecommended --passive --norestart" `
-          -y --no-progress
-        
-        $exitCode = $LASTEXITCODE
-        
-        # Exit codes: 0 = success, 3010 = success but reboot required
-        if ($exitCode -eq 0 -or $exitCode -eq 3010) {
-          Write-Host "VS2026 Installation successful (exit code: $exitCode)"
-          exit 0
-        } else {
-          Write-Host "VS2026 Installation failed (exit code: $exitCode)"
-          exit $exitCode
-        }
-      shell: powershell
-      timeout-minutes: 30
-      
-    - name: Verify Installation
-      run: |
-        Write-Host "Checking VS2026 installation..."
-        Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools" -ErrorAction Stop
-        Write-Host "VS2026 verified successfully"
-      shell: powershell
     - name: Scripts Install
       run: ./scripts/vs/install.sh
     - name: 'Download artifacts'
