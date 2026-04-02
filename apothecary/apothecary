@@ -569,38 +569,6 @@ if [ "$TYPE" = "vs" ]; then
   fi
 
 
-    echo "Detecting Visual Studio edition..."
-
-    if [ -z "${DRIVE+x}" ]; then
-        export DRIVE=/c
-    fi
-
-    if [ "${VS_VER}" = "17" ] || [ "${VS_VER}" = "18" ]; then
-        # VS 2022 / 2026+ → installed under C:\Program Files\
-        BASE_DIR="${DRIVE}/Program Files/Microsoft Visual Studio"
-        YEAR_PATH="${VS_YEAR}"   # 2022 or 2026 etc.
-    else
-        # VS 2017 / 2019 → under Program Files (x86)
-        BASE_DIR="${DRIVE}/Program Files (x86)/Microsoft Visual Studio"
-        YEAR_PATH="${VS_YEAR_PATH:-${VS_YEAR}}"
-    fi
-
-    # Check in recommended priority order
-    if [ -d "${BASE_DIR}/${YEAR_PATH}/Enterprise" ]; then
-        export VS_TYPE="Enterprise"
-    elif [ -d "${BASE_DIR}/${YEAR_PATH}/Professional" ]; then
-        export VS_TYPE="Professional"
-    elif [ -d "${BASE_DIR}/${YEAR_PATH}/Community" ]; then
-        export VS_TYPE="Community"
-    else
-        echo "Warning: No Visual Studio ${VS_VER} edition found. Defaulting to Community."
-        export VS_TYPE="Community"
-    fi
-
-    echo "Using Visual Studio ${VS_VER} ${VS_TYPE}"
-
-
-
   if [ -z ${MULTITHREADED_TYPE+x} ]; then
     MULTITHREADED_TYPE="MD"
   fi
@@ -661,55 +629,99 @@ if [ "$TYPE" = "vs" ]; then
     export EXE_FLAGS="/NODEFAULTLIB:libvcruntime.lib /DEFAULTLIB:ucrt.lib /DEFAULTLIB:msvcrt.lib"
   fi
 
-  VS_BAT="vcvarsall.bat"
-  if [ -z "${WSL_DISTRO_NAME+x}" ]; then
-    export DRIVE=/c
-  else
-    export DRIVE=/mnt/c
-  fi
-  if [ -z ${VS_HOSTPLATFORM+x} ]; then
-    if [ ${VS_HOST} == "amd64" ]; then
-      VS_HOSTPLATFORM=Hostx64
-    elif [ ${VS_HOST} == "86" ]; then
-      VS_HOSTPLATFORM=Hostx86
+
+    # Set DRIVE for WSL or native Windows
+    if [ -z "${WSL_DISTRO_NAME+x}" ]; then
+        export DRIVE=/c
     else
-      #else if arm or arm64 which is same as VS_HOST
-      VS_HOSTPLATFORM=${VS_HOST}
+        export DRIVE=/mnt/c
     fi
-  fi
 
+    # Default VS_TYPE to Community (will be overridden by detection if possible)
+    if [ -z "${VS_TYPE+x}" ]; then
+        export VS_TYPE="Community"
+    fi
 
-  if [ -z ${VS_BASE_PATH+x} ]; then
-    if [ "${VS_VER}" = "15" ]; then
-      VS_BASE_PATH="${DRIVE}/Program Files (x86)/Microsoft Visual Studio/2017/$VS_TYPE"
-      VS_YEAR=2017
-      VC_VERSION=140
-      VS_BAT="vcvars$ARCH.bat"
+    # Set Host Platform
+    if [ -z "${VS_HOSTPLATFORM+x}" ]; then
+        if [ "${VS_HOST}" = "amd64" ]; then
+            VS_HOSTPLATFORM="Hostx64"
+        elif [ "${VS_HOST}" = "86" ]; then
+            VS_HOSTPLATFORM="Hostx86"
+        else
+            VS_HOSTPLATFORM="${VS_HOST}"   # arm / arm64
+        fi
+    fi
+
+    echo "Detecting Visual Studio ${VS_VER} edition..."
+
+    if [ "${VS_VER}" = "17" ] || [ "${VS_VER}" = "18" ]; then
+        # VS 2022 / 2026+ → under Program Files\
+        BASE_DIR="${DRIVE}/Program Files/Microsoft Visual Studio"
+        YEAR_PATH="${VS_VER}"   # We'll use 2022 or 18 directly for folder name
+    elif [ "${VS_VER}" = "15" ]; then
+        BASE_DIR="${DRIVE}/Program Files (x86)/Microsoft Visual Studio"
+        YEAR_PATH="2017"
     elif [ "${VS_VER}" = "16" ]; then
-      VS_YEAR_PATH=2019
-      if [ -d "${DRIVE}/Program Files (x86)/Microsoft Visual Studio/$VS_YEAR_PATH/$VS_TYPE" ]; then
-        VS_YEAR_PATH=2019
-        VC_VERSION=142
-      else
-        VS_YEAR_PATH=2019
-        VC_VERSION=142
-      fi
-      VS_BASE_PATH="${DRIVE}/Program Files (x86)/Microsoft Visual Studio/$VS_YEAR_PATH/$VS_TYPE"
-      VS_YEAR=$VS_YEAR_PATH
-    elif [ "${VS_VER}" = "17" ]; then
-      VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/2022/$VS_TYPE"
-      export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/2022/"
-      VS_YEAR=2022
-      VC_VERSION=143
-      VS_BAT="vcvars$ARCH.bat"
-    elif [ "${VS_VER}" = "18" ]; then
-      VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/18/$VS_TYPE"
-      export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/18/"
-      VS_YEAR=2026
-      VC_VERSION=144
-      VS_BAT="vcvars$ARCH.bat"
+        BASE_DIR="${DRIVE}/Program Files (x86)/Microsoft Visual Studio"
+        YEAR_PATH="2019"
+    else
+        BASE_DIR="${DRIVE}/Program Files (x86)/Microsoft Visual Studio"
+        YEAR_PATH="${VS_VER}"
     fi
-  fi
+
+    # Check editions in priority order
+    if [ -d "${BASE_DIR}/${YEAR_PATH}/Enterprise" ]; then
+        export VS_TYPE="Enterprise"
+    elif [ -d "${BASE_DIR}/${YEAR_PATH}/Professional" ]; then
+        export VS_TYPE="Professional"
+    elif [ -d "${BASE_DIR}/${YEAR_PATH}/Community" ]; then
+        export VS_TYPE="Community"
+    else
+        echo "Warning: No Visual Studio ${VS_VER} edition found. Defaulting to Community."
+        export VS_TYPE="Community"
+    fi
+
+    echo "→ Using Visual Studio ${VS_VER} ${VS_TYPE}"
+
+    if [ -z ${VS_BASE_PATH+x} ]; then
+        case "${VS_VER}" in
+            15)
+                VS_BASE_PATH="${DRIVE}/Program Files (x86)/Microsoft Visual Studio/2017/${VS_TYPE}"
+                VS_YEAR=2017
+                VC_VERSION=140
+                VS_BAT="vcvars${ARCH}.bat"
+                ;;
+
+            16)
+                VS_BASE_PATH="${DRIVE}/Program Files (x86)/Microsoft Visual Studio/2019/${VS_TYPE}"
+                VS_YEAR=2019
+                VC_VERSION=142
+                VS_BAT="vcvars${ARCH}.bat"
+                ;;
+
+            17)
+                VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/2022/${VS_TYPE}"
+                export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/2022/"
+                VS_YEAR=2022
+                VC_VERSION=143
+                VS_BAT="vcvars${ARCH}.bat"
+                ;;
+
+            18)
+                VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/18/${VS_TYPE}"
+                export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/18/"
+                VS_YEAR=2026
+                VC_VERSION=144
+                VS_BAT="vcvars${ARCH}.bat"
+                ;;
+
+            *)
+                echo "Error: Unsupported Visual Studio version: ${VS_VER}"
+                ;;
+        esac
+    fi
+
   if [ $ARCH == 32 ] ; then
     export PLATFORM="Win32"
     export BUILD_PLATFORM="x86"
