@@ -47,6 +47,7 @@ if command -v winget >/dev/null 2>&1; then
     winget install -e --id Microsoft.WindowsTerminal
     winget install Ninja-build.Ninja
     winget install jqlang.jq
+    winget install --id Kitware.CMake -e
     winget install --id Oracle.JDK.17 -e
     winget install Python.Python.3
 fi
