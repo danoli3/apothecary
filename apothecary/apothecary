@@ -712,7 +712,7 @@ if [ "$TYPE" = "vs" ]; then
                 VS_BASE_PATH="${DRIVE}/Program Files/Microsoft Visual Studio/18/${VS_TYPE}"
                 export VS_BASE_PATH_CLANG="${DRIVE}/Program Files/Microsoft Visual Studio/18/"
                 VS_YEAR=2026
-                VC_VERSION=144
+                VC_VERSION=145
                 VS_BAT="vcvars${ARCH}.bat"
                 ;;
 
