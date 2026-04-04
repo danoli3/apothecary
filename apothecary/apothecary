@@ -672,7 +672,11 @@ if [ "$TYPE" = "vs" ]; then
     if [ "${VS_VER}" = "17" ] || [ "${VS_VER}" = "18" ]; then
         # VS 2022 / 2026+ → under Program Files\
         BASE_DIR="${DRIVE}/Program Files/Microsoft Visual Studio"
-        YEAR_PATH="${VS_VER}"   # We'll use 2022 or 18 directly for folder name
+        if [ "${VS_VER}" = "17" ]; then
+            YEAR_PATH="2022"
+        else
+            YEAR_PATH="${VS_VER}" #18 for 2026+
+        fi
     elif [ "${VS_VER}" = "15" ]; then
         BASE_DIR="${DRIVE}/Program Files (x86)/Microsoft Visual Studio"
         YEAR_PATH="2017"
