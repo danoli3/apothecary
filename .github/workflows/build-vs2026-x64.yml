@@ -15,6 +15,7 @@ concurrency:
 env:
   TARGET: "vs"
   ARCH: 64
+  VS_STUDIO: "2026"
   NO_FORCE: 1
   VS_VER: 18
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
@@ -119,13 +120,14 @@ jobs:
           const arch = process.env.ARCH;
           const bundle = process.env.MATRIX_BUNDLE;
           const release = process.env.RELEASE;
-          const artifactName = `libs-${release}-${target}-${arch}-${bundle}`;
+          const studio = process.env.VS_STUDIO;
+          const artifactName = `libs-${release}-${target}-${studio}-${arch}-${bundle}`;
 
           let count = 0;
           const max = 1;
 
           for (const artifact of artifacts.data.artifacts) {
-            const isArtifactMatch = artifact.name.includes(`libs-${release}-${target}-${arch}`) && !artifact.expired;
+            const isArtifactMatch = artifact.name.includes(`libs-${release}-${target}-${studio}-${arch}`) && !artifact.expired;
             if (isArtifactMatch) {
               const download = await github.rest.actions.downloadArtifact({
                 owner: context.repo.owner,
@@ -184,7 +186,7 @@ jobs:
           # rm -f xout/*.tar.bz2
           # rm -f out/*.tar.bz2
     - name: List output directory1
-      if: env.USE_ARTIFACT == 'true'
+      #if: env.USE_ARTIFACT == 'true'
       run: ls -lah out/
     - name: Build64
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -199,7 +201,6 @@ jobs:
         BUNDLE: ${{ matrix.bundle }}
         ALWAYS_BUILD: true
     - name: List output directory1
-      if: env.USE_ARTIFACT == 'true'
       run: ls -lah out/
     - name: Upload binaries as Artifact
       #if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' )
@@ -207,8 +208,8 @@ jobs:
       env:
         release: ${{ env.RELEASE }}
       with:
-        name: libs-${{ env.RELEASE }}-${{ env.TARGET }}-${{ env.ARCH }}-${{ matrix.bundle }}
-        path: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_2026_${{ env.ARCH }}_${{ matrix.bundle }}.zip
+        name: libs-${{ env.RELEASE }}-${{ env.TARGET }}-${{ env.VS_STUDIO }}-${{ env.ARCH }}-${{ matrix.bundle }}
+        path: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.VS_STUDIO }}_${{ env.ARCH }}_${{ matrix.bundle }}.zip
         retention-days: 31
 
     - name: Update Release x64
@@ -218,6 +219,6 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ env.RELEASE }}
         draft: false
-        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_2026_${{ env.ARCH }}_${{ matrix.bundle }}.zip
+        files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.VS_STUDIO }}_${{ env.ARCH }}_${{ matrix.bundle }}.zip
 
 
