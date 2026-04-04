@@ -630,11 +630,25 @@ if [ "$TYPE" = "vs" ]; then
   fi
 
 
-    # Set DRIVE for WSL or native Windows
-    if [ -z "${WSL_DISTRO_NAME+x}" ]; then
-        export DRIVE=/c
+    for d in d c e f; do
+        if [ -d "/${d}/Program Files/Microsoft Visual Studio" ] || \
+           [ -d "/${d}/Program Files (x86)/Microsoft Visual Studio" ]; then
+            export DRIVE="/${d}"
+            echo "Found Visual Studio on ${DRIVE} drive"
+            break
+        fi
+    done
+
+    # 2. Fallback to original logic if nothing found
+    if [ -z "${DRIVE+x}" ]; then
+        if [ -z "${WSL_DISTRO_NAME+x}" ]; then
+            export DRIVE=/c
+        else
+            export DRIVE=/mnt/c
+        fi
+        echo "Using default DRIVE=${DRIVE} (WSL or standard Windows)"
     else
-        export DRIVE=/mnt/c
+        echo "DRIVE detected as ${DRIVE}"
     fi
 
     # Default VS_TYPE to Community (will be overridden by detection if possible)

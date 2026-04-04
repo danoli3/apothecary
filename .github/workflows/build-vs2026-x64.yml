@@ -148,6 +148,7 @@ jobs:
           fi
 
       - name: List output directory
+        if: env.USE_ARTIFACT == 'true'
         run: ls -lah out/
 
       # ── Build ───────────────────────────────────────────────────────────────
