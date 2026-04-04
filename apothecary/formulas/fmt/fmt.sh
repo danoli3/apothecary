@@ -7,12 +7,12 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscr
 FORMULA_DEPENDS=()
 
 # define the version
-VER=11.0.2
+VER=12.1.0
 
 # tools for git use
 GIT_URL=https://github.com/fmtlib/fmt
 URL=${GIT_URL}/archive/refs/tags/${VER}
-GIT_TAG=master
+GIT_TAG=12.1.0
 SHA=
 BUILD_ID=1
 DEFINES=""
@@ -21,19 +21,19 @@ DEFINES=""
 function download() {
     . "$DOWNLOADER_SCRIPT"
 
-    git clone --branch $GIT_TAG --depth=1 $GIT_URL
+    #git clone --branch $GIT_TAG --depth=1 $GIT_URL
 
-    # if [ "$TYPE" == "vs" ] ; then
-    # 	downloader "${URL}.zip"
-    # 	unzip -q "${VER}.zip"
-    # 	mv "fmt-${VER}" fmt
-    # 	rm "${VER}.zip"
-    # else
-    # 	downloader "${URL}.tar.gz"
-    # 	tar -xf "${VER}.tar.gz"
-    # 	mv "fmt-${VER}" fmt
-    # 	rm "${VER}.tar.gz"
-    # fi
+    if [ "$TYPE" == "vs" ] ; then
+    	downloader "${URL}.zip"
+    	unzip -q "${VER}.zip"
+    	mv "fmt-${VER}" fmt
+    	rm "${VER}.zip"
+    else
+    	downloader "${URL}.tar.gz"
+    	tar -xf "${VER}.tar.gz"
+    	mv "fmt-${VER}" fmt
+    	rm "${VER}.tar.gz"
+    fi
 
 }
 

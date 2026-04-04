@@ -11,9 +11,9 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
-VER=8.15.0
-VER_D=8_15_0
-SHA1="5b4e79489e2d24da13d2fa75897f69ca5fff741e"
+VER=8.19.0
+VER_D=8_19_0
+SHA1="f15ff190a787ab21402b493984e636209de9e182"
 BUILD_ID=2
 DEFINES=""
 USE_OPENSSL=ON

@@ -151,6 +151,9 @@ elif [ "$TARGET" == "vs" ]; then
         if [ "${VS_VER}" == "16" ]; then
             echo "VS2019 Version"
             TARGET="${TARGET}_2019"
+        elif [ "${VS_VER}" == "18" ]; then
+            echo "VS2026 Version"
+            TARGET="${TARGET}_2026"
         fi
     fi
     if [ -n "$PBUNDLE" ]; then
