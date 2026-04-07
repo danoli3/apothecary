@@ -186,6 +186,12 @@ jobs:
           rm -f xout/*.tar.bz2
           echo "Cleanup complete."
 
+      - name: Merge our libraries into XC Framework 
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: scripts/osx/xcframework_all.sh
+        env:
+          BUNDLE: ${{ matrix.bundle }}
+
       - name: Package Individual Modular Libraries (macOS)
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/')) && matrix.bundle == 3
         working-directory: ${{ env.GITHUB_WORKSPACE }}
@@ -223,11 +229,6 @@ jobs:
           rm -f xout/*.tar.bz2
           echo "Cleanup complete."
 
-      - name: Merge our libraries into XC Framework 
-        working-directory: ${{ env.GITHUB_WORKSPACE }}
-        run: scripts/osx/xcframework_all.sh
-        env:
-          BUNDLE: ${{ matrix.bundle }}
       - name: Package final
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         working-directory: ${{ env.GITHUB_WORKSPACE }}
