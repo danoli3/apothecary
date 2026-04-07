@@ -35,10 +35,11 @@ function download() {
 function prepare() {
     echo
 
+    cp -r $FORMULA_DIR/metalangle/ ./
+
     echo "Fetch Subdependancies"
     ./ios/xcode/fetchDependencies.sh
 
-    cp -r $FORMULA_DIR/metalangle/ ./
 
     mkdir -p "src/id"
     ./src/commit_id.sh gen /Users/one/SOURCE/apothecary/apothecary/build/metalangle/src ./src/id/commit.h

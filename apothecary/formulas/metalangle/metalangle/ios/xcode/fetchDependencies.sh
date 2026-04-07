@@ -33,18 +33,18 @@ git_pull()
     echo
 }
 
+#!/bin/sh
+set -e
+
 glslang_revision="7d65f09b83112c1ec9e29313cb9913ed2b850aa0"
-spirv_cross_revision="f38cbeb814c73510b85697adbe5e894f9eac978f"
+spirv_cross_revision="4d4b79bd7b69b07fabdeb06f849334ba79ea7cee"
 jsoncpp_revision="48246a099549ab325c01f69f24a34fc72e5c42e4"
 jsoncpp_src_revision="645250b6690785be60ab6780ce4b58698d884d11"
 
 git_pull third_party/glslang/src ${glslang_revision} https://chromium.googlesource.com/external/github.com/KhronosGroup/glslang
 git_pull third_party/spirv-cross/src ${spirv_cross_revision} https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Cross
 
-#  Updated to public GitHub mirror (exact same commit history)
+# ✅ Public GitHub mirror (already fixed)
 git_pull third_party/jsoncpp ${jsoncpp_revision} https://github.com/gsource-mirror/chromium-src-third_party-jsoncpp.git
 git_pull third_party/jsoncpp/source ${jsoncpp_src_revision} https://chromium.googlesource.com/external/github.com/open-source-parsers/jsoncpp
 
-cd "$CURRENR_DIR"
-
-cd "$CURRENR_DIR"
