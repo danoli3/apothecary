@@ -248,10 +248,10 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         workflow: 'build-macos.yml'
-    - name: Wait build-xros
-      uses: NathanFirmo/wait-for-other-action@v1.0.4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Wait build-xros
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
         workflow: 'build-xros.yml'
     # - name: Wait build-catos
     #   uses: NathanFirmo/wait-for-other-action@v1.0.4
@@ -263,11 +263,11 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         workflow: 'build-tvos.yml'
-    - name: Wait build-watchos
-      uses: NathanFirmo/wait-for-other-action@v1.0.4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        workflow: 'build-watchos.yml'
+    # - name: Wait build-watchos
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
+    #   with:
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     workflow: 'build-watchos.yml'
   build-xcframework:
     runs-on: macos-14
     needs: wait-for-workflows
