@@ -17,7 +17,7 @@ env:
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: true
-  DISABLE_WORKFLOW: "true"
+  DISABLE_WORKFLOW: "false"
 
 jobs:
   pre-check:
@@ -44,7 +44,7 @@ jobs:
         bundle: [1, 2, 3]
     env:
       BUNDLE: ${{ matrix.bundle }}
-      DEVELOPER_DIR: "/Applications/Xcode_16.2.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode_26.3.app/Contents/Developer"
     steps:
       - name: Determine Release
         id: vars
@@ -59,7 +59,7 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.2
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
@@ -97,7 +97,7 @@ jobs:
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Upload binaries as Artifact
         if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: libs-watchos-${{ env.TARGET }}-${{ matrix.bundle }}
           path: out/openFrameworksLibs_${{ env.release }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
