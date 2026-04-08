@@ -252,7 +252,7 @@ jobs:
     #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
     #     token: ${{ secrets.GITHUB_TOKEN }}
-        workflow: 'build-xros.yml'
+    #    workflow: 'build-xros.yml'
     # - name: Wait build-catos
     #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
