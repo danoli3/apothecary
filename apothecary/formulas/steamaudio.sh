@@ -57,7 +57,8 @@ function prepare() {
 
     cd core/build
 
-    #python3 get_dependencies.py -p$PLATFORM_NAME
+
+    python3 get_dependencies.py -p$PLATFORM_NAME
 
     # popd > /dev/null
 
@@ -174,10 +175,12 @@ function build() {
             source $APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh
         fi
 
-        cmake ../../ \
+        cmake ../ \
             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
+            -DCMAKE_MODULE_PATH="../../build" \
+            -DCMAKE_PREFIX_PATH="../../deps" \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \
             -DPLATFORM=$PLATFORM \
             -DCMAKE_BUILD_TYPE=Release \
@@ -194,11 +197,13 @@ function build() {
         GENERATOR_NAME="Visual Studio ${VS_VER_GEN}"
         PLATFORM_NAME="x64"  # adjust if needed for arm64 etc.
 
-        cmake ../../ \
+        cmake ../ \
             ${DEFINES} \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}" \
             ${CMAKE_WIN_SDK} \
+            -DCMAKE_MODULE_PATH="../../build" \
+            -DCMAKE_PREFIX_PATH="../../deps" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_CXX_FLAGS_RELEASE="${VS_C_FLAGS} ${FLAGS_RELEASE}" \
@@ -212,13 +217,15 @@ function build() {
 
         source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
 
-        cmake ../../ \
+        cmake ../ \
             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/android.toolchain.cmake \
             -DPLATFORM=$PLATFORM \
             -DANDROID_PLATFORM=${ANDROID_PLATFORM} \
             -DANDROID_ABI=${ABI} \
             -DANDROID_API=${ANDROID_API} \
+            -DCMAKE_MODULE_PATH="../../build" \
+            -DCMAKE_PREFIX_PATH="../../deps" \
             -DANDROID_TOOLCHAIN=clang \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DCMAKE_BUILD_TYPE=Release \
@@ -232,12 +239,40 @@ function build() {
     elif [ "$TYPE" == "emscripten" ]; then
         echoInfo "Building SteamAudio for Emscripten (experimental wasm)"
 
-        $EMSDK/upstream/emscripten/emcmake cmake ../../ \
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
+
+        PFFFT_ROOT="$DEPS_PATH/pffft/"
+        PFFFT_INCLUDE_DIR="$DEPS_PATH/pffft/include/pffft"
+        PFFFT_LIBRARY="$DEPS_PATH/pffft/lib/$TYPE/release/libpffft.a"
+
+        MySOFA_ROOT="$DEPS_PATH/mysofa/"
+        MySOFA_INCLUDE_DIR="$DEPS_PATH/mysofa/include"
+        MySOFA_LIBRARY="$DEPS_PATH/mysofa/lib/$TYPE/release/libmysofa.a"
+
+        FlatBuffers_INCLUDE_DIR="$DEPS_PATH/flatbuffers/include"
+
+        $EMSDK/upstream/emscripten/emcmake cmake ../ \
             ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DEMSCRIPTEN=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_MODULE_PATH="../../build" \
+            -DCMAKE_PREFIX_PATH="../../deps" \
+            -DPFFFT_ROOT=${PFFFT_ROOT} \
+            -DPFFFT_INCLUDE_DIR=${PFFFT_INCLUDE_DIR} \
+            -DPFFFT_LIBRARY=${PFFFT_LIBRARY} \
+            -DZLIB_ROOT=${ZLIB_ROOT} \
+            -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+            -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
+            -DMySOFA_ROOT=${MySOFA_ROOT} \
+            -DMySOFA_INCLUDE_DIR=${MySOFA_INCLUDE_DIR} \
+            -DMySOFA_LIBRARY=${MySOFA_LIBRARY} \
+            -DFlatBuffers_INCLUDE_DIR=${FlatBuffers_INCLUDE_DIR} \
+            -DCMAKE_IGNORE_PATH=/opt/homebrew \
+            -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
             -DCMAKE_CXX_FLAGS="-std=c++${CPP_STANDARD} ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-std=c${C_STANDARD} ${FLAG_RELEASE}" \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
@@ -269,6 +304,12 @@ function copy() {
         echoWarning "Windows library not found at expected location - check build output"
         secure $1/lib/$TYPE/$PLATFORM/phonon.lib
         secure "$1/lib/$TYPE/$PLATFORM/phonon.lib" "steamaudio.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+    elif [ "$TYPE" == "emscripten" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -v "${LIB_SRC_DIR}/lib/wasm/libphonon.a" $1/lib/$TYPE/$PLATFORM/libphonon.a 2>/dev/null || \
+        cp -v "${LIB_SRC_DIR}/libphonon.a" $1/lib/$TYPE/$PLATFORM/libphonon.a || \
+        echoWarning "libphonon.a not found - check build output"
+        secure "$1/lib/$TYPE/$PLATFORM/libphonon.a" "steamaudio.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     else
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -v "${LIB_SRC_DIR}/lib/$TYPE/libphonon.a" $1/lib/$TYPE/$PLATFORM/libphonon.a 2>/dev/null || \
