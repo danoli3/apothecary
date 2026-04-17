@@ -9,8 +9,8 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "linux" "android
 FORMULA_DEPENDS=()
 
 # define the version
-VER=1.1.0
-BUILD_ID=1
+VER=1.2.0
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
@@ -238,7 +238,7 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.a
 
-        $EMSDK/upstream/emscripten/emcmake cmake .. \
+        $EMSDK/upstream/emscripten/emcmake .. \
             cmake .. ${DEFINES} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
