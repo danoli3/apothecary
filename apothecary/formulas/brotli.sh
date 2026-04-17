@@ -238,8 +238,8 @@ function build() {
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o *.a
 
-        $EMSDK/upstream/emscripten/emcmake .. \
-            cmake .. ${DEFINES} \
+        $EMSDK/upstream/emscripten/emcmake cmake .. \
+            ${DEFINES} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DCMAKE_TOOLCHAIN_FILE=$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
             -DCMAKE_C_STANDARD=${C_STANDARD} \
