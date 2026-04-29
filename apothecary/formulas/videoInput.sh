@@ -11,28 +11,17 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=master
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/ofTheo/videoInput.git
 GIT_BRANCH=$VER
 
-CMAKE_LIST=https://raw.githubusercontent.com/danoli3/videoInput/master/videoInputSrcAndDemos/libs/videoInput/CMakeLists.txt
-
 # download the source code and unpack it into LIB_NAME
 function download() {
     echo "Running: git clone --branch ${GIT_BRANCH} ${GIT_URL}"
     git clone --branch ${GIT_BRANCH} ${GIT_URL}
-
-}
-
-# prepare the build environment, executed inside the lib src dir
-function prepare() {
-    . "$DOWNLOADER_SCRIPT"
-    downloader ${CMAKE_LIST}
-
-    mv -f CMakeLists.txt "videoInputSrcAndDemos/libs/videoInput/CMakeLists.txt"
 }
 
 # executed inside the lib src dir
@@ -147,8 +136,10 @@ function copy() {
     else
         mkdir -p $1/lib/$TYPE
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "videoInputSrcAndDemos/build_${TYPE}_${ARCH}/libvideoInput.a" $1/lib/$TYPE/$PLATFORM/videoInput.a
-
+        # cmake is passed -DLIBRARY_SUFFIX=${ARCH}, so the output may be named
+        # libvideoInput_${ARCH}.a rather than the plain libvideoInput.a.
+        LIB_A=$(ls "videoInputSrcAndDemos/build_${TYPE}_${ARCH}"/libvideoInput*.a 2>/dev/null | head -1)
+        cp -v "$LIB_A" $1/lib/$TYPE/$PLATFORM/videoInput.a
     fi
 
     echoWarning "TODO: License Copy"
