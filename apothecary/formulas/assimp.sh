@@ -6,7 +6,7 @@
 #
 # uses CMake
 
-FORMULA_TYPES=("osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "vs")
+FORMULA_TYPES=("osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "vs" "msys2" "linux")
 FORMULA_DEPENDS=("zlib")
 
 # define the version
@@ -117,7 +117,7 @@ function build() {
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
             -DCMAKE_VERBOSE_MAKEFILE=${VERBOSE_MAKEFILE}
 
-        cmake --build . --config Release -j${PARALLEL_MAKE}
+        cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd ..
         rm -f CMakeCache.txt
 
@@ -225,7 +225,7 @@ function build() {
     elif [ "$TYPE" == "msys2" ]; then
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
-        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$ARCH/zlib.a"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.a"
 
         DEFINES="
             -DCMAKE_C_STANDARD=${C_STANDARD} \
@@ -453,11 +453,35 @@ function copy() {
             cp -v "build_${TYPE}_${PLATFORM}_release/lib/Release/assimp-vc${VC_VERSION}-mt.lib" $1/lib/$TYPE/$PLATFORM/Release/libassimp.lib
             secure "$1/lib/$TYPE/$PLATFORM/libassimp.lib" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         fi
-    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos|linux|msys2)$ ]]; then
-        cp -v -r build_${TYPE}_${PLATFORM}/include/* $1/include
+    elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -Rv build_${TYPE}_${PLATFORM}/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
-        secure "$1/lib/$TYPE/$PLATFORM/libassimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        cp -Rv build_${TYPE}_${PLATFORM}/Release/include/* $1/include/
+        cp -v build_${TYPE}_${PLATFORM}/Release/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
+        secure "$1/lib/$TYPE/$PLATFORM/assimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+    elif [ "$TYPE" == "linux" ]; then
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -Rv build_${TYPE}_${PLATFORM}/Release/include/* $1/include/
+        cp -v build_${TYPE}_${PLATFORM}/Release/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
+        secure "$1/lib/$TYPE/$PLATFORM/assimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+    elif [ "$TYPE" == "msys2" ]; then
+        cp -v -r build_${TYPE}_${ARCH}/include/* $1/include/
+        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        cp -Rv build_${TYPE}_${ARCH}/lib/libassimp.a $1/lib/$TYPE/$PLATFORM/assimp.a
+        secure "$1/lib/$TYPE/$PLATFORM/assimp.a" "assimp.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        mkdir -p $1/lib/$TYPE/$PLATFORM/pkgconfig
+        cat > $1/lib/$TYPE/$PLATFORM/pkgconfig/assimp.pc <<EOF
+prefix=$1
+exec_prefix=\${prefix}
+libdir=\${prefix}/lib/${TYPE}/${PLATFORM}
+includedir=\${prefix}/include
+
+Name: assimp
+Description: Open Asset Import Library
+Version: ${VER}
+Libs: \${libdir}/assimp.a
+Cflags: -I\${includedir}
+EOF
+        cp -v $1/lib/$TYPE/$PLATFORM/pkgconfig/assimp.pc $1/lib/$TYPE/$PLATFORM/assimp.pc
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$ABI/
         cp -Rv build_${TYPE}_${ABI}/include/* $1/include
