@@ -8,7 +8,7 @@ FORMULA_TYPES=("linux" "msys2")
 FORMULA_DEPENDS=()
 
 # define the version
-VER=131.1.0
+VER=131.2.0
 BUILD_ID=1
 
 # tools for git use

@@ -12,10 +12,10 @@ FORMULA_TYPES=("osx" "vs" "linux")
 FORMULA_DEPENDS=()
 
 # define the version
-VER=2.2.0
+VER=2.3.1
 BUILD_ID=1
 DEFINES=""
-SHA1=22d6e9b9e691080eb6313407dbf51cfebc3345ea
+SHA1=c88f42a8ae50a55a6cb8c4d0b1efe0faba6573e5
 
 # tools for git use
 GIT_URL=https://github.com/nigels-com/glew.git

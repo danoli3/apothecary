@@ -9,8 +9,8 @@ FORMULA_TYPES=("osx" "msys2" "linux" "vs" "ios" "watchos" "catos" "xros" "tvos" 
 FORMULA_DEPENDS=()
 
 # define the version
-VER=3.11.3
-BUILD_ID=3
+VER=3.12.0
+BUILD_ID=1
 DEFINES=""
 
 # tools for git use

@@ -10,11 +10,11 @@ FORMULA_TYPES=("osx" "ios" "catos" "xros" "tvos" "vs" "android" "emscripten" "li
 FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
-VER=4.12.0
-BUILD_ID=8
+VER=4.14.0
+BUILD_ID=1
 DEFINES=""
 FRAMEWORKS=""
-FILE_VERSION=4120
+FILE_VERSION=4140
 
 # tools for git use
 GIT_URL=https://github.com/opencv/opencv

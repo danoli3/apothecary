@@ -10,9 +10,9 @@ FORMULA_TYPES=("osx" "vs" "linux" "linux64")
 FORMULA_DEPENDS=()
 
 GIT_URL=https://github.com/glfw/glfw
-VER=3.4
+VER=3.5.1
 GIT_BRANCH=$VER
-BUILD_ID=3
+BUILD_ID=1
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME

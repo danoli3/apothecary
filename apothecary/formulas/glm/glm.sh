@@ -10,9 +10,8 @@ FORMULA_DEPENDS=()
 
 # tools for git use
 GIT_URL=https://github.com/g-truc/glm
-#GIT_TAG=1.0.0.0
-GIT_TAG=master
-VER=1.0.1
+GIT_TAG=1.0.3
+VER=1.0.3
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME

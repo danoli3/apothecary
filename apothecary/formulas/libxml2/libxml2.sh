@@ -10,7 +10,7 @@ FORMULA_TYPES=("osx" "linux" "vs" "ios" "watchos" "catos" "xros" "tvos" "android
 FORMULA_DEPENDS=("zlib")
 
 # define the version by sha
-VER=2.13.5
+VER=2.13.9
 BUILD_ID=1
 DEFINES=""
 

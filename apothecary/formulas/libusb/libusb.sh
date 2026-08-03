@@ -7,9 +7,9 @@ FORMULA_TYPES=("osx" "vs")
 FORMULA_DEPENDS=()
 
 GIT_URL=https://github.com/libusb/libusb
-GIT_TAG=v1.0.27-rc2
+GIT_TAG=v1.0.30
 GIT_BRANCH_VS=master
-VER=1.0.27-rc2
+VER=1.0.30
 BUILD_ID=1
 DEFINES=""
 

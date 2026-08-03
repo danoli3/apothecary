@@ -10,7 +10,7 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "
 FORMULA_DEPENDS=("zlib" "libpng" "brotli")
 
 # define the version
-VER=2.13.3
+VER=2.14.3
 BUILD_ID=1
 DEFINES=""
 

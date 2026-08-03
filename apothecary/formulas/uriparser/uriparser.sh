@@ -7,17 +7,17 @@
 FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten")
 FORMULA_DEPENDS=()
 
-VER=0.9.9
+VER=1.0.2
 BUILD_ID=1
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/uriparser/uriparser
-GIT_TAG=$VER
+GIT_TAG=uriparser-${VER}
 
 # download the source code and unpack it into LIB_NAME
 function download() {
-    git clone $GIT_URL uriparser
+    git clone --branch $GIT_TAG --depth=1 $GIT_URL uriparser
 }
 
 # prepare the build environment, executed inside the lib src dir

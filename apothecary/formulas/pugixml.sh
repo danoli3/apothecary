@@ -9,7 +9,7 @@ FORMULA_TYPES=("emscripten" "osx" "vs" "ios" "watchos" "xros" "catos" "tvos" "an
 FORMULA_DEPENDS=()
 
 # define the version by sha
-VER=1.14
+VER=1.16
 BUILD_ID=1
 DEFINES=""
 

@@ -10,8 +10,8 @@ FORMULA_TYPES=("osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten
 FORMULA_DEPENDS=("zlib")
 
 # define the version
-VER=5.4.3
-BUILD_ID=5
+VER=6.0.5
+BUILD_ID=1
 DEFINES=""
 
 # tools for git use

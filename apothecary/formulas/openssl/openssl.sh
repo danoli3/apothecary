@@ -6,13 +6,13 @@
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
-VER=3.4.1
-VERDIR=3.4.0
-VER_TAG="3.4"
-SHA1=d3469baf41823a28ad71aae12b2fbb9fe3b19a0d
-SHA256=002a2d6b30b58bf4bea46c43bdd96365aaf8daa6c428782aa4feee06da197df3
+VER=3.5.7
+VERDIR=3.5.0
+VER_TAG="3.5"
+SHA1=53d331880fbde8e6fe25870d5325a61201f6264d
+SHA256=a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8
 
-BUILD_ID=2
+BUILD_ID=1
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org

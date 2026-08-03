@@ -11,13 +11,13 @@ FORMULA_TYPES=("osx" "vs" "linux")
 FORMULA_DEPENDS=("openssl" "zlib" )
 
 # define the version
-VER=1.14.1
-BUILD_ID=2
+VER=1.15.3
+BUILD_ID=1
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/pocoproject/poco
-GIT_TAG=poco-${VER}
+GIT_TAG=poco-${VER}-release
 
 DEFAULT_VS_STATIC=1
 
