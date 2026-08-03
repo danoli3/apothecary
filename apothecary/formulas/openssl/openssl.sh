@@ -14,7 +14,7 @@ VER_TAG="4.0"
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=3
+BUILD_ID=4
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -319,11 +319,11 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
-        if [ "$ARCH" == "arm64" ] || [ "$ARCH" == "arm64ec" ] || [ "$ARCH" == "arm" ]; then
-            DEFINES="${DEFINES} -DOPENSSL_ASM=OFF"
-        else
-            DEFINES="${DEFINES} -DOPENSSL_ASM=ON"
-        fi
+        # Always disable ASM for VS static OF builds.
+        # OPENSSL_ASM=ON on x64 (previous) re-enabled asm after global OFF and
+        # fails without a complete NASM/MASM pipeline under openssl-cmake 4.x.
+        # Arm64/arm64ec already forced OFF; keep one path for all VS arches.
+        DEFINES="${DEFINES} -DOPENSSL_ASM=OFF -DOPENSSL_NO_ASM=ON"
 
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"
