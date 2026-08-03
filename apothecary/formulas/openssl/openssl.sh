@@ -6,13 +6,15 @@
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
-VER=3.5.7
-VERDIR=3.5.0
-VER_TAG="3.5"
-SHA1=53d331880fbde8e6fe25870d5325a61201f6264d
-SHA256=a8c0d28a529ca480f9f36cf5792e2cd21984552a3c8e4aa11a24aa31aeac98e8
+# OpenSSL 4.0.1 + danoli3/openssl-cmake branch 4.0 (test pin for PR #562)
+# Note: openssl-cmake 3.5 + 3.5.7 failed CI (ML-DSA DTLS capability macros).
+VER=4.0.1
+VERDIR=4.0.0
+VER_TAG="4.0"
+SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
+SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=1
+BUILD_ID=2
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -102,6 +104,35 @@ function prepare() {
     apothecaryDepend prepare zlib
     apothecaryDepend build zlib
     apothecaryDepend copy zlib
+
+    # openssl-cmake 4.0 WIP: some provider CMakeLists incorrectly list
+    # ${CMAKE_BINARY_DIR}/providers/implementations/include as a SOURCES
+    # entry (directory path). Strip those lines so headers resolve from
+    # the OpenSSL source tree like the 3.4/3.5 cmake branches.
+    # See: https://github.com/danoli3/openssl-cmake/tree/4.0
+    if [[ "$VER_TAG" == "4.0" || "$VER" == 4.* ]]; then
+        echo "openssl prepare: patching openssl-cmake 4.x provider SOURCES lists"
+        local f
+        for f in \
+            providers/common/CMakeLists.txt \
+            providers/default/CMakeLists.txt \
+            providers/legacy/CMakeLists.txt; do
+            if [ -f "$f" ]; then
+                # Remove lines that are only the broken binary-dir include path
+                # (optionally followed by whitespace). Keep real source paths.
+                if [[ "$(uname -s)" == "Darwin" ]]; then
+                    sed -i '' \
+                        -e '/^[[:space:]]*\${CMAKE_BINARY_DIR}\/providers\/implementations\/include[[:space:]]*$/d' \
+                        "$f"
+                else
+                    sed -i \
+                        -e '/^[[:space:]]*\${CMAKE_BINARY_DIR}\/providers\/implementations\/include[[:space:]]*$/d' \
+                        "$f"
+                fi
+            fi
+        done
+    fi
+
     echo "prepare"
 }
 

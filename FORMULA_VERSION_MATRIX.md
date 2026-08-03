@@ -26,7 +26,7 @@
 
 | Library | Preferred track | Why |
 |---------|-----------------|-----|
-| OpenSSL | **3.5.x LTS** (not 4.x yet) | LTS + `danoli3/openssl-cmake` branch support |
+| OpenSSL | **4.0.1** (cmake branch `4.0`) · fallback LTS **3.5.x** | PR #562 tests 4.0.1; openssl-cmake 4.0 needs provider SOURCES patch |
 | OpenCV | **4.x** (not 5.x yet) | OF still on 4.x API surface |
 | libpng | **1.6.x** stable (not 1.7 beta) | 1.7 still beta |
 | libxml2 | **2.13.x** or careful 2.14/2.15 | Major minor jumps can break consumers |
@@ -58,7 +58,7 @@
 | **libxml2** | `2.13.9` | `v2.15.3` (also `v2.14.6`, `v2.13.9` on 2.13 line) | major-behind* | https://github.com/GNOME/libxml2 | `apothecary/formulas/libxml2/libxml2.sh` |
 | **metalangle** | `1.0` | tags vary (`v0.0.1`, branch tags); not a clear semver product | n/a | https://github.com/kakashidinho/metalangle | `apothecary/formulas/metalangle/metalangle.sh` |
 | **opencv** | `4.14.0` | `5.0.0` latest · **`4.14.0` latest 4.x** | current (4.x track) | https://github.com/opencv/opencv · contrib: https://github.com/opencv/opencv_contrib | `apothecary/formulas/opencv/opencv.sh` |
-| **openssl** | `3.5.7` (+ cmake wrapper `VER_TAG=3.5`) | `openssl-4.0.1` absolute latest · **`3.5.7` LTS** · `3.6.3` non-LTS | current (3.5 LTS track) | Source: https://github.com/openssl/openssl · CMake wrapper: https://github.com/danoli3/openssl-cmake · Site: https://www.openssl.org | `apothecary/formulas/openssl/openssl.sh` |
+| **openssl** | `4.0.1` (+ cmake wrapper `VER_TAG=4.0`) | `openssl-4.0.1` · LTS still `3.5.7` | current (4.0 track, experimental for OF) | Source: https://github.com/openssl/openssl · CMake wrapper: https://github.com/danoli3/openssl-cmake (`4.0`) · Site: https://www.openssl.org | `apothecary/formulas/openssl/openssl.sh` |
 | **pixman** | `0.46.4` | `pixman-0.46.4` | current | https://gitlab.freedesktop.org/pixman/pixman · https://cairographics.org/releases | `apothecary/formulas/pixman/pixman.sh` |
 | **poco** | `1.15.3` (`poco-1.15.3-release`) | `poco-1.15.3-release` | current | https://github.com/pocoproject/poco | `apothecary/formulas/poco/poco.sh` |
 | **portaudio** | `stable_v19_20110326` | `v19.7.0` | stale | https://github.com/PortAudio/portaudio (upstream); formula URL empty / legacy tarball name | `apothecary/formulas/portaudio.sh` |
@@ -98,7 +98,7 @@
 
 ### Already on latest (recommended track)
 
-`assimp` · `brotli` · `cairo` · `curl` · `fmt` · `FreeImage` · `freetype` · `glew` · `glfw` · `glm` · `json` · `kiss` · `libpng` (1.6) · `libusb` · `opencv` (4.x) · `openssl` (3.5 LTS) · `pixman` · `poco` · `pugixml` · `rtAudio` · `tess2` · `uriparser` · `utf8` · `zlib`
+`assimp` · `brotli` · `cairo` · `curl` · `fmt` · `FreeImage` · `freetype` · `glew` · `glfw` · `glm` · `json` · `kiss` · `libpng` (1.6) · `libusb` · `opencv` (4.x) · `openssl` (4.0.1) · `pixman` · `poco` · `pugixml` · `rtAudio` · `tess2` · `uriparser` · `utf8` · `zlib`
 
 ### Behind / worth reviewing
 
@@ -116,7 +116,7 @@
 
 | Formula | Current track | Newer major | Risk |
 |---------|---------------|-------------|------|
-| **openssl** | 3.5 LTS | 4.0.x | New major; cmake wrapper / OF linkage |
+| **openssl** | 4.0.1 (active pin) | — | Was 3.5 LTS; 4.0 needs openssl-cmake `4.0` + provider SOURCES patch |
 | **opencv** | 4.14 | 5.0 | API / module changes |
 | **libpng** | 1.6.58 | 1.7 beta | Not stable yet |
 
@@ -198,7 +198,7 @@ formulas:
   libusb:     { current: "1.0.30",   latest: "1.0.30",   status: current,      source: "https://github.com/libusb/libusb" }
   libxml2:    { current: "2.13.9",   latest: "2.15.3",   status: major-behind, source: "https://github.com/GNOME/libxml2" }
   opencv:     { current: "4.14.0",   latest: "5.0.0",    status: current,      track: "4.x", source: "https://github.com/opencv/opencv" }
-  openssl:    { current: "3.5.7",    latest: "4.0.1",    status: current,      track: "3.5-LTS", source: "https://github.com/openssl/openssl", cmake: "https://github.com/danoli3/openssl-cmake" }
+  openssl:    { current: "4.0.1",    latest: "4.0.1",    status: current,      track: "4.0", source: "https://github.com/openssl/openssl", cmake: "https://github.com/danoli3/openssl-cmake", cmake_branch: "4.0" }
   pixman:     { current: "0.46.4",   latest: "0.46.4",   status: current,      source: "https://gitlab.freedesktop.org/pixman/pixman" }
   poco:       { current: "1.15.3",   latest: "1.15.3",   status: current,      source: "https://github.com/pocoproject/poco" }
   portaudio:  { current: "stable_v19_20110326", latest: "v19.7.0", status: stale, source: "https://github.com/PortAudio/portaudio" }
