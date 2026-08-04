@@ -8,8 +8,21 @@ APOTHECARY_SCRIPTS="$(realpath "$APOTHECARY_DIR/scripts")"
 APOTHECARY_PATH="$(realpath "$APOTHECARY_DIR/apothecary")"
 FORMULAS_DIR="$(realpath "$APOTHECARY_PATH/formulas")"
 APOTHECARY_BIN="$(realpath "$APOTHECARY_PATH/apothecary")"
-OUTPUT_FOLDER="$(realpath "$APOTHECARY_DIR/out")"
-BUILD_DIR="$(realpath "$APOTHECARY_DIR/build")"
+# Honour pre-set paths (e.g. openFrameworks menu → libs/)
+if [[ -z "${OUTPUT_FOLDER:-}" ]]; then
+	mkdir -p "$APOTHECARY_DIR/out"
+	OUTPUT_FOLDER="$(realpath "$APOTHECARY_DIR/out")"
+else
+	mkdir -p "$OUTPUT_FOLDER"
+	OUTPUT_FOLDER="$(realpath "$OUTPUT_FOLDER")"
+fi
+if [[ -z "${BUILD_DIR:-}" ]]; then
+	mkdir -p "$APOTHECARY_DIR/build"
+	BUILD_DIR="$(realpath "$APOTHECARY_DIR/build")"
+else
+	mkdir -p "$BUILD_DIR"
+	BUILD_DIR="$(realpath "$BUILD_DIR")"
+fi
 
 UI_APP_NAME="apothecary"
 UI_APP_VERSION="$APO_SCRIPT_VERSION"
