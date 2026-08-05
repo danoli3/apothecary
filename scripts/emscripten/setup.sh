@@ -2,7 +2,7 @@
 
 # Default EMSDK path and version
 EMSDK=${EMSDK:-$HOME/emsdk}
-EMSDK_VERSION=${EMSDK_VERSION:-latest}  # Default to 'latest' if unset
+EMSDK_VERSION=${EMSDK_VERSION:-6.0.5}
 SETUP_STATUS_FILE="$HOME/.emsdk_setup_status"
 
 check_emsdk() {
