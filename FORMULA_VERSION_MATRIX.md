@@ -42,7 +42,7 @@
 | **boost** | `1.66.0` | `boost-1.91.0` (stable); `1.92.0.beta1` | stale | https://www.boost.org / https://github.com/boostorg/boost · tarball via jfrog artifactory in formula | `apothecary/formulas/boost/boost.sh` |
 | **brotli** | `1.2.0` | `v1.2.0` | current | https://github.com/google/brotli | `apothecary/formulas/brotli.sh` |
 | **cairo** | `1.18.4` | `1.18.4` | current | https://gitlab.freedesktop.org/cairo/cairo · releases https://www.cairographics.org/releases/ | `apothecary/formulas/cairo/cairo.sh` |
-| **curl** | `8.21.0` | `curl-8_21_0` / `8.21.0` | current | https://github.com/curl/curl | `apothecary/formulas/curl/curl.sh` |
+| **curl** | `8.19.0` | `curl-8_21_0` / `8.21.0` | compatibility pin | https://github.com/curl/curl | `apothecary/formulas/curl/curl.sh` |
 | **fmt** | `12.2.0` | `12.2.0` | current | https://github.com/fmtlib/fmt | `apothecary/formulas/fmt/fmt.sh` |
 | **FreeImage** | `3.19.11` (`VER=31911` legacy id) | `3.19.11` | current | https://github.com/danoli3/FreeImage (OF fork) | `apothecary/formulas/FreeImage/FreeImage.sh` |
 | **freetype** | `2.14.3` | `VER-2-14-3` / `2.14.3` | current | https://github.com/freetype/freetype · https://freetype.org | `apothecary/formulas/freetype/freetype.sh` |
@@ -183,7 +183,7 @@ formulas:
   boost:      { current: "1.66.0",   latest: "1.91.0",   status: stale,        source: "https://github.com/boostorg/boost" }
   brotli:     { current: "1.2.0",    latest: "1.2.0",    status: current,      source: "https://github.com/google/brotli" }
   cairo:      { current: "1.18.4",   latest: "1.18.4",   status: current,      source: "https://gitlab.freedesktop.org/cairo/cairo" }
-  curl:       { current: "8.21.0",   latest: "8.21.0",   status: current,      source: "https://github.com/curl/curl" }
+  curl:       { current: "8.19.0",   latest: "8.21.0",   status: compatibility_pin, source: "https://github.com/curl/curl" }
   fmt:        { current: "12.2.0",   latest: "12.2.0",   status: current,      source: "https://github.com/fmtlib/fmt" }
   FreeImage:  { current: "3.19.11",  latest: "3.19.11",  status: current,      source: "https://github.com/danoli3/FreeImage" }
   freetype:   { current: "2.14.3",   latest: "2.14.3",   status: current,      source: "https://github.com/freetype/freetype" }
