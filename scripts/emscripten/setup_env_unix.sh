@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="6.0.5"
+VERSION="6.0.6"
 
 # Check if EMSDK is set and valid
 if [[ -z "$EMSDK" || ! -d "$EMSDK/upstream/emscripten" ]]; then
