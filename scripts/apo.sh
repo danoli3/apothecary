@@ -92,13 +92,17 @@ autoDetectHost
 
 runApothecary(){
 	local -a cmd=()
+	local engine_type="$TYPE"
 	if [[ ! -f "$APOTHECARY_BIN" ]]; then
 		echoError "apothecary not found: ${APOTHECARY_BIN}"
 		return 1
 	fi
 	[[ -x "$APOTHECARY_BIN" ]] || chmod +x "$APOTHECARY_BIN" 2>/dev/null || true
 
-	cmd=( "$APOTHECARY_BIN" -t "$TYPE" )
+	# `macos` is the public spelling; formulas and package paths use the
+	# historical canonical target name `osx`.
+	[[ "$engine_type" == "macos" ]] && engine_type="osx"
+	cmd=( "$APOTHECARY_BIN" -t "$engine_type" )
 	[[ -n "$ARCH" ]] && cmd+=( -a "$ARCH" )
 	cmd+=( -b "$BUILD_DIR" -d "$OUTPUT_FOLDER" )
 	[[ "$FORCE" = 1 ]] && cmd+=( -f )
@@ -210,6 +214,8 @@ printHelp(){
     update   [lib ...]              Download + build + copy
     download [lib ...]              Download sources
     build    [lib ...]              Build
+    modular  [lib|addon|script ...] Stage XCFramework output in xout
+    variant  <profile> [action]     Build/package an isolated modular variant
     clean    [lib ...]              Clean build
     remove   [lib ...]              Remove from build cache
     platforms                       List build platforms
@@ -226,6 +232,8 @@ printHelp(){
   Examples
     ${prog}
     ${prog} update zlib
+    TYPE=ios ARCH=arm64 ${prog} modular path/to/formula.sh
+    TYPE=linux ARCH=x86_64 ${prog} variant opencv-cuda-ai
     TYPE=android ARCH=arm64 ${prog} update openssl
     ${prog} formulas
 
@@ -421,6 +429,7 @@ cmdMenu(){
 			"Build for this machine (${DEFAULT_TYPE})|build-host" \
 			"Build for platform…|build-type" \
 			"Choose library (current type)|library" \
+			"Build modular OpenCV CUDA/AI variant|variant" \
 			"Settings (type / arch / force)|settings" \
 			"List platforms|list-platforms" \
 			"List formulas|list-formulas" \
@@ -439,6 +448,10 @@ cmdMenu(){
 			build-host)     cmdMenuBuildHost; menuPause ;;
 			build-type)     cmdMenuBuildType; menuPause ;;
 			library)        cmdMenuPickLibrary; menuPause ;;
+			variant)
+				"$APOTHECARY_SCRIPTS/build-opencv-variant.sh" opencv-cuda-ai all
+				menuPause
+				;;
 			settings)       cmdMenuSettings; menuPause ;;
 			list-platforms) cmdPlatforms; menuPause ;;
 			list-formulas)  cmdFormulas; menuPause ;;
@@ -461,19 +474,30 @@ runCommand(){
 		platforms)      cmdPlatforms ;;
 		formulas|libs)  cmdFormulas ;;
 		status)         cmdStatus ;;
+		variant)
+			if [[ $# -eq 0 ]]; then
+				echoError "variant requires a profile (opencv-cuda or opencv-cuda-ai)"
+				return 1
+			fi
+			"$APOTHECARY_SCRIPTS/build-opencv-variant.sh" "$@"
+			;;
 		version)
 			printBanner "version"
 			printf '\n'
 			echoKV "cli" "$APO_SCRIPT_VERSION"
 			printf '\n'
 			;;
-		update|download|build|copy|clean|remove|remove-all|remove-lib|framework)
+		update|download|build|copy|clean|remove|remove-all|remove-lib|framework|modular)
 			if [[ $# -eq 0 ]]; then
 				echoError "${cmd} requires a library name (or core)"
 				echoNote "example: apo ${cmd} zlib"
 				return 1
 			fi
-			cmdRunBuild "$cmd" "$@"
+			if [[ "$cmd" == "modular" ]]; then
+				cmdRunBuild framework "$@"
+			else
+				cmdRunBuild "$cmd" "$@"
+			fi
 			;;
 		*)
 			if [[ -f "$APOTHECARY_BIN" ]]; then

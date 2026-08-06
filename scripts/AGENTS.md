@@ -42,6 +42,8 @@ oF’s own agent notes: `openFrameworks/scripts/AGENTS.md` (`of` downloads prebu
 | `apo update <lib…>` | Download + build + copy | Main path; needs lib(s) or `core` |
 | `apo download <lib…>` | Sources only | |
 | `apo build <lib…>` | Compile only | |
+| `apo modular <lib…>` | Stage XCFramework output | Accepts core names, addon names, or formula script paths |
+| `apo variant <profile> [build\|package\|all]` | Build an isolated modular variant | Profiles: `opencv-cuda`, `opencv-cuda-ai`; Linux/Windows only |
 | `apo clean <lib…>` | Clean build tree | |
 | `apo remove <lib…>` | Remove from build cache | |
 | `apo help` | Usage | |
@@ -56,7 +58,7 @@ Unknown commands may **passthrough** to the underlying `apothecary` binary.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `TYPE` | host OS (`osx`, `linux`, …) | Build type (`-t`). Also accepted: `TARGET` |
+| `TYPE` | host OS (`osx`, `linux`, …) | Build type (`-t`). Also accepted: `TARGET`. `macos` is normalized to the engine's canonical `osx` target. |
 | `ARCH` | host arch | Architecture (`-a`) |
 | `FORCE=1` | `0` | Force re-download (`-f`). Alias: `APO_FORCE` |
 | `VERBOSE=1` | off | Extra logging (`-v`) |
@@ -64,6 +66,8 @@ Unknown commands may **passthrough** to the underlying `apothecary` binary.
 | `UI_ANIM=0` | `1` | No spinners / list animation |
 | `OUTPUT_FOLDER` | `<repo>/out` | Install / package output (`-d`) |
 | `BUILD_DIR` | `<repo>/build` | Build cache (`-b`) |
+| `PACKAGE_LIBS` | unset | Space/comma-separated non-core staging directories for `scripts/package-individual.sh` |
+| `OPENCV_EXTRA_DEFINES` | unset | Additional CMake definitions for modular OpenCV variants |
 
 **Valid `TYPE` values (wrapper list):**  
 `osx` `macos` `ios` `tvos` `xros` `watchos` `catos` `android` `linux` `vs` `msys2` `emscripten`

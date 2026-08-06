@@ -362,6 +362,7 @@ function build() {
                 -DWITH_CUDNN=ON \
                 -DWITH_CUBLAS=ON \
                 -DWITH_CUFFT=ON \
+                -DOPENCV_DNN_CUDA=ON \
                 -DENABLE_FAST_MATH=ON"
         else
             export DEFINES="$DEFINES \
@@ -370,6 +371,8 @@ function build() {
                 -DWITH_CUBLAS=OFF \
                 -DWITH_CUFFT=OFF"
         fi
+
+        export DEFINES="${DEFINES} ${OPENCV_EXTRA_DEFINES:-}"
 
 		echoInfo "Building with OPENCV_STATIC"
 		export DEFINES="${DEFINES} \
@@ -672,11 +675,17 @@ function build() {
                 -DCUDA_FAST_MATH=ON \
                 -DWITH_CUBLAS=ON \
                 -DWITH_CUFFT=ON \
+                -DWITH_CUDNN=${OPENCV_WITH_CUDNN:-ON} \
+                -DOPENCV_DNN_CUDA=ON \
                 -DCUDA_ARCH_BIN='6.1;7.5;8.6;8.9;9.0' \
                 -DCUDA_ARCH_PTX='9.0'"
         fi
 
-        cmake .. {CORE_DEFS} ${DEFINES} \
+        # Modular variants can add CMake features without changing the core
+        # OpenCV configuration or its cache identity.
+        DEFINES="${DEFINES} ${OPENCV_EXTRA_DEFINES:-}"
+
+        cmake .. ${CORE_DEFS} ${DEFINES} \
             -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/${TYPE}${PLATFORM}.toolchain.cmake \
             -DGCC_VERSION=${GCC_VERSION} \
             -DCMAKE_SYSTEM_PROCESSOR=$ABI \

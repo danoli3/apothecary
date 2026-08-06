@@ -1,0 +1,61 @@
+name: Build modular OpenCV CUDA
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Modular OpenCV feature profile
+        type: choice
+        options:
+          - opencv-cuda-ai
+          - opencv-cuda
+        default: opencv-cuda-ai
+      release_tag:
+        description: Optional existing release tag to receive the artifacts
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  linux-cuda:
+    runs-on: [self-hosted, linux, x64, cuda]
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Build modular CUDA variant
+        shell: bash
+        env:
+          TYPE: linux
+          ARCH: x86_64
+        run: NO_COLOR=1 UI_ANIM=0 ./apo variant "${{ inputs.profile }}" all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.profile }}-linux-x86_64
+          path: xout/oF_${{ inputs.profile }}_linux_x86_64.tar.bz2
+      - name: Attach to modular release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release_tag }}" xout/oF_${{ inputs.profile }}_linux_x86_64.tar.bz2 --clobber
+
+  windows-cuda:
+    runs-on: [self-hosted, windows, x64, cuda]
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Build modular CUDA variant
+        shell: bash
+        env:
+          TYPE: vs
+          ARCH: 64
+        run: NO_COLOR=1 UI_ANIM=0 ./apo variant "${{ inputs.profile }}" all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.profile }}-windows-x64
+          path: xout/oF_${{ inputs.profile }}_vs_64.zip
+      - name: Attach to modular release
+        if: inputs.release_tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release_tag }}" xout/oF_${{ inputs.profile }}_vs_64.zip --clobber

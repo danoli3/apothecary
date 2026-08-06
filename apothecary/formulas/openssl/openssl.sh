@@ -161,7 +161,7 @@ function build() {
 
         DEFINES="${DEFINES} \
             -DNO_FORK=ON \
-            -DOPENSSL_OCSP=OFF \
+            -DOPENSSL_OCSP=ON \
             -DOPENSSL_CMP=OFF \
             "
         rm -f CMakeCache.txt *.a *.o
