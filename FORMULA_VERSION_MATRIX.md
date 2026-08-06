@@ -30,7 +30,7 @@
 | OpenCV | **4.x** (not 5.x yet) | OF still on 4.x API surface |
 | libpng | **1.6.x** stable (not 1.7 beta) | 1.7 still beta |
 | libxml2 | **2.13.x** or careful 2.14/2.15 | Major minor jumps can break consumers |
-| Assimp | **6.x** | Already on 6.0.5 |
+| Assimp | **5.4.x** | Pinned to the last known working release after 6.0.5 CI regressions |
 
 ---
 
@@ -38,7 +38,7 @@
 
 | Formula | Current (pinned) | Latest upstream | Status | Remote source | Formula path |
 |---------|------------------|-----------------|--------|---------------|--------------|
-| **assimp** | `6.0.5` | `v6.0.5` | current | https://github.com/assimp/assimp | `apothecary/formulas/assimp.sh` |
+| **assimp** | `5.4.3` | `v6.0.5` | compatibility pin | https://github.com/assimp/assimp | `apothecary/formulas/assimp.sh` |
 | **boost** | `1.66.0` | `boost-1.91.0` (stable); `1.92.0.beta1` | stale | https://www.boost.org / https://github.com/boostorg/boost · tarball via jfrog artifactory in formula | `apothecary/formulas/boost/boost.sh` |
 | **brotli** | `1.2.0` | `v1.2.0` | current | https://github.com/google/brotli | `apothecary/formulas/brotli.sh` |
 | **cairo** | `1.18.4` | `1.18.4` | current | https://gitlab.freedesktop.org/cairo/cairo · releases https://www.cairographics.org/releases/ | `apothecary/formulas/cairo/cairo.sh` |
@@ -179,7 +179,7 @@
 # formula_version_matrix snapshot 2026-08-03
 generated: 2026-08-03
 formulas:
-  assimp:     { current: "6.0.5",    latest: "6.0.5",    status: current,      source: "https://github.com/assimp/assimp" }
+  assimp:     { current: "5.4.3",    latest: "6.0.5",    status: compatibility_pin, source: "https://github.com/assimp/assimp" }
   boost:      { current: "1.66.0",   latest: "1.91.0",   status: stale,        source: "https://github.com/boostorg/boost" }
   brotli:     { current: "1.2.0",    latest: "1.2.0",    status: current,      source: "https://github.com/google/brotli" }
   cairo:      { current: "1.18.4",   latest: "1.18.4",   status: current,      source: "https://gitlab.freedesktop.org/cairo/cairo" }

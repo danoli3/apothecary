@@ -10,8 +10,8 @@ FORMULA_TYPES=("osx" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten
 FORMULA_DEPENDS=("zlib")
 
 # define the version
-VER=6.0.5
-BUILD_ID=1
+VER=5.4.3
+BUILD_ID=5
 DEFINES=""
 
 # tools for git use
@@ -527,5 +527,4 @@ function clean() {
         rm -f CMakeCache.txt 2>/dev/null
     fi
 }
-
 
