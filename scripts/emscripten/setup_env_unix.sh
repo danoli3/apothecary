@@ -1,10 +1,10 @@
 #!/bin/bash
 
-VERSION="latest"
+VERSION="6.0.6"
 
 # Check if EMSDK is set and valid
 if [[ -z "$EMSDK" || ! -d "$EMSDK/upstream/emscripten" ]]; then
-    echo "🔹 Emscripten SDK not found or invalid. Installing the latest version..."
+    echo "🔹 Emscripten SDK not found or invalid. Installing version $VERSION..."
     cd $HOME
     if [ ! -d "emsdk" ]; then
         git clone https://github.com/emscripten-core/emsdk.git
@@ -23,7 +23,7 @@ if [[ -z "$EMSDK" || ! -d "$EMSDK/upstream/emscripten" ]]; then
     echo 'export PATH="$HOME/emsdk:$HOME/emsdk/upstream/emscripten:$PATH"' >> $HOME/.bashrc
     source $HOME/.bashrc
 else
-    echo "Emscripten SDK found at $EMSDK. Updating to the latest version..."
+    echo "Emscripten SDK found at $EMSDK. Updating to version $VERSION..."
     cd "$EMSDK"
     ./emsdk install "$VERSION"
     ./emsdk activate "$VERSION" --permanent

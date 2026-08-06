@@ -57,6 +57,7 @@ jobs:
       - name: Force-move floating tags to branch tip
         env:
           BRANCH: ${{ steps.meta.outputs.branch }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -80,5 +81,17 @@ jobs:
             refs/tags/latest \
             refs/tags/latest-modular \
             --force --atomic
+
+          # Moving a git tag does not refresh the existing GitHub Release
+          # record. Retarget it explicitly so the Releases page shows this SHA
+          # and receives a new updated_at timestamp.
+          for release_tag in latest latest-modular; do
+            if gh release view "$release_tag" >/dev/null 2>&1; then
+              gh release edit "$release_tag" --target "$SHA" --verify-tag
+              echo "retargeted release ${release_tag} → ${SHA}"
+            else
+              echo "No GitHub Release exists for ${release_tag}; tag was still moved."
+            fi
+          done
 
           echo "moved latest and latest-modular → ${SHA}"
