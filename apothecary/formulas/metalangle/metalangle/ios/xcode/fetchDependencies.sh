@@ -28,6 +28,12 @@ git_pull()
 		git checkout $REV
 	fi
 
+    ACTUAL_REV=$(git rev-parse HEAD)
+    if [ "$ACTUAL_REV" != "$REV" ]; then
+        echo "Dependency commit mismatch for $DIR: expected $REV, got $ACTUAL_REV" >&2
+        exit 1
+    fi
+
     echo
     echo "Fetching $URL Done."
     echo
@@ -47,4 +53,3 @@ git_pull third_party/spirv-cross/src ${spirv_cross_revision} https://chromium.go
 # ✅ Public GitHub mirror (already fixed)
 git_pull third_party/jsoncpp ${jsoncpp_revision} https://github.com/gsource-mirror/chromium-src-third_party-jsoncpp.git
 git_pull third_party/jsoncpp/source ${jsoncpp_src_revision} https://chromium.googlesource.com/external/github.com/open-source-parsers/jsoncpp
-

@@ -14,6 +14,7 @@ FORMULA_TYPES=()
 # define the shaderc version by sha
 # Known good version is from: https://github.com/google/shaderc/blob/known-good/known_good.json
 VER=ff84893dd52d28f0b1737d2635733d952013bd9c
+SHA256=aa239c3fdd16ad1f11337ffc466aa71b320696e049abc85fd8dea07a2e7de35c
 #v2024.3
 
 # tools for git use
@@ -23,7 +24,9 @@ DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
 function download() {
+    . "$DOWNLOADER_SCRIPT"
     curl -Lk $GIT_URL/archive/$GIT_TAG.tar.gz -o shaderc-$GIT_TAG.tar.gz
+    verify_sha256 "shaderc-$GIT_TAG.tar.gz" "$SHA256"
     tar -xf shaderc-$GIT_TAG.tar.gz
     mv shaderc-$GIT_TAG shaderc
     rm shaderc*.tar.gz
@@ -41,6 +44,7 @@ function prepare() {
         git clone https://github.com/KhronosGroup/glslang.git glslang
         pushd glslang
         git checkout 46ef757e048e760b46601e6e77ae0cb72c97bd2f
+        verify_git_commit . 46ef757e048e760b46601e6e77ae0cb72c97bd2f
         popd
     fi
 
@@ -49,6 +53,7 @@ function prepare() {
         git clone https://github.com/KhronosGroup/SPIRV-Tools.git spirv-tools
         pushd spirv-tools
         git checkout 01c8438ee4ac52c248119b7e03e0b021f853b51a
+        verify_git_commit . 01c8438ee4ac52c248119b7e03e0b021f853b51a
         popd
     fi
 
@@ -56,6 +61,7 @@ function prepare() {
         git clone https://github.com/KhronosGroup/SPIRV-Headers.git spirv-tools/external/spirv-headers # rev: db5cf6176137003ca4c25df96f7c0649998c3499
         pushd spirv-tools/external/spirv-headers
         git checkout 2a9b6f951c7d6b04b6c21fe1bf3f475b68b84801
+        verify_git_commit . 2a9b6f951c7d6b04b6c21fe1bf3f475b68b84801
         popd
     fi
 

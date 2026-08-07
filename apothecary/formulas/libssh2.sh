@@ -8,6 +8,7 @@ FORMULA_TYPES=()
 FORMULA_DEPENDS=("zlib" "openssl")
 
 VER=1.11.0-dev
+SOURCE_COMMIT=19aa4338f744c1cac4a177aba624593f8de36c2a
 GIT_URL=https://github.com/libssh2/libssh2.git
 
 DEFINES=""
@@ -17,14 +18,11 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     FILE_NAME=libssh2
 
-    if [ -d $FILE_NAME ]; then
-        echo "Directory $FILE_NAME already exists. Pulling latest changes."
-        cd $FILE_NAME
-        git pull origin master
-        cd ..
-    else
-        git clone --depth=1 --branch master $GIT_URL $FILE_NAME
+    if [ ! -d $FILE_NAME ]; then
+        git clone $GIT_URL $FILE_NAME
+        git -C "$FILE_NAME" checkout "$SOURCE_COMMIT"
     fi
+    verify_git_commit "$FILE_NAME" "$SOURCE_COMMIT"
 }
 
 function prepare() {

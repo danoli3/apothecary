@@ -8,6 +8,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.3.2
+SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 BUILD_ID=1
 DEFINES=""
 FRAMEWORKS=""
@@ -21,6 +22,7 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
 
     downloader ${GIT_URL}
+    verify_sha256 "zlib-$VER.tar.gz" "$SHA256"
     tar -xf zlib-$VER.tar.gz
     mv zlib-$VER zlib
     rm -f zlib-$VER.tar.gz
@@ -389,5 +391,4 @@ function clean() {
         make clean
     fi
 }
-
 

@@ -8,6 +8,7 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscr
 FORMULA_DEPENDS=()
 
 VER=1.0.2
+SOURCE_COMMIT=9b2bed92f5deecf740819f9bf27724bee2fe9c12
 BUILD_ID=1
 DEFINES=""
 
@@ -17,7 +18,9 @@ GIT_TAG=uriparser-${VER}
 
 # download the source code and unpack it into LIB_NAME
 function download() {
+    . "$DOWNLOADER_SCRIPT"
     git clone --branch $GIT_TAG --depth=1 $GIT_URL uriparser
+    verify_git_commit uriparser "$SOURCE_COMMIT"
 }
 
 # prepare the build environment, executed inside the lib src dir

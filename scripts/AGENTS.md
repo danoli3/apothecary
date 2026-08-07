@@ -28,6 +28,7 @@ oF’s own agent notes: `openFrameworks/scripts/AGENTS.md` (`of` downloads prebu
 5. **Confirms:** `confirmYes` defaults to **yes** on empty Enter. Non-TTY `read` with empty stdin often auto-accepts. Prefer piping `yes` only when you intend to proceed; never hang waiting for a human.
 6. **Require a library list** for `update` / `download` / `build` / `clean` / `remove` — no bare action with zero libs.
 7. **Direct engine passthrough** is available for unknown verbs if `apothecary/apothecary` exists; still set `TYPE`/`ARCH` via env so the wrapper passes `-t`/`-a`.
+8. **Verify every network source before use.** Archive downloads must declare a pinned SHA-256 and call `verify_sha256` before extraction. Git downloads must check out a pinned 40-character commit and call `verify_git_commit`. Run `scripts/audit-formula-checksums.sh` after formula changes.
 
 ---
 

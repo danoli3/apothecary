@@ -8,6 +8,8 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=0.46.4
+SHA256_OFFICIAL=d09c44ebc3bd5bee7021c79f922fe8fb2fb57f7320f55e97ff9914d2346a591c
+SHA256_GITLAB=40de14d71320eaa91bc171c5f657210cf0b9a0ee9ae72629fbc8ab1d33b8887c
 BUILD_ID=4
 DEFINES=""
 
@@ -30,6 +32,7 @@ function download() {
 
     local OFFICIAL="pixman-${VER}.tar.gz"
     if downloader "${URL}/${OFFICIAL}" && gzip -t "${OFFICIAL}" 2>/dev/null; then
+        verify_sha256 "$OFFICIAL" "$SHA256_OFFICIAL"
         pixman_tar_extract -xzf "${OFFICIAL}"
         rm "${OFFICIAL}"
         mv "pixman-${VER}" pixman
@@ -40,6 +43,7 @@ function download() {
     echo "cairographics.org download unavailable; using GitLab pixman/pixman archive"
     local TARBALL="pixman-pixman-${VER}.tar"
     downloader "${GIT_LAB}.tar"
+    verify_sha256 "$TARBALL" "$SHA256_GITLAB"
     pixman_tar_extract -xf "${TARBALL}"
     rm "${TARBALL}"
     mv "pixman-pixman-${VER}" pixman

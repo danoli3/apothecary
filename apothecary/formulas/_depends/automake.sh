@@ -9,6 +9,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.16.4
+SHA256="8a0f0be7aaae2efa3a68482af28e5872d8830b9813a6a932a2571eac63ca1794"
 BUILD_ID=1
 DEFINES=""
 
@@ -21,6 +22,7 @@ function download() {
     pwd
     . "$DOWNLOADER_SCRIPT"
     downloader ${GIT_URL}-$VER.tar.gz
+    verify_sha256 "automake-$VER.tar.gz" "$SHA256"
     tar -xf automake-$VER.tar.gz
     mv automake-$VER automake
     rm automake-$VER.tar.gz

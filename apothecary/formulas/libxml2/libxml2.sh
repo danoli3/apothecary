@@ -11,6 +11,7 @@ FORMULA_DEPENDS=("zlib")
 
 # define the version by sha
 VER=2.13.9
+SOURCE_COMMIT=04af2cabb9f859c198b8a553c028a87481199410
 BUILD_ID=1
 DEFINES=""
 
@@ -19,6 +20,7 @@ GIT_URL=https://github.com/GNOME/libxml2.git
 
 ICU_VER=74-2
 ICU_VER_U=74_2
+ICU_SHA256_ZIP=b22e94977a82aac7ebe269ee00bc2d3164bd4495cafcb9e0b2109ab7fac2a37d
 
 DEPEND_URL=https://github.com/unicode-org/icu/releases/download/release-${ICU_VER}/icu4c-${ICU_VER_U}-src
 
@@ -32,9 +34,11 @@ function download() {
         cd libxml2
         git checkout -b v${VER} tags/v${VER}
         cd ../
+        verify_git_commit libxml2 "$SOURCE_COMMIT"
 
         if [ ! -d "icu" ]; then
             downloader "${DEPEND_URL}.${DOWNLOAD_TYPE}"
+            verify_sha256 "icu4c-${ICU_VER_U}-src.${DOWNLOAD_TYPE}" "$ICU_SHA256_ZIP"
             unzip -qq "icu4c-${ICU_VER_U}-src.${DOWNLOAD_TYPE}"
             rm -f "icu4c-${ICU_VER_U}-src.${DOWNLOAD_TYPE}"
         fi
@@ -44,8 +48,10 @@ function download() {
         cd libxml2
         git checkout -b v${VER} tags/v${VER}
         cd ../
+        verify_git_commit libxml2 "$SOURCE_COMMIT"
         if [ ! -d "icu" ]; then
             downloader "${DEPEND_URL}.zip"
+            verify_sha256 "icu4c-${ICU_VER_U}-src.zip" "$ICU_SHA256_ZIP"
             unzip -qq "icu4c-${ICU_VER_U}-src.zip"
             rm -f "icu4c-${ICU_VER_U}-src.zip"
         fi

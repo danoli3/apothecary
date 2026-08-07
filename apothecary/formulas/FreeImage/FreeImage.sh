@@ -14,6 +14,7 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscr
 FORMULA_DEPENDS=("zlib" "libpng")
 
 VER=3.19.11
+SHA256="ce34e2946b4fe458d55d390c83943141e0b13bfb69331c3494ab539826753adc"
 GIT_URL=https://github.com/danoli3/FreeImage
 GIT_TAG=$VER
 BUILD_ID=4
@@ -28,6 +29,7 @@ function download() {
     URL="$GIT_URL/archive/refs/tags/$GIT_TAG.tar.gz"
     # For win32, we simply download the pre-compiled binaries.
     curl -sSL -o FreeImage-$GIT_TAG.tar.gz $URL
+    verify_sha256 "FreeImage-$GIT_TAG.tar.gz" "$SHA256"
 
     tar -xzf FreeImage-$GIT_TAG.tar.gz
     mv FreeImage-$GIT_TAG FreeImage

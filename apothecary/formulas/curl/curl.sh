@@ -14,6 +14,9 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 VER=8.19.0
 VER_D=8_19_0
 SHA1="f15ff190a787ab21402b493984e636209de9e182"
+SHA256="2a2c11db4c122691aa23b4363befda1bfd801770bfebf41e1d21cee4f2ab0f71"
+CACERT_DATE=2026-07-16
+CACERT_SHA256="3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
 BUILD_ID=2
 DEFINES=""
 USE_OPENSSL=ON
@@ -28,18 +31,13 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
 
     downloader $GIT_URL/releases/download/curl-$VER_D/curl-$VER.tar.gz
+    verify_sha256 "curl-$VER.tar.gz" "$SHA256"
     tar -xf curl-$VER.tar.gz
     mv curl-$VER curl
-    CHECKSHA=$(shasum -a 1 curl-$VER.tar.gz | cut -d ' ' -f1)
-    if [ "$CHECKSHA" != "$SHA1" ]; then
-        echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-        exit 1
-    else
-        echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
-    fi
     rm curl*.tar.gz
 
-    curl -LO https://curl.se/ca/cacert.pem
+    curl -L "https://curl.se/ca/cacert-${CACERT_DATE}.pem" -o cacert.pem
+    verify_sha256 cacert.pem "$CACERT_SHA256"
     cp cacert.pem curl/src/cacert.pem
     mv cacert.pem curl/cacert.pem
 

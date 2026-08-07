@@ -10,6 +10,8 @@ GIT_URL=https://github.com/libusb/libusb
 GIT_TAG=v1.0.30
 GIT_BRANCH_VS=master
 VER=1.0.30
+SHA256="2ae28adb0bb9558c86135c4e1c11b320b0805461e207a64a6e520a114094bf07"
+SHA256_ZIP="543a61dbc8878435c096aec6543d51ff73f6a80743621c66ecab2ba1eb66a974"
 BUILD_ID=1
 DEFINES=""
 
@@ -22,12 +24,14 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     if [ "$TYPE" == "vs" ]; then
         downloader "${URL}.zip"
+        verify_sha256 "v${VER}.zip" "$SHA256_ZIP"
         unzip v${VER}.zip
         mv libusb-${VER} libusb
     fi
 
     if [ "$TYPE" == "osx" ]; then
         downloader "${URL}.tar.gz"
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
         tar -xzf v${VER}.tar.gz
 
         mv libusb-${VER} libusb

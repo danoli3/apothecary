@@ -13,7 +13,8 @@ VER=12.2.0
 GIT_URL=https://github.com/fmtlib/fmt
 URL=${GIT_URL}/archive/refs/tags/${VER}
 GIT_TAG=12.2.0
-SHA=
+SHA256="8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0"
+SHA256_ZIP="8bc0dfbeccc1ba96dc9c0f9bf0bbc95f3c7a35308122618638c5755f389e5e72"
 BUILD_ID=1
 DEFINES=""
 
@@ -24,12 +25,14 @@ function download() {
     #git clone --branch $GIT_TAG --depth=1 $GIT_URL
 
     if [ "$TYPE" == "vs" ] ; then
-    	downloader "${URL}.zip"
+		downloader "${URL}.zip"
+		verify_sha256 "${VER}.zip" "$SHA256_ZIP"
     	unzip -q "${VER}.zip"
     	mv "fmt-${VER}" fmt
     	rm "${VER}.zip"
     else
-    	downloader "${URL}.tar.gz"
+		downloader "${URL}.tar.gz"
+		verify_sha256 "${VER}.tar.gz" "$SHA256"
     	tar -xf "${VER}.tar.gz"
     	mv "fmt-${VER}" fmt
     	rm "${VER}.tar.gz"

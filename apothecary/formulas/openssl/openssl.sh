@@ -11,6 +11,7 @@ FORMULA_DEPENDS=("zlib")
 VER=4.0.1
 VERDIR=4.0.0
 VER_TAG="4.0"
+OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
@@ -71,6 +72,7 @@ function download() {
         downloader ${MIRROR}/source/$FILE_NAME.tar.gz.sha1
     fi
 
+    verify_sha256 "$FILE_NAME.tar.gz" "$SHA256"
     CHECKSHA=$(shasum $FILE_NAME.tar.gz | cut -d ' ' -f1)
 
     # Extract only the SHA value from the .sha1 file
@@ -89,7 +91,9 @@ function download() {
         rm $FILE_NAME.tar.gz.sha1
     fi
     # Clone the openssl-cmake repository
-    git clone --branch $VER_TAG --depth=1 $GIT_URL openssl_cmake_temp
+    git clone --branch $VER_TAG $GIT_URL openssl_cmake_temp
+    git -C openssl_cmake_temp checkout "$OPENSSL_CMAKE_COMMIT"
+    verify_git_commit openssl_cmake_temp "$OPENSSL_CMAKE_COMMIT"
 
     # Organize directories as needed
     mkdir -p openssl

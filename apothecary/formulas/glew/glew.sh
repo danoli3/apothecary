@@ -16,6 +16,7 @@ VER=2.3.1
 BUILD_ID=1
 DEFINES=""
 SHA1=c88f42a8ae50a55a6cb8c4d0b1efe0faba6573e5
+SHA256=b64790f94b926acd7e8f84c5d6000a86cb43967bd1e688b03089079799c9e889
 
 # tools for git use
 GIT_URL=https://github.com/nigels-com/glew.git
@@ -26,14 +27,7 @@ URL=https://github.com/nigels-com/glew/releases/download/${GIT_TAG}
 function download() {
     . "$DOWNLOADER_SCRIPT"
     downloader "${URL}/${GIT_TAG}.tgz"
-
-    CHECKSHA=$(shasum -a 1 glew-$VER.tgz | cut -d ' ' -f1)
-    if [ "$CHECKSHA" != "$SHA1" ]; then
-        echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-        exit 1
-    else
-        echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
-    fi
+    verify_sha256 "glew-$VER.tgz" "$SHA256"
     tar -xf glew-$VER.tgz
     mv glew-$VER glew
     rm glew-$VER.tgz

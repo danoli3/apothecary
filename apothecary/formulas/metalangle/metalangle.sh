@@ -8,6 +8,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.0
+SOURCE_COMMIT=ec925142edeb1da3158fd8710ecc6dc2fb1f1f97
 BUILD_ID=2
 DEFINES=""
 
@@ -29,6 +30,8 @@ DEFINES="ANGLE_IS_64_BIT_CPU"
 function download() {
     . "$DOWNLOADER_SCRIPT"
     git clone ${GIT_URL}
+    git -C metalangle checkout "$SOURCE_COMMIT"
+    verify_git_commit metalangle "$SOURCE_COMMIT"
 }
 
 # prepare the build environment, executed inside the lib src dir

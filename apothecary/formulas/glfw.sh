@@ -11,6 +11,8 @@ FORMULA_DEPENDS=()
 
 GIT_URL=https://github.com/glfw/glfw
 VER=3.5.1
+SHA256="5234f4f29473e9a06bc7847d8371858dd135d38466eeeaa652fdc9f8f9ff0c20"
+SHA256_ZIP="e9a80355e8a0c59b15ae8576c2c3aeae792c2b1082ec426dc93bde70d5017fda"
 GIT_BRANCH=$VER
 BUILD_ID=1
 DEFINES=""
@@ -23,11 +25,13 @@ function download() {
 
     if [ "$TYPE" == "vs" ]; then
         downloader "${GIT_URL}/archive/refs/tags/${VER}.zip"
+        verify_sha256 "${VER}.zip" "$SHA256_ZIP"
         unzip -q "${VER}.zip"
         mv "glfw-${VER}" glfw
         rm "${VER}.zip"
     else
         downloader "${GIT_URL}/archive/refs/tags/${VER}.tar.gz"
+        verify_sha256 "${VER}.tar.gz" "$SHA256"
         tar -xf "${VER}.tar.gz"
         mv "glfw-${VER}" glfw
         rm "${VER}.tar.gz"

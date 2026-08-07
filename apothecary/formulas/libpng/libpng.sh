@@ -17,7 +17,8 @@ GIT_URL=http://git.code.sf.net/p/libpng/code
 GIT_TAG=v$VER
 #URL=https://github.com/glennrp/libpng/archive/refs/tags/v1.6.40 # RIP Glenn Randers-Pehrson
 URL=https://github.com/pnggroup/libpng/archive/refs/tags/v${VER}
-SHA=
+SHA256="a9d4df463d36a6e5f9c29bd6f4967312d17e996c1854f3511f833924eb1993cf"
+SHA256_ZIP="ad8fc23d75a76f352989bbec9e905bdfe8f2d2e77b32e4f2070a4bb1849802ee"
 WINDOWS_URL=https://github.com/pnggroup/libpng/archive/refs/tags/v${VER}
 
 # download the source code and unpack it into LIB_NAME
@@ -26,12 +27,14 @@ function download() {
 
     if [ "$TYPE" == "vs" ]; then
         downloader "${URL}.zip"
+        verify_sha256 "v${VER}.zip" "$SHA256_ZIP"
         unzip -q "v${VER}.zip"
         mv "libpng-${VER}" libpng
         rm "v${VER}.zip"
     else
         echo "https://github.com/pnggroup/libpng/archive/refs/tags/v${VER}.tar.gz"
         downloader "${URL}.tar.gz"
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
         tar -xf "v${VER}.tar.gz"
         mv "libpng-${VER}" libpng
         rm "v${VER}.tar.gz"
@@ -418,5 +421,4 @@ function clean() {
         make clean
     fi
 }
-
 

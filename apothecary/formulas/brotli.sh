@@ -10,6 +10,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=1.2.0
+SHA256="816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec"
 BUILD_ID=2
 DEFINES=""
 
@@ -25,10 +26,15 @@ function download() {
         # unzip -q v${VER}.zip
         # mv brotli-${VER} brotli
         # rm -f v${VER}.zip
-        git clone "$GIT_URL.git" brotli
+        downloader ${GIT_URL}/archive/refs/tags/v${VER}.tar.gz
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
+        tar -xf v${VER}.tar.gz
+        mv brotli-${VER} brotli
+        rm v${VER}.tar.gz
         # https://github.com/google/brotli/issues/1105 # using git for VS due to my report fix on upstream
     else
         downloader ${GIT_URL}/archive/refs/tags/v${VER}.tar.gz
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
         tar -xf v${VER}.tar.gz
         mv brotli-${VER} brotli
         rm -f v${VER}.tar.gz

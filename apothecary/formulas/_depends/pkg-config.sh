@@ -5,6 +5,7 @@
 
 # define the version
 VER=0.29.2
+SHA256="6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591"
 BUILD_ID=1
 DEFINES=""
 
@@ -17,7 +18,9 @@ FORMULA_TYPES=()
 
 # download the source code and unpack it into LIB_NAME
 function download() {
+    . "$DOWNLOADER_SCRIPT"
     curl -LO ${URL}/pkg-config-$VER.tar.gz
+    verify_sha256 "pkg-config-$VER.tar.gz" "$SHA256"
     tar -xf pkg-config-$VER.tar.gz
     # if [ "$CHECKSHA" != "$SHA1" ] ; then
     #    echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"

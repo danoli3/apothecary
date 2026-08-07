@@ -16,6 +16,7 @@ FORMULA_TYPES=("osx" "vs" "linux")
 
 # define the version
 VER=6.0.1
+SHA256="7206c8b6cee43b474f43d64988fefaadfdcfc4264ed38d8de5f5d0e6ddb0a123"
 BUILD_ID=4
 DEFINES=""
 
@@ -30,6 +31,7 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     # downloader ${URL}/rtaudio-${VER}.tar.gz
     downloader ${GIT_URL}/archive/refs/tags/$VER.tar.gz
+    verify_sha256 "$VER.tar.gz" "$SHA256"
     tar -xf ${VER}.tar.gz
     mv rtaudio-${VER} rtAudio
     rm ${VER}.tar.gz

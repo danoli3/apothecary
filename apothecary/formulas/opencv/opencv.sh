@@ -11,6 +11,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 
 # define the version
 VER=4.14.0
+SHA256="ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e"
 BUILD_ID=1
 DEFINES=""
 FRAMEWORKS=""
@@ -22,17 +23,20 @@ GIT_TAG=$VER
 
 GIT_CONTRIB_URL=https://github.com/opencv/opencv_contrib
 VER_CONTRIB=$VER
+SHA256_CONTRIB="4f17abd1bc7f88e19c3380c8de7cbf2d863aced5b5ee8d8934cc7902b67d42c9"
 
 # download the source code and unpack it into LIB_NAME
 function download() {
 
     . "$DOWNLOADER_SCRIPT"
     downloader $GIT_URL/archive/refs/tags/$VER.tar.gz
+    verify_sha256 "$VER.tar.gz" "$SHA256"
     tar -xzf $VER.tar.gz
     mv opencv-$VER opencv
     rm $VER.tar.gz
 
     downloader $GIT_CONTRIB_URL/archive/refs/tags/$VER.tar.gz
+    verify_sha256 "$VER.tar.gz" "$SHA256_CONTRIB"
     tar -xzf $VER.tar.gz
     mv opencv_contrib-$VER opencv/opencv_contrib
     rm $VER.tar.gz
