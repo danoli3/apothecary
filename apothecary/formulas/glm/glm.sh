@@ -10,14 +10,16 @@ FORMULA_DEPENDS=()
 
 # tools for git use
 GIT_URL=https://github.com/g-truc/glm
-#GIT_TAG=1.0.0.0
-GIT_TAG=master
-VER=1.0.1
+GIT_TAG=1.0.3
+VER=1.0.3
+SOURCE_COMMIT=8d1fd52e5ab5590e2c81768ace50c72bae28f2ed
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
 function download() {
+    . "$DOWNLOADER_SCRIPT"
     git clone --branch $GIT_TAG --depth=1 $GIT_URL
+    verify_git_commit glm "$SOURCE_COMMIT"
 }
 
 # prepare the build environment, executed inside the lib src dir

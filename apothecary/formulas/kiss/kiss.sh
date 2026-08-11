@@ -8,7 +8,8 @@ FORMULA_TYPES=("linux" "msys2")
 FORMULA_DEPENDS=()
 
 # define the version
-VER=131.1.0
+VER=131.2.0
+SHA256="205a8f6a448ef12b091f8ac6a514b5091bb5f6b0b543431ed75f673116cf5cbf"
 BUILD_ID=1
 
 # tools for git use
@@ -25,6 +26,7 @@ function download() {
 
     echo "${URL}"
     downloader "${URL}.tar.gz"
+    verify_sha256 "${VER}.tar.gz" "$SHA256"
     tar -xf "${VER}.tar.gz"
     mv "kissfft-${VER}" kissfft
     rm "${VER}.tar.gz"

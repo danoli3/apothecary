@@ -11,6 +11,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=stable_v19_20110326
+SHA256=328a89adc42c66840641d2d557d01e8bd9e6be32e12d3802e3b638e0791de540
 BUILD_ID=1
 DEFINES=""
 
@@ -20,7 +21,9 @@ GIT_TAG=
 
 # download the source code and unpack it into LIB_NAME
 function download() {
-    curl -O http://www.portaudio.com/archives/pa_$VER.tgz
+    . "$DOWNLOADER_SCRIPT"
+    downloader http://www.portaudio.com/archives/pa_$VER.tgz
+    verify_sha256 "pa_$VER.tgz" "$SHA256"
     tar -xf pa_$VER.tgz
     rm pa_$VER.tgz
 }

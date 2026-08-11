@@ -1,0 +1,169 @@
+name: Test libraries in openFrameworks
+
+on:
+  workflow_dispatch:
+    inputs:
+      library_ref:
+        description: Library line or release to test
+        required: true
+        default: bleeding
+        type: choice
+        options:
+          - bleeding
+          - master
+          - latest
+          - latest-modular
+      openframeworks_ref:
+        description: openFrameworks branch, tag, or SHA
+        required: true
+        default: master
+        type: string
+      platform:
+        description: Integration target
+        required: true
+        default: linux
+        type: choice
+        options:
+          - linux
+          - macos
+          - ios
+          - tvos
+          - android
+          - emscripten
+          - windows
+
+permissions:
+  contents: read
+
+concurrency:
+  group: of-library-integration-${{ inputs.library_ref }}-${{ inputs.openframeworks_ref }}-${{ inputs.platform }}
+  cancel-in-progress: false
+
+jobs:
+  integration:
+    name: ${{ inputs.platform }} / ${{ inputs.library_ref }} / oF ${{ inputs.openframeworks_ref }}
+    runs-on: ${{ (inputs.platform == 'macos' || inputs.platform == 'ios' || inputs.platform == 'tvos') && 'macos-15' || inputs.platform == 'windows' && 'windows-2022' || 'ubuntu-24.04' }}
+    env:
+      OF_ROOT: ${{ github.workspace }}/openFrameworks
+      GH_TOKEN: ${{ github.token }}
+      APOTHECARY_REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Check out Apothecary test scripts
+        uses: actions/checkout@v6.0.2
+        with:
+          path: apothecary-tests
+
+      - name: Check out openFrameworks
+        uses: actions/checkout@v6.0.2
+        with:
+          repository: openframeworks/openFrameworks
+          ref: ${{ inputs.openframeworks_ref }}
+          submodules: recursive
+          path: openFrameworks
+
+      - name: Set up MSYS2 download tools
+        if: inputs.platform == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: git unzip
+
+      - name: Install selected libraries
+        shell: bash
+        run: bash apothecary-tests/scripts/test-openframeworks-libraries.sh "$OF_ROOT" "${{ inputs.library_ref }}" "${{ inputs.platform }}"
+
+      - name: Install Linux dependencies
+        if: inputs.platform == 'linux'
+        run: sudo openFrameworks/scripts/linux/ubuntu/install_dependencies.sh -y
+
+      - name: Install Windows build dependencies
+        if: inputs.platform == 'windows'
+        shell: msys2 {0}
+        working-directory: openFrameworks
+        run: scripts/ci/vs/install.sh
+
+      - name: Build Linux core, emptyExample, and allAddonsExample
+        if: inputs.platform == 'linux'
+        working-directory: openFrameworks
+        env:
+          TRAVIS_BUILD_DIR: ${{ github.workspace }}/openFrameworks
+        run: scripts/ci/linux64/build.sh
+
+      - name: Run Linux smoke tests
+        if: inputs.platform == 'linux'
+        working-directory: openFrameworks
+        env:
+          TRAVIS_BUILD_DIR: ${{ github.workspace }}/openFrameworks
+        run: scripts/ci/linux64/run_tests.sh
+
+      - name: Build macOS core and examples
+        if: inputs.platform == 'macos'
+        working-directory: openFrameworks
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+          SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+        run: scripts/ci/osx/build.sh xcode
+
+      - name: Build iOS
+        if: inputs.platform == 'ios'
+        working-directory: openFrameworks
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: scripts/ci/ios/build.sh
+
+      - name: Build tvOS
+        if: inputs.platform == 'tvos'
+        working-directory: openFrameworks
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: scripts/ci/tvos/build.sh
+
+      - name: Set up Java
+        if: inputs.platform == 'android'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build Android core
+        if: inputs.platform == 'android'
+        working-directory: openFrameworks/libs/openFrameworksCompiled/project/android
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: |
+          gradle wrapper
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          ./cmake.sh arm64-v8a
+
+      - name: Build Emscripten core and examples
+        if: inputs.platform == 'emscripten'
+        working-directory: openFrameworks
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src emscripten/emsdk:5.0.7 scripts/ci/emscripten/build.sh
+
+      - name: Set up MSBuild
+        if: inputs.platform == 'windows'
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Build Windows emptyExample and allAddonsExample
+        if: inputs.platform == 'windows'
+        working-directory: openFrameworks
+        shell: pwsh
+        run: |
+          msbuild examples/templates/emptyExample/emptyExample.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143
+          msbuild examples/templates/allAddonsExample/allAddonsExample.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143
+
+      - name: Integration summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## openFrameworks library integration"
+            echo
+            echo "- Libraries: \`${{ inputs.library_ref }}\`"
+            echo "- openFrameworks: \`${{ inputs.openframeworks_ref }}\`"
+            echo "- Platform: \`${{ inputs.platform }}\`"
+            echo "- Result: \`${{ job.status }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

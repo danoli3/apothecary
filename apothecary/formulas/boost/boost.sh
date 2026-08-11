@@ -10,6 +10,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VERSION=1.66.0
+SHA256=71c32f4085e3adef4fffc90674a01079665d281d1de2aea6c6955db8567deae1
 UNCOMPRESSED_NAME=boost_1_66_0
 TARBALL=$UNCOMPRESSED_NAME.tar.gz
 BUILD_ID=1
@@ -35,6 +36,7 @@ function download() {
 
     . "$DOWNLOADER_SCRIPT"
     downloader ${URL}
+    verify_sha256 "$TARBALL" "$SHA256"
     tar xzf ${TARBALL}
 
     mv $UNCOMPRESSED_NAME boost

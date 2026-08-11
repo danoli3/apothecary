@@ -24,6 +24,7 @@ BUILD_ID=1
 DEFINES=""
 
 SHA1="0a54ce94df6e9db9b9d55ada2ef58b6c47861fde"
+SHA256="4632f86fb9610a4dc2bdb0cb8ebc9a66785c8eb8ae2a8d003bff31b8bc46b32c"
 
 # tools for git use
 GIT_URL=http://anongit.freedesktop.org/git/cairo
@@ -40,14 +41,7 @@ function download() {
     local TARBALL="cairo-${VER}.tar"
 
     downloader "${GIT_LAB}.tar"
-
-    CHECKSHA=$(shasum -a 1 "${TARBALL}" | cut -d ' ' -f1)
-    if [ "$CHECKSHA" != "$SHA1" ]; then
-        echoError "ERROR! SHA did not Verify: [$CHECKSHA] SHA on Record:[$SHA1] - Developer has not updated SHA or Man in the Middle Attack"
-        exit 1
-    else
-        echo "SHA for Download Verified Successfully: [$CHECKSHA] SHA on Record:[$SHA1]"
-    fi
+    verify_sha256 "$TARBALL" "$SHA256"
 
     tar -xf "${TARBALL}"
     rm "${TARBALL}"

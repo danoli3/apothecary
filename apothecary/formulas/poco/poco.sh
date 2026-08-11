@@ -11,13 +11,13 @@ FORMULA_TYPES=("osx" "vs" "linux")
 FORMULA_DEPENDS=("openssl" "zlib" )
 
 # define the version
-VER=1.14.1
-BUILD_ID=2
+VER=1.15.3
+BUILD_ID=1
 DEFINES=""
 
 # tools for git use
 GIT_URL=https://github.com/pocoproject/poco
-GIT_TAG=poco-${VER}
+GIT_TAG=poco-${VER}-release
 
 DEFAULT_VS_STATIC=1
 
@@ -29,29 +29,20 @@ FORMULA_DEPENDS_MANUAL=1
 # 3rd Party libraries.  See https://github.com/pocoproject/poco/blob/develop/README
 # for more information.
 
-SHA=
+SHA256="4f112fea59e0c65f0fffe30a4957f8d66cf41528c21dd9903e6d7550022c794e"
 
 # download the source code and unpack it into LIB_NAME
 function download() {
-    if [ "$SHA" == "" ]; then
-        echo "SHA=="" Using $GIT_URL with GIT_TAG=$GIT_TAG"
-        curl -Lk $GIT_URL/archive/$GIT_TAG.tar.gz -o poco-$GIT_TAG.tar.gz
-        tar -xf poco-$GIT_TAG.tar.gz
-        mv poco-$GIT_TAG poco
-        rm poco*.tar.gz
-    else
-        echo "$GIT_URL - Using SHA=$SHA"
-        git clone $GIT_URL -b poco-$VER
-    fi
+    . "$DOWNLOADER_SCRIPT"
+    curl -Lk $GIT_URL/archive/$GIT_TAG.tar.gz -o poco-$GIT_TAG.tar.gz
+    verify_sha256 "poco-$GIT_TAG.tar.gz" "$SHA256"
+    tar -xf poco-$GIT_TAG.tar.gz
+    mv poco-$GIT_TAG poco
+    rm poco*.tar.gz
 }
 
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
-
-    if [ "$SHA" != "" ]; then
-        echo "Setting git repo to SHA=$SHA"
-        git reset --hard $SHA
-    fi
 
     apothecaryDepend download zlib
     apothecaryDepend prepare zlib

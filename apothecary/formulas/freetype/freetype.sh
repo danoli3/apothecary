@@ -10,7 +10,8 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "vs" "android" "
 FORMULA_DEPENDS=("zlib" "libpng" "brotli")
 
 # define the version
-VER=2.13.3
+VER=2.14.3
+SHA256="dc49de6b01a266eef4876a4dd34d9842c475d3e28ff2eff63bd2fb760ab56261"
 BUILD_ID=1
 DEFINES=""
 
@@ -28,6 +29,7 @@ function download() {
 
     . "$DOWNLOADER_SCRIPT"
     downloader $URL
+    verify_sha256 "${GIT_VER}.tar.gz" "$SHA256"
 
     tar -xzf $GIT_VER.tar.gz
     mv freetype-$GIT_VER freetype
@@ -669,5 +671,4 @@ function clean() {
         make clean
     fi
 }
-
 

@@ -6,19 +6,25 @@
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
-VER=3.4.1
-VERDIR=3.4.0
-VER_TAG="3.4"
-SHA1=d3469baf41823a28ad71aae12b2fbb9fe3b19a0d
-SHA256=002a2d6b30b58bf4bea46c43bdd96365aaf8daa6c428782aa4feee06da197df3
+# OpenSSL 4.0.1 + danoli3/openssl-cmake branch 4.0 (test pin for PR #562)
+# Note: openssl-cmake 3.5 + 3.5.7 failed CI (ML-DSA DTLS capability macros).
+VER=4.0.1
+VERDIR=4.0.0
+VER_TAG="4.0"
+OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
+SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
+SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=2
+BUILD_ID=4
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
 MIRROR=https://www.openssl.org
 GIT_URL=https://github.com/danoli3/openssl-cmake
 
+# openssl-cmake uses OPENSSL_ASM (not OPENSSL_NO_ASM) as the master switch.
+# Passing only OPENSSL_NO_ASM=ON is overridden when Perl is present (ASM defaults ON),
+# which breaks macOS x86_64 / some Windows static links (missing asm symbols).
 DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_COMP=ON \
 	-DOPENSSL_NO_EC_NISTP_64_GCC_128=ON \
@@ -33,6 +39,7 @@ DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_UNIT_TEST=ON \
 	-DOPENSSL_NO_WEAK_SSL_CIPHERS=OFF \
 	-DOPENSSL_NO_ASAN=ON \
+	-DOPENSSL_ASM=OFF \
 	-DOPENSSL_NO_ASM=ON \
 	-DOPENSSL_NO_CRYPTO_MDEBUG=ON \
 	-DOPENSSL_NO_DEVCRYPTOENG=ON \
@@ -46,7 +53,7 @@ DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_STATIC_ENGINE=OFF \
 	-DOPENSSL_STATIC_ENGINE=ON \
 	-DOPENSSL_THREADS=ON \
-	-DBUILD_TESTING=ON \
+	-DBUILD_TESTING=OFF \
 	-DOPENSSL_NO_AFALGENG=ON \
 	-DOPENSSL_ZLIB=ON \
 	-DOPENSSL_BUILD_DOCS=OFF"
@@ -65,6 +72,7 @@ function download() {
         downloader ${MIRROR}/source/$FILE_NAME.tar.gz.sha1
     fi
 
+    verify_sha256 "$FILE_NAME.tar.gz" "$SHA256"
     CHECKSHA=$(shasum $FILE_NAME.tar.gz | cut -d ' ' -f1)
 
     # Extract only the SHA value from the .sha1 file
@@ -83,7 +91,9 @@ function download() {
         rm $FILE_NAME.tar.gz.sha1
     fi
     # Clone the openssl-cmake repository
-    git clone --branch $VER_TAG --depth=1 $GIT_URL openssl_cmake_temp
+    git clone --branch $VER_TAG $GIT_URL openssl_cmake_temp
+    git -C openssl_cmake_temp checkout "$OPENSSL_CMAKE_COMMIT"
+    verify_git_commit openssl_cmake_temp "$OPENSSL_CMAKE_COMMIT"
 
     # Organize directories as needed
     mkdir -p openssl
@@ -102,6 +112,35 @@ function prepare() {
     apothecaryDepend prepare zlib
     apothecaryDepend build zlib
     apothecaryDepend copy zlib
+
+    # openssl-cmake 4.0 WIP: some provider CMakeLists incorrectly list
+    # ${CMAKE_BINARY_DIR}/providers/implementations/include as a SOURCES
+    # entry (directory path). Strip those lines so headers resolve from
+    # the OpenSSL source tree like the 3.4/3.5 cmake branches.
+    # See: https://github.com/danoli3/openssl-cmake/tree/4.0
+    if [[ "$VER_TAG" == "4.0" || "$VER" == 4.* ]]; then
+        echo "openssl prepare: patching openssl-cmake 4.x provider SOURCES lists"
+        local f
+        for f in \
+            providers/common/CMakeLists.txt \
+            providers/default/CMakeLists.txt \
+            providers/legacy/CMakeLists.txt; do
+            if [ -f "$f" ]; then
+                # Remove lines that are only the broken binary-dir include path
+                # (optionally followed by whitespace). Keep real source paths.
+                if [[ "$(uname -s)" == "Darwin" ]]; then
+                    sed -i '' \
+                        -e '/^[[:space:]]*\${CMAKE_BINARY_DIR}\/providers\/implementations\/include[[:space:]]*$/d' \
+                        "$f"
+                else
+                    sed -i \
+                        -e '/^[[:space:]]*\${CMAKE_BINARY_DIR}\/providers\/implementations\/include[[:space:]]*$/d' \
+                        "$f"
+                fi
+            fi
+        done
+    fi
+
     echo "prepare"
 }
 
@@ -126,7 +165,7 @@ function build() {
 
         DEFINES="${DEFINES} \
             -DNO_FORK=ON \
-            -DOPENSSL_OCSP=OFF \
+            -DOPENSSL_OCSP=ON \
             -DOPENSSL_CMP=OFF \
             "
         rm -f CMakeCache.txt *.a *.o
@@ -284,11 +323,11 @@ function build() {
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
-        if [ "$ARCH" == "arm64" ] || [ "$ARCH" == "arm64ec" ] || [ "$ARCH" == "arm" ]; then
-            DEFINES="${DEFINES} -DOPENSSL_ASM=OFF"
-        else
-            DEFINES="${DEFINES} -DOPENSSL_ASM=ON"
-        fi
+        # Always disable ASM for VS static OF builds.
+        # OPENSSL_ASM=ON on x64 (previous) re-enabled asm after global OFF and
+        # fails without a complete NASM/MASM pipeline under openssl-cmake 4.x.
+        # Arm64/arm64ec already forced OFF; keep one path for all VS arches.
+        DEFINES="${DEFINES} -DOPENSSL_ASM=OFF -DOPENSSL_NO_ASM=ON"
 
         mkdir -p "build_${TYPE}_${ARCH}"
         cd "build_${TYPE}_${ARCH}"

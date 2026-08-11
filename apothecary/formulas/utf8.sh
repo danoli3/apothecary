@@ -7,9 +7,11 @@ FORMULA_TYPES=("osx" "msys2" "linux" "vs" "ios" "watchos" "catos" "xros" "tvos" 
 FORMULA_DEPENDS=()
 
 # define the version
-VER=4.0.9
-VER_=4_0_9
-BUILD_ID=3
+VER=4.1.1
+VER_=4_1_1
+SHA256="1ca68016f0abc24172998e39ce0d8f8e2b7a26f7579a0ff85d4e1b9a7aea56f8"
+SHA256_ZIP="45ae96c0a7b7b02c147160aae7562002f5a93fec696919d3b6b2ca6c91304a5a"
+BUILD_ID=1
 DEFINES=""
 
 # tools for git use
@@ -22,11 +24,13 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     if [ "$TYPE" == "vs" ]; then
         downloader ${GIT_URL}/archive/refs/tags/v${VER}.zip
+        verify_sha256 "v${VER}.zip" "$SHA256_ZIP"
         unzip -q v${VER}.zip
         mv utfcpp-${VER} utf8
         rm v${VER}.zip
     else
         downloader ${GIT_URL}//archive/refs/tags/v${VER}.tar.gz
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
         tar -xf v${VER}.tar.gz
         mv utfcpp-${VER} utf8
         rm -f v${VER}.tar.gz

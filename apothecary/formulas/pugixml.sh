@@ -9,7 +9,8 @@ FORMULA_TYPES=("emscripten" "osx" "vs" "ios" "watchos" "xros" "catos" "tvos" "an
 FORMULA_DEPENDS=()
 
 # define the version by sha
-VER=1.14
+VER=1.16
+SHA256="4cee1ca4aad395170f4c7a07824f3bdd41f28316c6e1e1090a1425b278ec0b4b"
 BUILD_ID=1
 DEFINES=""
 
@@ -21,6 +22,7 @@ GIT_TAG=$VER
 function download() {
     . "$DOWNLOADER_SCRIPT"
     downloader https://github.com/zeux/pugixml/releases/download/v$VER/pugixml-$VER.tar.gz
+    verify_sha256 "pugixml-$VER.tar.gz" "$SHA256"
     mkdir pugixml
     tar xzf pugixml-$VER.tar.gz --directory pugixml --strip-components=1
     rm "pugixml-$VER.tar.gz"

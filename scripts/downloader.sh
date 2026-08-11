@@ -71,6 +71,65 @@ echoInfo() {
     echo -e "$CON_BOLD$CON_WHITE$1$CON_DEFAULT"
 }
 
+# Verify a downloaded source archive before it is unpacked.  Keep this here so
+# every formula gets the same behavior on macOS, Linux, MSYS2 and Windows CI.
+verify_sha256() {
+    local file="$1"
+    local expected="$2"
+    local actual=""
+
+    if [[ ! -f "$file" ]]; then
+        echoError "SHA-256 verification failed: file not found: $file"
+        return 1
+    fi
+    if [[ ! "$expected" =~ ^[0-9a-fA-F]{64}$ ]]; then
+        echoError "SHA-256 verification failed: invalid expected digest for $file"
+        return 1
+    fi
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        actual=$(sha256sum "$file" | awk '{print $1}')
+    elif command -v shasum >/dev/null 2>&1; then
+        actual=$(shasum -a 256 "$file" | awk '{print $1}')
+    elif command -v openssl >/dev/null 2>&1; then
+        actual=$(openssl dgst -sha256 "$file" | awk '{print $NF}')
+    else
+        echoError "SHA-256 verification failed: no SHA-256 tool is installed"
+        return 1
+    fi
+
+    actual=$(printf '%s' "$actual" | tr '[:upper:]' '[:lower:]')
+    expected=$(printf '%s' "$expected" | tr '[:upper:]' '[:lower:]')
+    if [[ "$actual" != "$expected" ]]; then
+        echoError "SHA-256 mismatch for $file"
+        echoError "expected: $expected"
+        echoError "actual:   $actual"
+        return 1
+    fi
+    echo "  [downloader] SHA-256 verified: $file"
+}
+
+verify_git_commit() {
+    local directory="$1"
+    local expected="$2"
+    local actual=""
+    if [[ ! "$expected" =~ ^[0-9a-fA-F]{40}$ ]]; then
+        echoError "Git verification failed: invalid expected commit for $directory"
+        return 1
+    fi
+    actual=$(git -C "$directory" rev-parse HEAD 2>/dev/null) || {
+        echoError "Git verification failed: cannot resolve HEAD in $directory"
+        return 1
+    }
+    if [[ "$actual" != "$expected" ]]; then
+        echoError "Git commit mismatch for $directory"
+        echoError "expected: $expected"
+        echoError "actual:   $actual"
+        return 1
+    fi
+    echo "  [downloader] Git commit verified: $directory @ $actual"
+}
+
 check_remote_vs_local() {
     LOCAL_FILE="$1"
     REMOTE_URL="$2"

@@ -8,6 +8,7 @@ FORMULA_TYPES=("linux" "osx" )
 FORMULA_DEPENDS=( "freetype" "libpng" "zlib" )
 
 VER=1.24.0
+SOURCE_COMMIT=b125253cade5432e535ef2ea848ac00d2fb5286d
 GIT_URL=https://gitlab.freedesktop.org/gstreamer/gstreamer.git
 
 DEFINES=""
@@ -17,14 +18,10 @@ function download() {
     . "$DOWNLOADER_SCRIPT"
     FILE_NAME=gstreamer
 
-    if [ -d $FILE_NAME ]; then
-        echo "Directory $FILE_NAME already exists. Pulling latest changes."
-        cd $FILE_NAME
-        git pull origin main
-        cd ..
-    else
-        git clone --depth=1 --branch main $GIT_URL $FILE_NAME
+    if [ ! -d $FILE_NAME ]; then
+        git clone --depth=1 --branch "$VER" $GIT_URL $FILE_NAME
     fi
+    verify_git_commit "$FILE_NAME" "$SOURCE_COMMIT"
 
     echo "prepare gstreamer install apts"
     sudo apt-get update

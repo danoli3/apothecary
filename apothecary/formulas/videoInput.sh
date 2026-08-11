@@ -11,6 +11,7 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=master
+SOURCE_COMMIT=261bfeee7c91810a46a5313ad7e2c298fc8732e5
 BUILD_ID=2
 DEFINES=""
 
@@ -20,8 +21,11 @@ GIT_BRANCH=$VER
 
 # download the source code and unpack it into LIB_NAME
 function download() {
+    . "$DOWNLOADER_SCRIPT"
     echo "Running: git clone --branch ${GIT_BRANCH} ${GIT_URL}"
     git clone --branch ${GIT_BRANCH} ${GIT_URL}
+    git -C videoInput checkout "$SOURCE_COMMIT"
+    verify_git_commit videoInput "$SOURCE_COMMIT"
 }
 
 # executed inside the lib src dir

@@ -11,6 +11,8 @@ FORMULA_DEPENDS=("zlib")
 
 # define the version
 VER=5.4.3
+SHA256="66dfbaee288f2bc43172440a55d0235dfc7bf885dda6435c038e8000e79582cb"
+SHA256_ZIP="795c29716f4ac123b403e53b677e9f32a8605c4a7b2d9904bfaae3f4053b506d"
 BUILD_ID=5
 DEFINES=""
 
@@ -35,11 +37,13 @@ function download() {
 
     if [ "$TYPE" == "vs" ]; then
         downloader "$GIT_URL/archive/refs/tags/v$VER.zip"
+        verify_sha256 "v${VER}.zip" "$SHA256_ZIP"
         unzip -oq v${VER}.zip
         mv assimp-$VER assimp
         rm v${VER}.zip
     else
         downloader "${GIT_URL}/archive/refs/tags/v$VER.tar.gz"
+        verify_sha256 "v${VER}.tar.gz" "$SHA256"
         tar -xf v${VER}.tar.gz
         mv assimp-${VER} assimp
         rm -f v${VER}.tar.gz
@@ -527,5 +531,3 @@ function clean() {
         rm -f CMakeCache.txt 2>/dev/null
     fi
 }
-
-

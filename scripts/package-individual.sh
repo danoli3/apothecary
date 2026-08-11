@@ -43,9 +43,15 @@ if [ -z $TARGET ]; then
     exit 0
 fi
 
-echo "Sourcing: ${LOCAL_ROOT}/scripts/calculate_formulas.sh"
-ls -lah "${LOCAL_ROOT}/scripts/"
-source "${LOCAL_ROOT}/scripts/calculate_formulas.sh"
+if [ -n "${PACKAGE_LIBS:-}" ]; then
+    # Package addon/non-core staging directories without adding them to the
+    # core build matrix.
+    IFS=', ' read -r -a FORMULAS <<< "$PACKAGE_LIBS"
+    echo "Using explicitly requested modular libraries: [${FORMULAS[*]}]"
+else
+    echo "Sourcing: ${LOCAL_ROOT}/scripts/calculate_formulas.sh"
+    source "${LOCAL_ROOT}/scripts/calculate_formulas.sh"
+fi
 if [ -z "$FORMULAS" ]; then
     echo "No formulas to build"
     exit 0

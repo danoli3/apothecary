@@ -13,6 +13,11 @@ FORMULA_DEPENDS=()
 
 # define the version
 VER=44459
+SHA256_OSX=66afb3146c436ba0d22651fd4b56f531afbf3abca446559bc3f0a198c7d0faa7
+SHA256_LINUX=de59499c644f309b702bbf12795049c87f276e861b4e8fa880acebf4810a8ca8
+SHA256_LINUX64=f4082ff99df3da9d5a1198295d3328b624f909fc9863783cda608643e5ac8fb3
+SHA256_VS32=8a84e09057caac0a1bb6a4aa9b6282dc99c717dc2bcea871736de9c3b9084a62
+SHA256_VS64=bdd3c5ac32df2b6decbcd4ddc5536ee2195f03db9a654e10df4e113548b35c8c
 BUILD_ID=1
 DEFINES=""
 
@@ -36,6 +41,15 @@ function download() {
     fi
     . "$DOWNLOADER_SCRIPT"
     downloader "${URL}/${PKG}"
+    case "$TYPE:$ARCH" in
+        osx:*) expected_sha="$SHA256_OSX" ;;
+        linux:*) expected_sha="$SHA256_LINUX" ;;
+        linux64:*) expected_sha="$SHA256_LINUX64" ;;
+        vs:32) expected_sha="$SHA256_VS32" ;;
+        vs:64) expected_sha="$SHA256_VS64" ;;
+        *) echoError "No SHA-256 is recorded for $PKG"; return 1 ;;
+    esac
+    verify_sha256 "$PKG" "$expected_sha"
     tar xjf $PKG
     rm "${PKG}"
 }

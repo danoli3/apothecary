@@ -1,0 +1,30 @@
+name: Validate formula sources
+
+on:
+  push:
+    paths:
+      - 'apothecary/formulas/**'
+      - 'scripts/downloader.sh'
+      - 'scripts/audit-formula-checksums.sh'
+      - '.github/workflows/validate-formula-sources.yml'
+  pull_request:
+    paths:
+      - 'apothecary/formulas/**'
+      - 'scripts/downloader.sh'
+      - 'scripts/audit-formula-checksums.sh'
+      - '.github/workflows/validate-formula-sources.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Check shell syntax
+        run: |
+          bash -n scripts/downloader.sh
+          find apothecary/formulas -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+      - name: Require source verification
+        run: bash scripts/audit-formula-checksums.sh
