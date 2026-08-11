@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Re-run failed workflow runs on the current branch
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9.0.0
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
         with:
           script: |

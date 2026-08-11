@@ -65,13 +65,13 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
         run: ./scripts/osx/install.sh
       - name: 'Download artifacts'
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@v9.0.0
         if: env.USE_ARTIFACT == 'true'
         with:
           script: |
@@ -227,7 +227,7 @@ jobs:
           BUNDLE: ${{ matrix.bundle }}
       - name: Update Release arm64
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
@@ -289,13 +289,13 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
       - name: Scripts Calc Formula
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
         run: ./scripts/macos/install.sh
       - name: 'Download all artifacts'
-        uses: actions/github-script@v8.0.0
+        uses: actions/github-script@v9.0.0
         with:
           script: |
             const fs = require('fs');
@@ -414,21 +414,21 @@ jobs:
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: Update Release macOS 1
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout_1/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_1.tar.bz2
       - name: Update Release macOS 2
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout_2/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_2.tar.bz2
       - name: Update Release macOS 3
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        uses: softprops/action-gh-release@v3.0.1
+        uses: softprops/action-gh-release@v3.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
