@@ -59,7 +59,7 @@ jobs:
           else
             echo "RELEASE=latest" >> $GITHUB_ENV
           fi
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
       - name: Scripts Calc Formula - ${{ env.TARGET }} Bundle ${{ matrix.bundle }}
         run: ./scripts/calculate_formulas.sh
       - name: Scripts Install
