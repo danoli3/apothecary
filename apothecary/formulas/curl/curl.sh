@@ -64,12 +64,13 @@ function prepare() {
     apothecaryDepend copy openssl
 
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        patch --batch --forward -p1 <"$FORMULA_DIR/apple-patch.diff"
-        if [ $? -ne 0 ]; then
+        if grep -q 'char \*input = getpass(prompt);' src/tool_paramhlp.c; then
+            echo "apple-patch.diff already applied"
+        elif patch --batch --forward -p1 <"$FORMULA_DIR/apple-patch.diff"; then
+            echo "apple-patch.diff applied successfully"
+        else
             echo "Failed to apply apple-patch.diff"
             exit 1
-        else
-            echo "apple-patch.diff applied successfully"
         fi
     fi
     echo "prepared"
