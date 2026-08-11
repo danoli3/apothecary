@@ -239,32 +239,32 @@ jobs:
     # if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding' || contains(github.ref, 'refs/tags/'))
     steps:
     # - name: Wait build-ios
-    #   uses: NathanFirmo/wait-for-other-action@v1.1.5
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
     #     token: ${{ secrets.GITHUB_TOKEN }}
     #     workflow: 'build-ios.yml'
     - name: Wait build-macos
-      uses: NathanFirmo/wait-for-other-action@v1.1.5
+      uses: NathanFirmo/wait-for-other-action@v1.0.4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         workflow: 'build-macos.yml'
     # - name: Wait build-xros
-    #   uses: NathanFirmo/wait-for-other-action@v1.1.5
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
     #     token: ${{ secrets.GITHUB_TOKEN }}
     #    workflow: 'build-xros.yml'
     # - name: Wait build-catos
-    #   uses: NathanFirmo/wait-for-other-action@v1.1.5
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
     #     token: ${{ secrets.GITHUB_TOKEN }}
     #     workflow: 'build-catos.yml'
     - name: Wait build-tvos
-      uses: NathanFirmo/wait-for-other-action@v1.1.5
+      uses: NathanFirmo/wait-for-other-action@v1.0.4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         workflow: 'build-tvos.yml'
     # - name: Wait build-watchos
-    #   uses: NathanFirmo/wait-for-other-action@v1.1.5
+    #   uses: NathanFirmo/wait-for-other-action@v1.0.4
     #   with:
     #     token: ${{ secrets.GITHUB_TOKEN }}
     #     workflow: 'build-watchos.yml'
