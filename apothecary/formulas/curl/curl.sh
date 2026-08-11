@@ -139,7 +139,12 @@ function build() {
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=OFF -DUSE_OPENSSL=OFF -DCURL_USE_SCHANNEL=ON"
         fi
 
-        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig;${PKG_CONFIG_PATH};${OF_LIBS_OPENSSL}/lib/$TYPE/$PLATFORM;${ZLIB_ROOT}/lib/$TYPE/$PLATFORM;${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
+        # The Visual Studio build runs from an MSYS2 shell in CI. Do not let
+        # pkg-config inject MinGW's native headers (for example vadefs.h) into
+        # an MSVC project, especially when cross-compiling for ARM64/ARM64EC.
+        unset PKG_CONFIG_PATH
+        unset PKG_CONFIG_SYSTEM_INCLUDE_PATH
+        unset PKG_CONFIG_SYSTEM_LIBRARY_PATH
 
         DEFS="-DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
@@ -176,6 +181,7 @@ function build() {
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
