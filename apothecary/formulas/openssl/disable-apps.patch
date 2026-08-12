@@ -2,7 +2,7 @@ diff --git a/CMakeLists.txt b/CMakeLists.txt
 index 8fd185f..19a60b8 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -764,9 +764,13 @@ if (BUILD_TESTING)
+@@ -764,9 +764,14 @@ if (BUILD_TESTING)
      add_custom_target(check ${CMAKE_CTEST_COMMAND})
  endif()
  
