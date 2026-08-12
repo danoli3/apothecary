@@ -6,7 +6,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "android")
+FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "watchos" "android")
 FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
@@ -341,7 +341,7 @@ function build() {
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-        if [[ "$TYPE" =~ ^(ios|xros|catos|watchos)$ ]]; then
+        if [ "$TYPE" == "ios" ]; then
             export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
             OPENSSL_ROOT="$LIBS_ROOT/openssl/"
             OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
@@ -353,7 +353,8 @@ function build() {
                 -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
                 -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
         else
-            # Use Apple's native Secure Transport backend on macOS and tvOS.
+            # Use Apple's native Secure Transport backend on macOS, tvOS,
+            # visionOS, CarPlay and watchOS.
             OPENSSL_ROOT="$LIBS_ROOT"
             OPENSSL_INCLUDE_DIR=""
             OPENSSL_LIBRARY=""
@@ -457,20 +458,34 @@ function build() {
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd "Release/lib/"
             # Rename with prefixes (including library origin to avoid duplicates)
-            mkdir -p curl
-            mv libcurl.a curl/libcurl.a
-            cd curl
-            ar -x libcurl.a
-            for f in *.o; do mv "$f" "curl_${ARCH}_$f"; done
-            for obj in *.o; do
-                if [ -z "$(nm "$obj")" ]; then
-                    echo "Removing empty object file: $obj"
-                    rm -f "$obj"
+            rm -rf curl
+            mkdir curl
+            mv libcurl.a curl/libcurl-original.a
+            CURL_ARCHS=$(lipo -archs curl/libcurl-original.a)
+            for CURL_ARCH in $CURL_ARCHS; do
+                mkdir "curl/$CURL_ARCH"
+                if [ "$(echo "$CURL_ARCHS" | wc -w | tr -d ' ')" -gt 1 ]; then
+                    lipo curl/libcurl-original.a -thin "$CURL_ARCH" -output "curl/$CURL_ARCH/libcurl.a"
+                else
+                    cp curl/libcurl-original.a "curl/$CURL_ARCH/libcurl.a"
                 fi
+                cd "curl/$CURL_ARCH"
+                ar -x libcurl.a
+                rm libcurl.a
+                for f in *.o; do mv "$f" "curl_${ARCH}_${CURL_ARCH}_$f"; done
+                for obj in *.o; do
+                    if [ -z "$(nm "$obj")" ]; then
+                        echo "Removing empty object file: $obj"
+                        rm -f "$obj"
+                    fi
+                done
+                ar rcs "../../libcurl_${CURL_ARCH}.a" curl_${ARCH}_${CURL_ARCH}_*.o
+                cd ../..
             done
-            ar rcs "../libcurl.a" curl_${ARCH}_*.o
+            lipo -create libcurl_*.a -output libcurl.a
+            rm -f libcurl_*.a
             echo "Verifying libcurl.a.:"
-            lipo -info "libcurl.a"
+            lipo -info libcurl.a
             rm -rf curl
             cd ../..
         cd ..
