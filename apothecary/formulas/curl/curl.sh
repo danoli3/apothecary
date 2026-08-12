@@ -11,13 +11,13 @@ FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
-VER=8.19.0
-VER_D=8_19_0
-SHA1="f15ff190a787ab21402b493984e636209de9e182"
-SHA256="2a2c11db4c122691aa23b4363befda1bfd801770bfebf41e1d21cee4f2ab0f71"
+VER=8.21.0
+VER_D=8_21_0
+SHA1="c4a973118684745cb03c38987d131ccbce9e7ab1"
+SHA256="d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
 CACERT_DATE=2026-07-16
 CACERT_SHA256="3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
-BUILD_ID=3
+BUILD_ID=4
 DEFINES=""
 USE_OPENSSL=ON
 
@@ -64,12 +64,13 @@ function prepare() {
     apothecaryDepend copy openssl
 
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        patch -p1 <"$FORMULA_DIR/apple-patch.diff"
-        if [ $? -ne 0 ]; then
+        if grep -q 'char \*input = getpass(prompt);' src/tool_paramhlp.c; then
+            echo "apple-patch.diff already applied"
+        elif patch --batch --forward -p1 <"$FORMULA_DIR/apple-patch.diff"; then
+            echo "apple-patch.diff applied successfully"
+        else
             echo "Failed to apply apple-patch.diff"
             exit 1
-        else
-            echo "apple-patch.diff applied successfully"
         fi
     fi
     echo "prepared"
@@ -138,7 +139,12 @@ function build() {
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=OFF -DUSE_OPENSSL=OFF -DCURL_USE_SCHANNEL=ON"
         fi
 
-        export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig;${PKG_CONFIG_PATH};${OF_LIBS_OPENSSL}/lib/$TYPE/$PLATFORM;${ZLIB_ROOT}/lib/$TYPE/$PLATFORM;${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
+        # The Visual Studio build runs from an MSYS2 shell in CI. Do not let
+        # pkg-config inject MinGW's native headers (for example vadefs.h) into
+        # an MSVC project, especially when cross-compiling for ARM64/ARM64EC.
+        unset PKG_CONFIG_PATH
+        unset PKG_CONFIG_SYSTEM_INCLUDE_PATH
+        unset PKG_CONFIG_SYSTEM_LIBRARY_PATH
 
         DEFS="-DLIBRARY_SUFFIX=${ARCH} \
             -DCMAKE_BUILD_TYPE=Release \
@@ -151,8 +157,8 @@ function build() {
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_INSTALL_INCLUDEDIR=include"
         cmake .. ${DEFS} \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1" \
             -DCMAKE_CXX_FLAGS_RELEASE="-DUSE_PTHREADS=1 " \
             -DCMAKE_C_FLAGS_RELEASE="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
             -DCMAKE_CPP_FLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}" \
@@ -170,11 +176,12 @@ function build() {
             -DENABLE_UNICODE=ON \
             ${OPENSSL_DEFS} \
             -DUSE_SSLEAY=ON \
-            -DUSE_NGHTTP2=ON \
+            -DUSE_NGHTTP2=OFF \
             -DUSE_OPENSSL=ON \
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
+            -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
             -DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
@@ -183,6 +190,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_BROTLI=ON \
+            -DCURL_ZSTD=OFF \
             -DBROTLIDEC_LIBRARY=${LIBBROTLI_DEC_LIB} \
             -DBROTLICOMMON_LIBRARY=${LIBBROTLI_COMMON_LIB} \
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
@@ -253,8 +261,8 @@ function build() {
             -DANDROID_TOOLCHAIN=clang \
             -DANDROID_NDK_ROOT=$ANDROID_NDK_ROOT \
             -DENABLE_VISIBILITY=OFF \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
             -DHAVE_GETPASS_R=0 \
             -DCURL_USE_LIBSSH2=OFF \
@@ -381,8 +389,8 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCURL_CA_BUNDLE="${CACERT_PATH}" \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
-            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -DOPENSSL_NO_ENGINE ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
+            -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
             -DHAVE_GETPASS_R=0 \
             -DCURL_USE_LIBSSH2=OFF \
