@@ -3,7 +3,7 @@
 # openssl
 
 # define the version
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
+FORMULA_TYPES=("vs" "osx" "ios" "tvos" "xros" "catos" "watchos" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
 # OpenSSL 4.0.1 + danoli3/openssl-cmake branch 4.0 (test pin for PR #562)
