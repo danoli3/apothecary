@@ -8,6 +8,9 @@
 
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "android")
 FORMULA_DEPENDS=("openssl" "zlib" "brotli")
+if [ "$TYPE" == "vs" ]; then
+    FORMULA_DEPENDS+=("nghttp2")
+fi
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
@@ -17,7 +20,7 @@ SHA1="c4a973118684745cb03c38987d131ccbce9e7ab1"
 SHA256="d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
 CACERT_DATE=2026-07-16
 CACERT_SHA256="3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
-BUILD_ID=4
+BUILD_ID=5
 DEFINES=""
 USE_OPENSSL=ON
 
@@ -127,6 +130,10 @@ function build() {
         LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
         LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
 
+        NGHTTP2_ROOT="$LIBS_ROOT/nghttp2/"
+        NGHTTP2_INCLUDE_DIR="$NGHTTP2_ROOT/include"
+        NGHTTP2_LIBRARY="$NGHTTP2_ROOT/lib/$TYPE/$PLATFORM/nghttp2.lib"
+
         if [ "$USE_OPENSSL" == "ON" ]; then
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=ON \
                 -DUSE_OPENSSL=ON \
@@ -176,7 +183,10 @@ function build() {
             -DENABLE_UNICODE=ON \
             ${OPENSSL_DEFS} \
             -DUSE_SSLEAY=ON \
-            -DUSE_NGHTTP2=OFF \
+            -DUSE_NGHTTP2=ON \
+            -DNGHTTP2_USE_STATIC_LIBS=ON \
+            -DNGHTTP2_INCLUDE_DIR="$NGHTTP2_INCLUDE_DIR" \
+            -DNGHTTP2_LIBRARY="$NGHTTP2_LIBRARY" \
             -DUSE_OPENSSL=ON \
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -207,6 +217,21 @@ function build() {
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+
+        local curl_library="Release/lib/libcurl.lib"
+        local merged_library="Release/lib/libcurl-merged.lib"
+        local librarian="$VS_BIN_PATH/lib.exe"
+        if [ ! -f "$curl_library" ] || [ ! -f "$NGHTTP2_LIBRARY" ]; then
+            echo "Cannot merge curl and nghttp2: input library missing"
+            exit 1
+        fi
+        "$librarian" /NOLOGO /OUT:"$(cygpath -w "$merged_library")" \
+            "$(cygpath -w "$curl_library")" "$(cygpath -w "$NGHTTP2_LIBRARY")"
+        if [ ! -s "$merged_library" ]; then
+            echo "Failed to create merged libcurl.lib"
+            exit 1
+        fi
+        mv -f "$merged_library" "$curl_library"
         cd ..
 
         rm ${OPENSSL_PATH}/lib/libssl.lib
