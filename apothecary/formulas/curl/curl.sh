@@ -176,7 +176,7 @@ function build() {
             -DENABLE_UNICODE=ON \
             ${OPENSSL_DEFS} \
             -DUSE_SSLEAY=ON \
-            -DUSE_NGHTTP2=ON \
+            -DUSE_NGHTTP2=OFF \
             -DUSE_OPENSSL=ON \
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -190,6 +190,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_BROTLI=ON \
+            -DCURL_ZSTD=OFF \
             -DBROTLIDEC_LIBRARY=${LIBBROTLI_DEC_LIB} \
             -DBROTLICOMMON_LIBRARY=${LIBBROTLI_COMMON_LIB} \
             -DBROTLI_INCLUDE_DIR=${LIBBROTLI_INCLUDE_DIR} \
