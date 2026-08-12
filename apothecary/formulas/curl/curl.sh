@@ -236,7 +236,7 @@ function build() {
             echo "Cannot merge curl and nghttp2: input library missing"
             exit 1
         fi
-        "$librarian" /NOLOGO /OUT:"$(cygpath -w "$merged_library")" \
+        MSYS2_ARG_CONV_EXCL='*' "$librarian" /NOLOGO /OUT:"$(cygpath -w "$merged_library")" \
             "$(cygpath -w "$curl_library")" "$(cygpath -w "$NGHTTP2_LIBRARY")"
         if [ ! -s "$merged_library" ]; then
             echo "Failed to create merged libcurl.lib"
