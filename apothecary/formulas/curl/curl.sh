@@ -50,6 +50,17 @@ function download() {
 function prepare() {
     echo "prepare"
 
+    if [ "$TYPE" == "vs" ]; then
+        if grep -q 'pragma comment(lib, "bcrypt.lib")' lib/rand.c; then
+            echo "windows-system-libs.diff already applied"
+        elif patch --batch --forward -p1 <"$FORMULA_DIR/windows-system-libs.diff"; then
+            echo "windows-system-libs.diff applied successfully"
+        else
+            echo "Failed to apply windows-system-libs.diff"
+            exit 1
+        fi
+    fi
+
     apothecaryDependencies download
 
     # cp -f $FORMULA_DIR/CMakeLists.txt .

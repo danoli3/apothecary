@@ -1,0 +1,13 @@
+diff --git a/lib/rand.c b/lib/rand.c
+--- a/lib/rand.c
++++ b/lib/rand.c
+@@ -35,6 +35,9 @@
+ 
+ #ifdef _WIN32
+ #include <bcrypt.h>
++#ifdef _MSC_VER
++#pragma comment(lib, "bcrypt.lib")
++#endif
+ #ifndef STATUS_SUCCESS
+ #define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
+ #endif
