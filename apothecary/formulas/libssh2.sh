@@ -28,51 +28,79 @@ function prepare() {
 }
 
 function build() {
-    local libs_root
-    libs_root=$(realpath "$LIBS_DIR")
-    local openssl_root="$libs_root/openssl"
-    local zlib_root="$libs_root/zlib"
-    local build_dir="build_${TYPE}_${PLATFORM}"
-    local platform_args=()
+    local LIBS_ROOT
+    LIBS_ROOT=$(realpath "$LIBS_DIR")
+    local OPENSSL_ROOT="$LIBS_ROOT/openssl"
+    local ZLIB_ROOT="$LIBS_ROOT/zlib"
+    local BUILD_DIR="build_${TYPE}_${PLATFORM}"
+    local OPENSSL_ROOT_CMAKE="$OPENSSL_ROOT"
+    local OPENSSL_INCLUDE_CMAKE="$OPENSSL_ROOT/include"
+    local ZLIB_ROOT_CMAKE="$ZLIB_ROOT"
+    local ZLIB_INCLUDE_CMAKE="$ZLIB_ROOT/include"
+    local PLATFORM_ARGS=()
 
     if [ "$TYPE" == "vs" ]; then
         unset PKG_CONFIG_PATH PKG_CONFIG_SYSTEM_INCLUDE_PATH PKG_CONFIG_SYSTEM_LIBRARY_PATH
-        platform_args=(
+        local OPENSSL_SSL_POSIX="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.lib"
+        local OPENSSL_CRYPTO_POSIX="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.lib"
+        local ZLIB_POSIX="$ZLIB_ROOT/lib/$TYPE/$PLATFORM/zlib.lib"
+        if [ ! -f "$OPENSSL_SSL_POSIX" ] || [ ! -f "$OPENSSL_CRYPTO_POSIX" ] || [ ! -f "$ZLIB_POSIX" ]; then
+            echo "Missing packaged dependencies for libssh2 $TYPE/$PLATFORM"
+            exit 1
+        fi
+        local OPENSSL_ROOT_WINDOWS OPENSSL_INCLUDE_WINDOWS OPENSSL_SSL_WINDOWS OPENSSL_CRYPTO_WINDOWS
+        local ZLIB_ROOT_WINDOWS ZLIB_INCLUDE_WINDOWS ZLIB_WINDOWS
+        OPENSSL_ROOT_WINDOWS=$(cygpath -m "$OPENSSL_ROOT")
+        OPENSSL_INCLUDE_WINDOWS=$(cygpath -m "$OPENSSL_ROOT/include")
+        OPENSSL_SSL_WINDOWS=$(cygpath -m "$OPENSSL_SSL_POSIX")
+        OPENSSL_CRYPTO_WINDOWS=$(cygpath -m "$OPENSSL_CRYPTO_POSIX")
+        ZLIB_ROOT_WINDOWS=$(cygpath -m "$ZLIB_ROOT")
+        ZLIB_INCLUDE_WINDOWS=$(cygpath -m "$ZLIB_ROOT/include")
+        ZLIB_WINDOWS=$(cygpath -m "$ZLIB_POSIX")
+        OPENSSL_ROOT_CMAKE="$OPENSSL_ROOT_WINDOWS"
+        OPENSSL_INCLUDE_CMAKE="$OPENSSL_INCLUDE_WINDOWS"
+        ZLIB_ROOT_CMAKE="$ZLIB_ROOT_WINDOWS"
+        ZLIB_INCLUDE_CMAKE="$ZLIB_INCLUDE_WINDOWS"
+        PLATFORM_ARGS=(
             -G "Visual Studio ${VS_VER_GEN}"
             -A "$PLATFORM"
             ${CMAKE_WIN_SDK}
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.lib"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.lib"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.lib"
+            -DOPENSSL_ROOT_DIR:PATH="$OPENSSL_ROOT_WINDOWS"
+            -DOPENSSL_INCLUDE_DIR:PATH="$OPENSSL_INCLUDE_WINDOWS"
+            -DOPENSSL_SSL_LIBRARY:FILEPATH="$OPENSSL_SSL_WINDOWS"
+            -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="$OPENSSL_CRYPTO_WINDOWS"
+            -DZLIB_ROOT:PATH="$ZLIB_ROOT_WINDOWS"
+            -DZLIB_INCLUDE_DIR:PATH="$ZLIB_INCLUDE_WINDOWS"
+            -DZLIB_LIBRARY:FILEPATH="$ZLIB_WINDOWS"
         )
     elif [ "$TYPE" == "android" ]; then
         source "$APOTHECARY_DIR/configure/android_configure.sh" "$ABI" cmake
-        platform_args=(
+        PLATFORM_ARGS=(
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/android.toolchain.cmake"
             -DANDROID_ABI="$ABI"
             -DANDROID_API="$ANDROID_API"
             -DANDROID_NDK_ROOT="$ANDROID_NDK_ROOT"
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.a"
+            -DOPENSSL_SSL_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.a"
+            -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.a"
+            -DZLIB_LIBRARY="$ZLIB_ROOT/lib/$TYPE/$PLATFORM/zlib.a"
         )
     else
-        platform_args=(
+        PLATFORM_ARGS=(
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/ios.toolchain.cmake"
             -DPLATFORM="$PLATFORM"
             -DDEPLOYMENT_TARGET="$MIN_SDK_VER"
             -DENABLE_BITCODE=OFF
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.a"
+            -DOPENSSL_SSL_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.a"
+            -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.a"
+            -DZLIB_LIBRARY="$ZLIB_ROOT/lib/$TYPE/$PLATFORM/zlib.a"
         )
     fi
 
-    rm -rf "$build_dir"
-    cmake -S . -B "$build_dir" \
-        "${platform_args[@]}" \
+    rm -rf "$BUILD_DIR"
+    cmake -S . -B "$BUILD_DIR" \
+        "${PLATFORM_ARGS[@]}" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$build_dir/Release" \
+        -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/Release" \
         -DCMAKE_INSTALL_INCLUDEDIR=include \
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
@@ -83,36 +111,36 @@ function build() {
         -DBUILD_TESTING=OFF \
         -DENABLE_WERROR=OFF \
         -DCRYPTO_BACKEND=OpenSSL \
-        -DOPENSSL_ROOT_DIR="$openssl_root" \
-        -DOPENSSL_INCLUDE_DIR="$openssl_root/include" \
-        -DZLIB_ROOT="$zlib_root" \
-        -DZLIB_INCLUDE_DIR="$zlib_root/include"
+        -DOPENSSL_ROOT_DIR:PATH="$OPENSSL_ROOT_CMAKE" \
+        -DOPENSSL_INCLUDE_DIR:PATH="$OPENSSL_INCLUDE_CMAKE" \
+        -DZLIB_ROOT:PATH="$ZLIB_ROOT_CMAKE" \
+        -DZLIB_INCLUDE_DIR:PATH="$ZLIB_INCLUDE_CMAKE"
 
-    cmake --build "$build_dir" --config Release -j"${PARALLEL_MAKE}" --target install
-    grep -q '^CRYPTO_BACKEND:STRING=OpenSSL$' "$build_dir/CMakeCache.txt" || {
+    cmake --build "$BUILD_DIR" --config Release -j"${PARALLEL_MAKE}" --target install
+    grep -q '^CRYPTO_BACKEND:STRING=OpenSSL$' "$BUILD_DIR/CMakeCache.txt" || {
         echo "libssh2 configured without OpenSSL"
         exit 1
     }
 }
 
 function copy() {
-    local build_dir="build_${TYPE}_${PLATFORM}/Release"
-    local extension=a
-    [ "$TYPE" == "vs" ] && extension=lib
+    local BUILD_DIR="build_${TYPE}_${PLATFORM}/Release"
+    local EXTENSION=a
+    [ "$TYPE" == "vs" ] && EXTENSION=lib
 
     mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM" "$1/license"
-    cp -Rv "$build_dir/include/"* "$1/include/"
-    cp -v "$build_dir/lib/libssh2.$extension" "$1/lib/$TYPE/$PLATFORM/libssh2.$extension"
+    cp -Rv "$BUILD_DIR/include/"* "$1/include/"
+    cp -v "$BUILD_DIR/lib/libssh2.$EXTENSION" "$1/lib/$TYPE/$PLATFORM/libssh2.$EXTENSION"
     cp -v COPYING "$1/license/"
 
     . "$SECURE_SCRIPT"
-    secure "$1/lib/$TYPE/$PLATFORM/libssh2.$extension" "libssh2.pkl" \
+    secure "$1/lib/$TYPE/$PLATFORM/libssh2.$EXTENSION" "libssh2.pkl" \
         "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
 }
 
 function clean() {
-    local build_dir="build_${TYPE}_${PLATFORM}"
-    [ -d "$build_dir" ] && rm -r "$build_dir"
+    local BUILD_DIR="build_${TYPE}_${PLATFORM}"
+    [ -d "$BUILD_DIR" ] && rm -r "$BUILD_DIR"
 }
 
 function load() {

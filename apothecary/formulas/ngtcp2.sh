@@ -28,47 +28,66 @@ function prepare() {
 }
 
 function build() {
-    local libs_root openssl_root build_dir
-    libs_root=$(realpath "$LIBS_DIR")
-    openssl_root="$libs_root/openssl"
-    build_dir="build_${TYPE}_${PLATFORM}"
-    local platform_args=()
+    local LIBS_ROOT OPENSSL_ROOT BUILD_DIR
+    LIBS_ROOT=$(realpath "$LIBS_DIR")
+    OPENSSL_ROOT="$LIBS_ROOT/openssl"
+    BUILD_DIR="build_${TYPE}_${PLATFORM}"
+    local OPENSSL_ROOT_CMAKE="$OPENSSL_ROOT"
+    local OPENSSL_INCLUDE_CMAKE="$OPENSSL_ROOT/include"
+    local PLATFORM_ARGS=()
 
     if [ "$TYPE" == "vs" ]; then
         unset PKG_CONFIG_PATH PKG_CONFIG_SYSTEM_INCLUDE_PATH PKG_CONFIG_SYSTEM_LIBRARY_PATH
-        platform_args=(
+        local OPENSSL_SSL_POSIX="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.lib"
+        local OPENSSL_CRYPTO_POSIX="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.lib"
+        if [ ! -f "$OPENSSL_SSL_POSIX" ] || [ ! -f "$OPENSSL_CRYPTO_POSIX" ]; then
+            echo "Missing packaged OpenSSL libraries for $TYPE/$PLATFORM:"
+            echo "  $OPENSSL_SSL_POSIX"
+            echo "  $OPENSSL_CRYPTO_POSIX"
+            exit 1
+        fi
+        local OPENSSL_ROOT_WINDOWS OPENSSL_INCLUDE_WINDOWS OPENSSL_SSL_WINDOWS OPENSSL_CRYPTO_WINDOWS
+        OPENSSL_ROOT_WINDOWS=$(cygpath -m "$OPENSSL_ROOT")
+        OPENSSL_INCLUDE_WINDOWS=$(cygpath -m "$OPENSSL_ROOT/include")
+        OPENSSL_SSL_WINDOWS=$(cygpath -m "$OPENSSL_SSL_POSIX")
+        OPENSSL_CRYPTO_WINDOWS=$(cygpath -m "$OPENSSL_CRYPTO_POSIX")
+        OPENSSL_ROOT_CMAKE="$OPENSSL_ROOT_WINDOWS"
+        OPENSSL_INCLUDE_CMAKE="$OPENSSL_INCLUDE_WINDOWS"
+        PLATFORM_ARGS=(
             -G "Visual Studio ${VS_VER_GEN}"
             -A "$PLATFORM"
             ${CMAKE_WIN_SDK}
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.lib"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.lib"
+            -DOPENSSL_ROOT_DIR:PATH="$OPENSSL_ROOT_WINDOWS"
+            -DOPENSSL_INCLUDE_DIR:PATH="$OPENSSL_INCLUDE_WINDOWS"
+            -DOPENSSL_SSL_LIBRARY:FILEPATH="$OPENSSL_SSL_WINDOWS"
+            -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="$OPENSSL_CRYPTO_WINDOWS"
         )
     elif [ "$TYPE" == "android" ]; then
         source "$APOTHECARY_DIR/configure/android_configure.sh" "$ABI" cmake
-        platform_args=(
+        PLATFORM_ARGS=(
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/android.toolchain.cmake"
             -DANDROID_ABI="$ABI"
             -DANDROID_API="$ANDROID_API"
             -DANDROID_NDK_ROOT="$ANDROID_NDK_ROOT"
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
+            -DOPENSSL_SSL_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.a"
+            -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.a"
         )
     else
-        platform_args=(
+        PLATFORM_ARGS=(
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/ios.toolchain.cmake"
             -DPLATFORM="$PLATFORM"
             -DDEPLOYMENT_TARGET="$MIN_SDK_VER"
             -DENABLE_BITCODE=OFF
-            -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
-            -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
+            -DOPENSSL_SSL_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.a"
+            -DOPENSSL_CRYPTO_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.a"
         )
     fi
 
-    rm -rf "$build_dir"
-    cmake -S . -B "$build_dir" \
-        "${platform_args[@]}" \
+    rm -rf "$BUILD_DIR"
+    cmake -S . -B "$BUILD_DIR" \
+        "${PLATFORM_ARGS[@]}" \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX="$build_dir/Release" \
+        -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/Release" \
         -DCMAKE_INSTALL_INCLUDEDIR=include \
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
@@ -83,41 +102,41 @@ function build() {
         -DENABLE_WOLFSSL=OFF \
         -DENABLE_WERROR=OFF \
         -DBUILD_TESTING=OFF \
-        -DOPENSSL_ROOT_DIR="$openssl_root" \
-        -DOPENSSL_INCLUDE_DIR="$openssl_root/include"
+        -DOPENSSL_ROOT_DIR:PATH="$OPENSSL_ROOT_CMAKE" \
+        -DOPENSSL_INCLUDE_DIR:PATH="$OPENSSL_INCLUDE_CMAKE"
 
-    grep -q '^HAVE_SSL_SET_QUIC_TLS_CBS:INTERNAL=1$' "$build_dir/CMakeCache.txt" || {
+    grep -q '^HAVE_SSL_SET_QUIC_TLS_CBS:INTERNAL=1$' "$BUILD_DIR/CMakeCache.txt" || {
         echo "ngtcp2 could not verify the OpenSSL QUIC API"
         exit 1
     }
-    cmake --build "$build_dir" --config Release -j"${PARALLEL_MAKE}" --target install
+    cmake --build "$BUILD_DIR" --config Release -j"${PARALLEL_MAKE}" --target install
 }
 
 function copy() {
-    local build_dir="build_${TYPE}_${PLATFORM}/Release"
-    local extension=a
-    local transport_name=libngtcp2.a
-    local crypto_name=libngtcp2_crypto_ossl.a
+    local BUILD_DIR="build_${TYPE}_${PLATFORM}/Release"
+    local EXTENSION=a
+    local TRANSPORT_NAME=libngtcp2.a
+    local CRYPTO_NAME=libngtcp2_crypto_ossl.a
     if [ "$TYPE" == "vs" ]; then
-        extension=lib
-        transport_name=ngtcp2.lib
-        crypto_name=ngtcp2_crypto_ossl.lib
+        EXTENSION=lib
+        TRANSPORT_NAME=ngtcp2.lib
+        CRYPTO_NAME=ngtcp2_crypto_ossl.lib
     fi
 
     mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM" "$1/license"
-    cp -Rv "$build_dir/include/"* "$1/include/"
-    cp -v "$build_dir/lib/$transport_name" "$1/lib/$TYPE/$PLATFORM/ngtcp2.$extension"
-    cp -v "$build_dir/lib/$crypto_name" "$1/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.$extension"
+    cp -Rv "$BUILD_DIR/include/"* "$1/include/"
+    cp -v "$BUILD_DIR/lib/$TRANSPORT_NAME" "$1/lib/$TYPE/$PLATFORM/ngtcp2.$EXTENSION"
+    cp -v "$BUILD_DIR/lib/$CRYPTO_NAME" "$1/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.$EXTENSION"
     cp -v COPYING "$1/license/"
 
     . "$SECURE_SCRIPT"
-    secure "$1/lib/$TYPE/$PLATFORM/ngtcp2.$extension" "ngtcp2.pkl" \
+    secure "$1/lib/$TYPE/$PLATFORM/ngtcp2.$EXTENSION" "ngtcp2.pkl" \
         "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
 }
 
 function clean() {
-    local build_dir="build_${TYPE}_${PLATFORM}"
-    [ -d "$build_dir" ] && rm -r "$build_dir"
+    local BUILD_DIR="build_${TYPE}_${PLATFORM}"
+    [ -d "$BUILD_DIR" ] && rm -r "$BUILD_DIR"
 }
 
 function load() {
