@@ -48,8 +48,16 @@ jobs:
       CFLAGS: -O2 -fPIC ${{ matrix.arch_flags }}
       CXXFLAGS: -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=1 ${{ matrix.arch_flags }}
     steps:
+      - name: Restore APT package cache
+        uses: actions/cache@v5
+        with:
+          path: /github/home/.cache/apt/archives
+          key: apt-focal-${{ matrix.arch }}-gcc10-v1
+
       - name: Install build tools and GCC 10
         shell: bash
+        env:
+          APT_ARCHIVES: /github/home/.cache/apt/archives
         run: |
           set -euo pipefail
 
@@ -67,23 +75,12 @@ jobs:
             done
           }
 
+          install -d -m 755 "$APT_ARCHIVES/partial"
           retry apt-get update
-          retry env DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common ca-certificates git sudo gnupg dirmngr
-
-          install -d -m 700 "$HOME/.gnupg"
-          printf '%s\n' \
-            'keyserver hkp://keyserver.ubuntu.com:80' \
-            'connect-timeout 10' \
-            > "$HOME/.gnupg/dirmngr.conf"
-          printf '%s\n' \
-            'keyserver hkp://keyserver.ubuntu.com:80' \
-            'keyserver-options timeout=10' \
-            > "$HOME/.gnupg/gpg.conf"
-          gpgconf --kill dirmngr || true
-
-          retry add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          retry apt-get update
-          retry env DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-10 g++-10 gfortran-10 binutils file curl unzip bzip2 autoconf automake build-essential ccache coreutils dos2unix flex gperf libtool make ninja-build pkg-config python3 python3-pip xz-utils freeglut3-dev libasound2-dev libc6-dev libegl1-mesa-dev libfftw3-dev libgl1-mesa-dev libglu1-mesa-dev libjack-dev libpulse-dev libwayland-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev oss4-dev xorg-dev
+          retry env DEBIAN_FRONTEND=noninteractive apt-get \
+            -o "Dir::Cache::archives=$APT_ARCHIVES" \
+            -o Acquire::Retries=5 \
+            install -y ca-certificates git sudo gcc-10 g++-10 gfortran-10 binutils file curl unzip bzip2 autoconf automake build-essential ccache coreutils dos2unix flex gperf libtool make ninja-build pkg-config python3 python3-pip xz-utils freeglut3-dev libasound2-dev libc6-dev libegl1-mesa-dev libfftw3-dev libgl1-mesa-dev libglu1-mesa-dev libjack-dev libpulse-dev libwayland-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev oss4-dev xorg-dev
           python3 -m pip install --no-cache-dir cmake==3.31.6
           cmake --version
           gcc-10 --version

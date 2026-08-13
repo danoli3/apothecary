@@ -15,7 +15,7 @@ OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=6
+BUILD_ID=7
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -53,6 +53,7 @@ DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_STATIC_ENGINE=OFF \
 	-DOPENSSL_STATIC_ENGINE=ON \
 	-DOPENSSL_THREADS=ON \
+	-DOPENSSL_RAND_SEED=os \
 	-DBUILD_TESTING=OFF \
 	-DOPENSSL_NO_AFALGENG=ON \
 	-DOPENSSL_ZLIB=ON \
@@ -119,6 +120,15 @@ function prepare() {
         echo "disable-apps.patch applied successfully"
     else
         echo "Failed to apply disable-apps.patch"
+        exit 1
+    fi
+
+    if grep -q 'OPENSSL_RAND_SEED_.*CACHE BOOL.*FORCE)' CMakeLists.txt; then
+        echo "rand-seed.patch already applied"
+    elif patch --batch --forward -p1 <"$FORMULA_DIR/rand-seed.patch"; then
+        echo "rand-seed.patch applied successfully"
+    else
+        echo "Failed to apply rand-seed.patch"
         exit 1
     fi
 

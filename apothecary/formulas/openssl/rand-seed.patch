@@ -1,0 +1,8 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -179 +179 @@ foreach (_SEED IN ITEMS getrandom devrandom os egd none rdcpu librandom)
+-        set(OPENSSL_RAND_SEED_${_SEED_UPPER} ON CACHE BOOL "enable OpenSSL Random Generator ${_SEED} (automatically set, use OPENSSL_RAND_SEED if this is to be modified)")
++        set(OPENSSL_RAND_SEED_${_SEED_UPPER} ON CACHE BOOL "enable OpenSSL Random Generator ${_SEED} (automatically set, use OPENSSL_RAND_SEED if this is to be modified)" FORCE)
+@@ -188 +188 @@ foreach (_SEED IN ITEMS getrandom devrandom os egd none rdcpu librandom)
+-        set(OPENSSL_RAND_SEED_${_SEED_UPPER} OFF CACHE BOOL "enable OpenSSL Random Generator ${_SEED} (automatically set, use OPENSSL_RAND_SEED if this is to be modified)")
++        set(OPENSSL_RAND_SEED_${_SEED_UPPER} OFF CACHE BOOL "enable OpenSSL Random Generator ${_SEED} (automatically set, use OPENSSL_RAND_SEED if this is to be modified)" FORCE)
