@@ -13,15 +13,9 @@ ROOT=$(
 )/../../
 APOTHECARY_PATH=$ROOT/apothecary
 
-BUNDLE_NO="$1"
-# Check if the argument is provided
-if [ -z "${BUNDLE_NO+x}" ]; then
-    echo "No argument provided."
-    export BUNDLE=1
-else
-    echo "Argument 1: $BUNDLE_NO"
-    export BUNDLE=$BUNDLE_NO
-fi
+BUNDLE_NO="${1:-${BUNDLE:-1}}"
+echo "Bundle: $BUNDLE_NO"
+export BUNDLE="$BUNDLE_NO"
 
 export TARGET=xros
 export ARCH=arm64
@@ -32,7 +26,7 @@ echo "Architecture: $ARCH"
 echo "Bundle: $BUNDLE"
 echo "Apothecary path: $APOTHECARY_PATH"
 
-source ${ROOT}./scripts/calculate_formulas.sh
+source "${ROOT}./scripts/calculate_formulas.sh" "$TARGET" "$BUNDLE"
 if [ -z "$FORMULAS" ]; then
     echo "No formulas to framework"
     exit 0
