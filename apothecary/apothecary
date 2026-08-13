@@ -1991,7 +1991,7 @@ function frameworkFormula() {
       lipo -info "$lib_a"
       #xcrun codesign --sign - "$lib_a" || true
       . "$SECURE_SCRIPT"
-      secure "$lib_a" "$LIB_NAME" "$VERSION"
+      secure "$lib_a" "$LIB_NAME" "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
     done
 
     echoSuccess " xcframework for [$TYPE] transferring to [$XDIR]"
@@ -2276,7 +2276,7 @@ function xframeworkFormula() {
       lipo -info "$lib_a"
       #xcrun codesign --sign - "$lib_a" || true
       . "$SECURE_SCRIPT"
-      secure "$lib_a" "$LIB_NAME" "$VERSION"
+      secure "$lib_a" "$LIB_NAME" "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
     done
 
     echo " -- deploy to xcframework [$X_LIBS]..."
