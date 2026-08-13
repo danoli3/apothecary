@@ -103,26 +103,35 @@ function build() {
     echo "glon12: meson=${meson_win} ninja=${ninja_win}"
 
     local bat="glon12_vs_build.bat"
+    # vswhere inside the .bat so we use the same VS that owns cl, then
+    # refuse meson until LIB can resolve MSVCRT.lib (LNK1104 otherwise).
     cat >"$bat" <<EOF
 @echo off
-setlocal
-echo glon12 bat: calling vcvarsall ${varch}
-call "${vcvars}" ${varch}
-if errorlevel 1 (
-  echo vcvarsall ${varch} failed, trying arm64
-  call "${vcvars}" arm64
+setlocal EnableExtensions
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+set "VSDIR="
+if exist "%VSWHERE%" (
+  "%VSWHERE%" -latest -products * -property installationPath > "%TEMP%\glon12_vsdir.txt"
+  set /p VSDIR=<"%TEMP%\glon12_vsdir.txt"
 )
-if errorlevel 1 (
-  echo vcvarsall arm64 failed, trying amd64_arm64
-  call "${vcvars}" amd64_arm64
-)
-if errorlevel 1 (
-  echo vcvarsall amd64_arm64 failed, trying x64
-  call "${vcvars}" x64
-)
+if not defined VSDIR set "VSDIR=${vsroot}"
+echo glon12 bat: VSDIR=%VSDIR%
+set "VCVARS=%VSDIR%\VC\Auxiliary\Build\vcvarsall.bat"
+if not exist "%VCVARS%" set "VCVARS=${vcvars}"
+echo glon12 bat: VCVARS=%VCVARS%
+call "%VCVARS%" ${varch}
+if errorlevel 1 call "%VCVARS%" arm64
+if errorlevel 1 call "%VCVARS%" amd64_arm64
+if errorlevel 1 call "%VCVARS%" x64
 echo INCLUDE=%INCLUDE%
+echo LIB=%LIB%
 where cl
+where link
 set "PATH=${flex_win};%PATH%"
+if "%LIB%"=="" (
+  echo ERROR: LIB is empty after vcvarsall - install MSVC + Windows SDK for this arch
+  exit /b 1
+)
 cd /d "${src_win}"
 "${meson_win}" setup "${bdir_win}" --backend=${meson_backend} --buildtype=release --prefix="${prefix_win}" -Dgallium-drivers=d3d12 -Dgallium-d3d12-video=disabled -Dzlib=disabled -Dllvm=disabled -Dplatforms=windows -Dbuild-tests=false
 if errorlevel 1 exit /b 1
