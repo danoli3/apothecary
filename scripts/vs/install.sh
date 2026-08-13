@@ -43,24 +43,29 @@ echoDots() {
     done
 }
 
-# winget exits non-zero when the package is already installed / no upgrade.
-# That is not a failure for this script.
+# Git Bash often has no LOCALAPPDATA and no Python on PATH after winget.
+WIN_USER="${USERNAME:-${USER:-}}"
+WIN_LOCAL="${LOCALAPPDATA:-$HOME/AppData/Local}"
+export PATH="$WIN_LOCAL/Programs/Python/Python312:$WIN_LOCAL/Programs/Python/Python312/Scripts:$WIN_LOCAL/Programs/Python/Python313:$WIN_LOCAL/Programs/Python/Python313/Scripts:/c/Program Files/Python312:/c/Program Files/Python312/Scripts:/c/Program Files/Meson:/c/Program Files/Ninja:$PATH"
+
+# winget: already-installed is ok. Missing package id is not.
 winget_ensure() {
     local id="$1"
     if winget list -e --id "$id" >/dev/null 2>&1; then
         echo "winget: $id already installed"
         return 0
     fi
-    winget install -e --id "$id" --accept-package-agreements --accept-source-agreements || {
-        echo "winget: $id install returned $? (already installed is ok)"
+    if winget install -e --id "$id" --accept-package-agreements --accept-source-agreements; then
         return 0
-    }
+    fi
+    echo "winget: $id not installed (id may be wrong or already present)"
+    return 0
 }
 
 if command -v winget >/dev/null 2>&1; then
     winget_ensure Microsoft.WindowsTerminal
     winget_ensure Ninja-build.Ninja
-    winget_ensure mesonbuild.Meson
+    winget_ensure mesonbuild.meson
     winget_ensure jqlang.jq
     winget_ensure Kitware.CMake
     winget_ensure Oracle.JDK.17
@@ -73,35 +78,40 @@ if command -v pacman >/dev/null 2>&1; then
         meson \
         mingw-w64-x86_64-ninja \
         unzip \
-        python3
+        python3 || true
 fi
 
-# Real interpreter only. WindowsApps\python.exe is a Store stub that prints
-# "Python was not found" and exits 9009 — command -v still finds it.
+# Real interpreter only. WindowsApps\python.exe is a Store stub.
 python_ok() {
     local bin="$1"
-    [ -n "$bin" ] || return 1
+    [ -n "$bin" ] && [ -x "$bin" ] || [ -f "$bin" ] || return 1
     "$bin" -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)" >/dev/null 2>&1
 }
 
 find_python() {
     local cand
+    shopt -s nullglob
     for cand in \
-        "${LOCALAPPDATA}/Programs/Python/Python312/python.exe" \
-        "${LOCALAPPDATA}/Programs/Python/Python313/python.exe" \
-        "/c/Program Files/Python312/python.exe" \
-        "/c/Program Files/Python313/python.exe"
+        "$WIN_LOCAL/Programs/Python/Python312/python.exe" \
+        "$WIN_LOCAL/Programs/Python/Python313/python.exe" \
+        "$HOME/AppData/Local/Programs/Python/Python312/python.exe" \
+        "/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/python.exe" \
+        /c/Program\ Files/Python312/python.exe \
+        /c/Program\ Files/Python313/python.exe \
+        /c/Windows/py.exe \
+        /c/Windows/System32/py.exe
     do
         if python_ok "$cand"; then
             echo "$cand"
             return 0
         fi
     done
+    shopt -u nullglob
     if command -v py >/dev/null 2>&1 && py -3 -c "import sys" >/dev/null 2>&1; then
         echo "py"
         return 0
     fi
-    for cand in python3 python; do
+    for cand in python3; do
         if command -v "$cand" >/dev/null 2>&1 && python_ok "$(command -v "$cand")"; then
             command -v "$cand"
             return 0
@@ -110,28 +120,41 @@ find_python() {
     return 1
 }
 
-if [ "${GITHUB_ACTIONS:-0}" = 0 ]; then
-    PY="$(find_python || true)"
-    if [ "$PY" = "py" ]; then
-        py -3 -m ensurepip --upgrade
-        py -3 -m pip install --upgrade meson ninja numpy
-    elif [ -n "$PY" ]; then
-        "$PY" -m ensurepip --upgrade
-        "$PY" -m pip install --upgrade meson ninja numpy
-    else
-        echo "python is not on PATH (Store stub does not count). Skipping pip meson/ninja."
-        echo "Open a new shell after winget, or add Python312 to PATH."
-    fi
+PY=""
+PY="$(find_python || true)"
+if [ "$PY" = "py" ]; then
+    py -3 -m ensurepip --upgrade || true
+    py -3 -m pip install --upgrade meson ninja numpy
+elif [ -n "$PY" ]; then
+    "$PY" -m ensurepip --upgrade || true
+    "$PY" -m pip install --upgrade meson ninja numpy
+    PYDIR="$(dirname "$PY")"
+    export PATH="$PYDIR:$PYDIR/Scripts:$PATH"
+else
+    echo "python: no real interpreter found (Store stub ignored)."
+    echo "Add:  $WIN_LOCAL/Programs/Python/Python312"
+    echo "and:  $WIN_LOCAL/Programs/Python/Python312/Scripts"
+    echo "or disable Settings > Apps > App execution aliases > python.exe"
 fi
 
 echo
 echo "=== apothecary VS host tools ==="
-command -v meson >/dev/null && meson --version || echo "meson: MISSING (open a new shell after winget, or: pip install meson ninja)"
-command -v ninja >/dev/null && ninja --version || echo "ninja: MISSING"
-if PY="$(find_python || true)"; then
-    if [ "$PY" = "py" ]; then py -3 --version; else "$PY" --version; fi
+if command -v meson >/dev/null 2>&1; then
+    echo "meson: $(meson --version) ($(command -v meson))"
 else
-    echo "python: MISSING (disable Settings > Apps > App execution aliases > python.exe)"
+    echo "meson: MISSING"
+fi
+if command -v ninja >/dev/null 2>&1; then
+    echo "ninja: $(ninja --version) ($(command -v ninja))"
+else
+    echo "ninja: MISSING"
+fi
+if [ "$PY" = "py" ]; then
+    echo "python: $(py -3 --version 2>&1) (py -3)"
+elif [ -n "$PY" ]; then
+    echo "python: $("$PY" --version 2>&1) ($PY)"
+else
+    echo "python: MISSING"
 fi
 echo
 echo "Then (Git Bash / MSYS2, from repo root):"
