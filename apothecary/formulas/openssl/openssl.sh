@@ -15,7 +15,7 @@ OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=7
+BUILD_ID=8
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -23,8 +23,9 @@ MIRROR=https://www.openssl.org
 GIT_URL=https://github.com/danoli3/openssl-cmake
 
 # openssl-cmake uses OPENSSL_ASM (not OPENSSL_NO_ASM) as the master switch.
-# Passing only OPENSSL_NO_ASM=ON is overridden when Perl is present (ASM defaults ON),
-# which breaks macOS x86_64 / some Windows static links (missing asm symbols).
+# Enable assembly where the platform toolchain supports it. The Visual Studio
+# branch below still overrides this because its static build has no complete
+# NASM/MASM pipeline.
 DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_COMP=ON \
 	-DOPENSSL_NO_EC_NISTP_64_GCC_128=ON \
@@ -39,8 +40,8 @@ DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_NO_UNIT_TEST=ON \
 	-DOPENSSL_NO_WEAK_SSL_CIPHERS=OFF \
 	-DOPENSSL_NO_ASAN=ON \
-	-DOPENSSL_ASM=OFF \
-	-DOPENSSL_NO_ASM=ON \
+	-DOPENSSL_ASM=ON \
+	-DOPENSSL_NO_ASM=OFF \
 	-DOPENSSL_NO_CRYPTO_MDEBUG=ON \
 	-DOPENSSL_NO_DEVCRYPTOENG=ON \
 	-DOPENSSL_NO_EGD=ON \
@@ -346,9 +347,8 @@ function build() {
         ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
 
         # Always disable ASM for VS static OF builds.
-        # OPENSSL_ASM=ON on x64 (previous) re-enabled asm after global OFF and
-        # fails without a complete NASM/MASM pipeline under openssl-cmake 4.x.
-        # Arm64/arm64ec already forced OFF; keep one path for all VS arches.
+        # The VS static build fails without a complete NASM/MASM pipeline under
+        # openssl-cmake 4.x; keep one ASM-disabled path for every VS architecture.
         DEFINES="${DEFINES} -DOPENSSL_ASM=OFF -DOPENSSL_NO_ASM=ON"
 
         mkdir -p "build_${TYPE}_${ARCH}"
