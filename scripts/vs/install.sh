@@ -44,26 +44,44 @@ echoDots() {
 }
 
 if command -v winget >/dev/null 2>&1; then
-    winget install -e --id Microsoft.WindowsTerminal
-    winget install Ninja-build.Ninja
-    winget install jqlang.jq
-    winget install --id Kitware.CMake -e
-    winget install --id Oracle.JDK.17 -e
-    winget install Python.Python.3
+    winget install -e --id Microsoft.WindowsTerminal --accept-package-agreements --accept-source-agreements
+    winget install -e --id Ninja-build.Ninja --accept-package-agreements --accept-source-agreements
+    winget install -e --id mesonbuild.Meson --accept-package-agreements --accept-source-agreements
+    winget install -e --id jqlang.jq --accept-package-agreements --accept-source-agreements
+    winget install -e --id Kitware.CMake --accept-package-agreements --accept-source-agreements
+    winget install -e --id Oracle.JDK.17 --accept-package-agreements --accept-source-agreements
+    winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+fi
+
+# MSYS2 / Git-Bash-with-pacman (same packages CI uses for GLon12)
+if command -v pacman >/dev/null 2>&1; then
+    pacman -S --noconfirm --needed \
+        meson \
+        mingw-w64-x86_64-ninja \
+        unzip \
+        python3
 fi
 
 if [ "${GITHUB_ACTIONS:-0}" = 0 ]; then
 
     if command -v python >/dev/null 2>&1; then
         python -m ensurepip --upgrade
-        echo "python is installed. Proceeding to install numpy..."
-        python -m pip install numpy
+        python -m pip install --upgrade meson ninja numpy
     elif command -v python3 >/dev/null 2>&1; then
         python3 -m pip --version 2>/dev/null
-        echo "python3 is installed. Proceeding to install numpy..."
-        python3 -m pip install numpy
+        python3 -m pip install --upgrade meson ninja numpy
     else
-        echo "python is not installed. Skipping numpy installation."
+        echo "python is not installed. Skipping pip meson/ninja/numpy."
     fi
 
 fi
+
+echo
+echo "=== apothecary VS host tools ==="
+command -v meson >/dev/null && meson --version || echo "meson: MISSING (open a new shell after winget, or: pip install meson ninja)"
+command -v ninja >/dev/null && ninja --version || echo "ninja: MISSING"
+command -v python3 >/dev/null && python3 --version || command -v python >/dev/null && python --version || echo "python: MISSING"
+echo
+echo "Then (Git Bash / MSYS2, from repo root):"
+echo "  NO_COLOR=1 UI_ANIM=0 TYPE=vs ARCH=64 ./apo update glon12"
+echo "  NO_COLOR=1 UI_ANIM=0 TYPE=vs ARCH=64 ./apo update angle"
