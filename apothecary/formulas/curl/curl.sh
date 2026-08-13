@@ -65,48 +65,48 @@ function prepare() {
 }
 
 function verify_required_features() {
-    local config_header="$1"
-    local feature
-    for feature in USE_NGHTTP2 USE_NGTCP2 USE_NGHTTP3 USE_LIBSSH2; do
-        if ! grep -q "^#define ${feature} 1$" "$config_header"; then
-            echo "curl configured without required feature ${feature}"
+    local CONFIG_HEADER="$1"
+    local FEATURE
+    for FEATURE in USE_NGHTTP2 USE_NGTCP2 USE_NGHTTP3 USE_LIBSSH2; do
+        if ! grep -q "^#define ${FEATURE} 1$" "$CONFIG_HEADER"; then
+            echo "curl configured without required feature ${FEATURE}"
             exit 1
         fi
     done
 }
 
 function merge_unix_curl_dependencies() {
-    local curl_library="$1"
+    local CURL_LIBRARY="$1"
     shift
 
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        local merged_library="${curl_library}.merged"
-        /usr/bin/libtool -static -o "$merged_library" "$curl_library" "$@"
-        mv "$merged_library" "$curl_library"
+        local MERGED_LIBRARY="${CURL_LIBRARY}.merged"
+        /usr/bin/libtool -static -o "$MERGED_LIBRARY" "$CURL_LIBRARY" "$@"
+        mv "$MERGED_LIBRARY" "$CURL_LIBRARY"
     else
-        local merge_script="${curl_library}.mri"
-        local merged_library="${curl_library}.merged"
-        local archiver="$TOOLCHAIN_PATH/llvm-ar"
-        local ranlib="$TOOLCHAIN_PATH/llvm-ranlib"
-        if [ ! -x "$archiver" ] || [ ! -x "$ranlib" ]; then
+        local MERGE_SCRIPT="${CURL_LIBRARY}.mri"
+        local MERGED_LIBRARY="${CURL_LIBRARY}.merged"
+        local ARCHIVER="$TOOLCHAIN_PATH/llvm-ar"
+        local RANLIB="$TOOLCHAIN_PATH/llvm-ranlib"
+        if [ ! -x "$ARCHIVER" ] || [ ! -x "$RANLIB" ]; then
             echo "Unable to find the Android NDK archive tools"
             exit 1
         fi
-        rm -f "$merged_library" "$merge_script"
+        rm -f "$MERGED_LIBRARY" "$MERGE_SCRIPT"
         {
-            echo "create $merged_library"
-            echo "addlib $curl_library"
-            local dependency
-            for dependency in "$@"; do
-                echo "addlib $dependency"
+            echo "create $MERGED_LIBRARY"
+            echo "addlib $CURL_LIBRARY"
+            local DEPENDENCY
+            for DEPENDENCY in "$@"; do
+                echo "addlib $DEPENDENCY"
             done
             echo save
             echo end
-        } >"$merge_script"
-        "$archiver" -M <"$merge_script"
-        "$ranlib" "$merged_library"
-        mv "$merged_library" "$curl_library"
-        rm -f "$merge_script"
+        } >"$MERGE_SCRIPT"
+        "$ARCHIVER" -M <"$MERGE_SCRIPT"
+        "$RANLIB" "$MERGED_LIBRARY"
+        mv "$MERGED_LIBRARY" "$CURL_LIBRARY"
+        rm -f "$MERGE_SCRIPT"
     fi
 }
 
@@ -424,6 +424,7 @@ function build() {
                 fi
             done
             ar rcs "../libcurl.a" curl_${ARCH}_*.o
+            cd ..
             rm -rf curl
             cd ../..
         merge_unix_curl_dependencies Release/lib/libcurl.a \
