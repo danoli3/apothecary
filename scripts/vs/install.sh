@@ -70,6 +70,7 @@ if command -v winget >/dev/null 2>&1; then
     winget_ensure Microsoft.WindowsTerminal
     winget_ensure Ninja-build.Ninja
     winget_ensure mesonbuild.meson
+    winget_ensure charmbracelet.Gum
     winget_ensure jqlang.jq
     winget_ensure Kitware.CMake
     winget_ensure Oracle.JDK.17
@@ -81,6 +82,7 @@ if command -v pacman >/dev/null 2>&1; then
     pacman -S --noconfirm --needed \
         meson \
         mingw-w64-x86_64-ninja \
+        mingw-w64-x86_64-gum \
         unzip \
         python3 || true
 fi
@@ -148,6 +150,11 @@ if command -v meson >/dev/null 2>&1; then
     echo "meson: $(meson --version) ($(command -v meson))"
 else
     echo "meson: MISSING"
+fi
+if command -v gum >/dev/null 2>&1; then
+    echo "gum: $(gum --version 2>/dev/null || echo ok) ($(command -v gum))"
+else
+    echo "gum: MISSING (apo menus work without it)"
 fi
 if command -v ninja >/dev/null 2>&1; then
     echo "ninja: $(ninja --version) ($(command -v ninja))"

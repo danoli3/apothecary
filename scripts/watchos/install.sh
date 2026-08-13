@@ -1,7 +1,7 @@
 # Silent update to prevent long logs
 brew update >/dev/null
 
-brew install --formula cmake coreutils autoconf automake ccache gtk-doc brotli libtool wget fontconfig bash
+brew install --formula cmake coreutils autoconf automake ccache gtk-doc brotli libtool wget fontconfig bash gum
 
 # brew reinstall libtool
 
