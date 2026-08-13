@@ -25,7 +25,7 @@ or, using the underlying engine directly:
 
 Core OF formulas currently in `apothecary/formulas`, with the version each currently pins:
 
-assimp, boost, brotli, cairo, curl, dawn, fmod, fmodex, fmt, FreeImage, freetype, glew, glfw, glm, gstreamer, json, kiss, libpng, libssh2, libusb, libxml2, metalangle, opencv, openssl, pixman, poco, portaudio, pugixml, rtAudio, shaderc, svgtiny, tess2, uriparser, utf8, videoInput, zlib
+assimp, boost, brotli, cairo, curl, dawn, fmod, fmodex, fmt, FreeImage, freetype, glew, glon12, glfw, glm, gstreamer, json, kiss, libpng, libssh2, libusb, libxml2, metalangle, opencv, openssl, pixman, poco, portaudio, pugixml, rtAudio, shaderc, svgtiny, tess2, uriparser, utf8, videoInput, zlib
 
 Run `./apo formulas` (or `apothecary/apothecary -h`) to list what's available in your checkout — this list (and the versions) changes as formulas are updated.
 

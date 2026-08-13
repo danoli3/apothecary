@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Proposed OF VS overlay for GLon12 (Mesa OpenGL → D3D12).
+  Import from the app vcxproj AFTER openFrameworksRelease/Debug.props.
+
+  What VS needs:
+  1. Build:  TYPE=vs ARCH=64 ./apo update glon12
+  2. Copy out/glon12/bin/vs/<Platform>/opengl32.dll
+           + libgallium_wgl.dll (+ libglapi.dll if present)
+     next to the .exe. Do not replace the Windows SDK opengl32.lib —
+     GLFW still links opengl32.lib; the Mesa DLL wins at load time
+     because it sits beside the executable.
+  3. Windows 10+ (D3D12). GLEW stays. Default GL path unchanged
+     unless OF_USE_GLON12=1.
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OF_USE_GLON12 Condition="'$(OF_USE_GLON12)'==''">0</OF_USE_GLON12>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(OF_USE_GLON12)'=='1'">
+    <ClCompile>
+      <PreprocessorDefinitions>OF_USE_GLON12=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(OF_USE_GLON12)'=='1'">
+    <None Include="$(OF_PATH)\libs\glon12\bin\vs\$(Platform)\opengl32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OF_PATH)\libs\glon12\bin\vs\$(Platform)\libgallium_wgl.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

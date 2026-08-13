@@ -47,6 +47,7 @@
 | **FreeImage** | `3.19.11` (`VER=31911` legacy id) | `3.19.11` | current | https://github.com/danoli3/FreeImage (OF fork) | `apothecary/formulas/FreeImage/FreeImage.sh` |
 | **freetype** | `2.14.3` | `VER-2-14-3` / `2.14.3` | current | https://github.com/freetype/freetype · https://freetype.org | `apothecary/formulas/freetype/freetype.sh` |
 | **glew** | `2.3.1` | `glew-2.3.1` | current | https://github.com/nigels-com/glew | `apothecary/formulas/glew/glew.sh` |
+| **glon12** | Mesa `26.0.4` | Mesa 26.0.x (D3D12 gallium) | pinned-dev | https://archive.mesa3d.org · https://docs.mesa3d.org/drivers/d3d12.html | `apothecary/formulas/glon12.sh` |
 | **glfw** | `3.5.1` | `3.5.1` | current | https://github.com/glfw/glfw | `apothecary/formulas/glfw.sh` |
 | **glm** | `1.0.3` | `1.0.3` | current | https://github.com/g-truc/glm | `apothecary/formulas/glm/glm.sh` |
 | **gstreamer** | `1.24.0` | `1.28.5` (stable line); `1.29.2` newer | behind | https://gitlab.freedesktop.org/gstreamer/gstreamer | `apothecary/formulas/gstreamer.sh` |

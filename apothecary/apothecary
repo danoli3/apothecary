@@ -709,6 +709,7 @@ if [ "$TYPE" = "vs" ]; then
                 VS_YEAR=2017
                 VC_VERSION=140
                 VS_BAT="vcvars${ARCH}.bat"
+                export VSINSTALLDIR="${VS_BASE_PATH}"
                 ;;
 
             16)
@@ -716,6 +717,7 @@ if [ "$TYPE" = "vs" ]; then
                 VS_YEAR=2019
                 VC_VERSION=142
                 VS_BAT="vcvars${ARCH}.bat"
+                export VSINSTALLDIR="${VS_BASE_PATH}"
                 ;;
 
             17)
@@ -724,6 +726,7 @@ if [ "$TYPE" = "vs" ]; then
                 VS_YEAR=2022
                 VC_VERSION=143
                 VS_BAT="vcvars${ARCH}.bat"
+                export VSINSTALLDIR="${VS_BASE_PATH}"
                 ;;
 
             18)
@@ -732,6 +735,7 @@ if [ "$TYPE" = "vs" ]; then
                 VS_YEAR=2026
                 VC_VERSION=145
                 VS_BAT="vcvars${ARCH}.bat"
+                export VSINSTALLDIR="${VS_BASE_PATH}"
                 ;;
 
             *)
@@ -2403,6 +2407,7 @@ function vs-build() {
     # msbuild is the tool used to build visual studio solutions
     MSBUILD_PATH="${VS_INSTALL_PATH}\MSBuild\\${VS_VER}.0\Bin\MSBuild.exe"
     echo "-- Found MSBuild path: ${MSBUILD_PATH}"
+    export VSINSTALLDIR="${VS_INSTALL_PATH}"
 
     # define fallback build selection if vs-build was not called with enough parameters.
 

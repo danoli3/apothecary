@@ -215,6 +215,7 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
             "openssl"
             "curl"
             "poco"
+            #"glon12"  # opt-in: TYPE=vs ./apo update glon12 (Mesa D3D12, large)
         )
     fi
 fi
