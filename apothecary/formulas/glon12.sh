@@ -17,7 +17,7 @@ VER=26.0.4
 SHA256=6d91541e086f29bb003602d2c81070f2be4c0693a90b181ca91e46fa3953fe78
 WINFLEX_VER=2.5.25
 WINFLEX_SHA256=8d324b62be33604b2c45ad1dd34ab93d722534448f55a16ca7292de32b6ac135
-BUILD_ID=2
+BUILD_ID=3
 DEFINES="-Dgallium-drivers=d3d12 -Dllvm=disabled -Dplatforms=windows"
 
 GIT_URL=https://gitlab.freedesktop.org/mesa/mesa
@@ -85,12 +85,19 @@ function build() {
         meson_backend="vs"
     fi
 
-    local vsroot vcvars
-    vsroot="${VS_INSTALL_PATH:-$VS_BASE_PATH}"
-    vsroot="$(cygpath -u "$vsroot" 2>/dev/null || echo "$vsroot")"
-    vcvars="$(cygpath -wa "${vsroot}/VC/Auxiliary/Build/vcvarsall.bat")"
-    local varch
+    # cl lives under VS 2022; vswhere -latest is VS 18 whose VsDevCmd is broken.
+    local varch cl_dir_win msvc_root msvc_root_win msvc_inc msvc_lib lib_arch vs2022_vcvars
     varch="$(_glon12_vcvars_arch)"
+    if [ -n "${VS_BIN_PATH:-}" ]; then
+        cl_dir_win="$(cygpath -wa "$VS_BIN_PATH")"
+        msvc_root="$(cd "$VS_BIN_PATH/../../.." && pwd)"
+        msvc_root_win="$(cygpath -wa "$msvc_root")"
+        lib_arch="$(basename "$VS_BIN_PATH")"
+        msvc_inc="${msvc_root_win}\\include"
+        msvc_lib="${msvc_root_win}\\lib\\${lib_arch}"
+    fi
+    vs2022_vcvars="$(cygpath -wa "${VS_BASE_PATH}/VC/Auxiliary/Build/vcvarsall.bat" 2>/dev/null || true)"
+
     local src_win bdir_win flex_win meson_win ninja_win prefix_win
     src_win="$(cygpath -wa "$(pwd)")"
     bdir_win="$(cygpath -wa "$(pwd)/${bdir}")"
@@ -99,37 +106,34 @@ function build() {
     ninja_win="$(cygpath -wa "$(command -v ninja)")"
     prefix_win="$(cygpath -wa "$(pwd)/${bdir}/Release")"
 
-    echo "glon12: vcvarsall=${vcvars} arch=${varch}"
-    echo "glon12: meson=${meson_win} ninja=${ninja_win}"
+    echo "glon12: cl_dir=${cl_dir_win}"
+    echo "glon12: msvc_lib=${msvc_lib}"
+    echo "glon12: vcvars2022=${vs2022_vcvars} arch=${varch}"
 
     local bat="glon12_vs_build.bat"
-    # vswhere inside the .bat so we use the same VS that owns cl, then
-    # refuse meson until LIB can resolve MSVCRT.lib (LNK1104 otherwise).
     cat >"$bat" <<EOF
 @echo off
 setlocal EnableExtensions
-set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
-set "VSDIR="
-if exist "%VSWHERE%" (
-  "%VSWHERE%" -latest -products * -property installationPath > "%TEMP%\glon12_vsdir.txt"
-  set /p VSDIR=<"%TEMP%\glon12_vsdir.txt"
-)
-if not defined VSDIR set "VSDIR=${vsroot}"
-echo glon12 bat: VSDIR=%VSDIR%
-set "VCVARS=%VSDIR%\VC\Auxiliary\Build\vcvarsall.bat"
-if not exist "%VCVARS%" set "VCVARS=${vcvars}"
+REM Prefer the VS that owns cl (2022), not vswhere -latest (VS 18 VsDevCmd errors).
+set "VCVARS=${vs2022_vcvars}"
 echo glon12 bat: VCVARS=%VCVARS%
-call "%VCVARS%" ${varch}
-if errorlevel 1 call "%VCVARS%" arm64
-if errorlevel 1 call "%VCVARS%" amd64_arm64
-if errorlevel 1 call "%VCVARS%" x64
+if exist "%VCVARS%" (
+  call "%VCVARS%" ${varch}
+  if errorlevel 1 call "%VCVARS%" amd64_arm64
+  if errorlevel 1 call "%VCVARS%" arm64
+  if errorlevel 1 call "%VCVARS%" x64
+)
+REM Git usr\bin\link.exe shadows MSVC link — put cl's dir first.
+set "PATH=${cl_dir_win};${flex_win};%PATH%"
+set "INCLUDE=${msvc_inc};%INCLUDE%"
+set "LIB=${msvc_lib};%LIB%"
 echo INCLUDE=%INCLUDE%
 echo LIB=%LIB%
 where cl
 where link
-set "PATH=${flex_win};%PATH%"
-if "%LIB%"=="" (
-  echo ERROR: LIB is empty after vcvarsall - install MSVC + Windows SDK for this arch
+if not exist "${msvc_lib}\\msvcrt.lib" (
+  echo ERROR: missing ${msvc_lib}\msvcrt.lib
+  echo Install VS 2022 MSVC ARM64/x64 build tools.
   exit /b 1
 )
 cd /d "${src_win}"
