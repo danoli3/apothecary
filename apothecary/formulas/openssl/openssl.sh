@@ -3,7 +3,7 @@
 # openssl
 
 # define the version
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "linux" "android" )
+FORMULA_TYPES=("vs" "osx" "ios" "tvos" "xros" "catos" "watchos" "linux" "android" )
 FORMULA_DEPENDS=("zlib")
 
 # OpenSSL 4.0.1 + danoli3/openssl-cmake branch 4.0 (test pin for PR #562)
@@ -15,7 +15,7 @@ OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=4
+BUILD_ID=6
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -113,6 +113,15 @@ function prepare() {
     apothecaryDepend build zlib
     apothecaryDepend copy zlib
 
+    if grep -q '^option(OPENSSL_BUILD_APPS ' CMakeLists.txt; then
+        echo "disable-apps.patch already applied"
+    elif patch --batch --forward -p1 <"$FORMULA_DIR/disable-apps.patch"; then
+        echo "disable-apps.patch applied successfully"
+    else
+        echo "Failed to apply disable-apps.patch"
+        exit 1
+    fi
+
     # openssl-cmake 4.0 WIP: some provider CMakeLists incorrectly list
     # ${CMAKE_BINARY_DIR}/providers/implementations/include as a SOURCES
     # entry (directory path). Strip those lines so headers resolve from
@@ -168,6 +177,9 @@ function build() {
             -DOPENSSL_OCSP=ON \
             -DOPENSSL_CMP=OFF \
             "
+        if [[ "$TYPE" =~ ^(ios|tvos|xros|catos|watchos)$ ]]; then
+            DEFINES="${DEFINES} -DOPENSSL_BUILD_APPS=OFF -DHAVE_FORK=0"
+        fi
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
             ${DEFINES} \

@@ -6,7 +6,7 @@
 #
 # uses a CMake build system
 
-FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "android")
+FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "watchos" "android")
 FORMULA_DEPENDS=("openssl" "zlib" "brotli")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
@@ -17,7 +17,7 @@ SHA1="c4a973118684745cb03c38987d131ccbce9e7ab1"
 SHA256="d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
 CACERT_DATE=2026-07-16
 CACERT_SHA256="3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
-BUILD_ID=5
+BUILD_ID=6
 DEFINES=""
 USE_OPENSSL=ON
 
@@ -84,12 +84,10 @@ function prepare() {
 function build() {
 
     LIBS_ROOT=$(realpath $LIBS_DIR)
-    if [[ ! "$TYPE" =~ ^(tvos|catos|watchos)$ ]]; then
-        export OF_LIBS_OPENSSL_ABS_PATH=$(realpath ${LIBS_DIR}/)
-        local OF_LIBS_OPENSSL="$LIBS_DIR/openssl/"
-        local OF_LIBS_OPENSSL_ABS_PATH=$(realpath $OF_LIBS_OPENSSL)
-        export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH
-    fi
+    export OF_LIBS_OPENSSL_ABS_PATH=$(realpath ${LIBS_DIR}/)
+    local OF_LIBS_OPENSSL="$LIBS_DIR/openssl/"
+    local OF_LIBS_OPENSSL_ABS_PATH=$(realpath $OF_LIBS_OPENSSL)
+    export OPENSSL_PATH=$OF_LIBS_OPENSSL_ABS_PATH
 
     local CACERT_PATH="./cacert.pem"
 
@@ -341,29 +339,19 @@ function build() {
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-        if [[ "$TYPE" =~ ^(ios|xros|catos|watchos)$ ]]; then
-            export OPENSSL_LIBRARIES=$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM
-            OPENSSL_ROOT="$LIBS_ROOT/openssl/"
-            OPENSSL_INCLUDE_DIR="$LIBS_ROOT/openssl/include"
-            OPENSSL_LIBRARY="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libssl.a"
-            OPENSSL_LIBRARY_CRYPT="$LIBS_ROOT/openssl/lib/$TYPE/$PLATFORM/libcrypto.a"
-            export USE_SECURE_TRANSPORT="OFF"
-            CURL_ENABLE_SSL="ON"
-            SSL_DEFS="-DOPENSSL_ROOT_DIR=${OF_LIBS_OPENSSL_ABS_PATH} \
-                -DOPENSSL_INCLUDE_DIR=${OF_LIBS_OPENSSL_ABS_PATH}/include \
-                -DOPENSSL_LIBRARIES=${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libssl.a:${OF_LIBS_OPENSSL_ABS_PATH}/lib/${TYPE}/${PLATFORM}/libcrypto.a"
-        else
-            # Use Apple's native Secure Transport backend on macOS and tvOS.
-            OPENSSL_ROOT="$LIBS_ROOT"
-            OPENSSL_INCLUDE_DIR=""
-            OPENSSL_LIBRARY=""
-            OPENSSL_LIBRARY_CRYPT=""
-            export USE_SECURE_TRANSPORT="ON"
-            OPENSSL_PATH=""
-            OF_LIBS_OPENSSL_ABS_PATH=""
-            CURL_ENABLE_SSL="ON"
-            SSL_DEFS="-DCURL_USE_OPENSSL=OFF -DUSE_OPENSSL=OFF"
-        fi
+        export OPENSSL_LIBRARIES="$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM"
+        OPENSSL_ROOT="$LIBS_ROOT/openssl"
+        OPENSSL_INCLUDE_DIR="$OPENSSL_ROOT/include"
+        OPENSSL_LIBRARY="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libssl.a"
+        OPENSSL_LIBRARY_CRYPT="$OPENSSL_ROOT/lib/$TYPE/$PLATFORM/libcrypto.a"
+        CURL_ENABLE_SSL="ON"
+        SSL_DEFS="-DCURL_USE_OPENSSL=ON \
+            -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT} \
+            -DOPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR} \
+            -DOPENSSL_SSL_LIBRARY=${OPENSSL_LIBRARY} \
+            -DOPENSSL_CRYPTO_LIBRARY=${OPENSSL_LIBRARY_CRYPT} \
+            -DOPENSSL_USE_STATIC_LIBS=ON \
+            -DUSE_APPLE_SECTRUST=ON"
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
@@ -388,7 +376,7 @@ function build() {
             -DCMAKE_C_STANDARD=${C_STANDARD} \
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCURL_CA_BUNDLE="${CACERT_PATH}" \
+            -DCURL_CA_BUNDLE=none \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
@@ -399,6 +387,8 @@ function build() {
             -DBUILD_SHARED_LIBS=OFF \
             -DCMAKE_IGNORE_PATH=/opt/homebrew \
             -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
+            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
+            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
             -DCURL_STATICLIB=ON \
             -DBUILD_STATIC_LIBS=ON \
             -DENABLE_UNICODE=ON \
@@ -432,8 +422,6 @@ function build() {
             -DHAVE_LIBSOCKET=OFF \
             -DCURL_ENABLE_SSL=${CURL_ENABLE_SSL} \
             -DCMAKE_MACOSX_BUNDLE=OFF \
-            -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
-            -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
             -DUSE_NGHTTP2=OFF \
             -DUSE_NGTCP2=OFF \
             -DCURL_CA_FALLBACK=ON \
@@ -454,23 +442,43 @@ function build() {
             -DENABLE_VERBOSE=ON \
             -DENABLE_THREADED_RESOLVER=ON \
             -DENABLE_IPV6=ON
+
+        if ! grep -q '^CURL_USE_OPENSSL:BOOL=ON$' CMakeCache.txt || \
+           ! grep -q '^USE_APPLE_SECTRUST:BOOL=ON$' CMakeCache.txt; then
+            echo "curl configured without the required OpenSSL and Apple SecTrust backends"
+            exit 1
+        fi
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd "Release/lib/"
             # Rename with prefixes (including library origin to avoid duplicates)
-            mkdir -p curl
-            mv libcurl.a curl/libcurl.a
-            cd curl
-            ar -x libcurl.a
-            for f in *.o; do mv "$f" "curl_${ARCH}_$f"; done
-            for obj in *.o; do
-                if [ -z "$(nm "$obj")" ]; then
-                    echo "Removing empty object file: $obj"
-                    rm -f "$obj"
+            rm -rf curl
+            mkdir curl
+            mv libcurl.a curl/libcurl-original.a
+            CURL_ARCHS=$(lipo -archs curl/libcurl-original.a)
+            for CURL_ARCH in $CURL_ARCHS; do
+                mkdir "curl/$CURL_ARCH"
+                if [ "$(echo "$CURL_ARCHS" | wc -w | tr -d ' ')" -gt 1 ]; then
+                    lipo curl/libcurl-original.a -thin "$CURL_ARCH" -output "curl/$CURL_ARCH/libcurl.a"
+                else
+                    cp curl/libcurl-original.a "curl/$CURL_ARCH/libcurl.a"
                 fi
+                cd "curl/$CURL_ARCH"
+                ar -x libcurl.a
+                rm libcurl.a
+                for f in *.o; do mv "$f" "curl_${ARCH}_${CURL_ARCH}_$f"; done
+                for obj in *.o; do
+                    if [ -z "$(nm "$obj")" ]; then
+                        echo "Removing empty object file: $obj"
+                        rm -f "$obj"
+                    fi
+                done
+                ar rcs "../../libcurl_${CURL_ARCH}.a" curl_${ARCH}_${CURL_ARCH}_*.o
+                cd ../..
             done
-            ar rcs "../libcurl.a" curl_${ARCH}_*.o
+            lipo -create libcurl_*.a -output libcurl.a
+            rm -f libcurl_*.a
             echo "Verifying libcurl.a.:"
-            lipo -info "libcurl.a"
+            lipo -info libcurl.a
             rm -rf curl
             cd ../..
         cd ..
@@ -515,11 +523,16 @@ function copy() {
         cp -v "build_${TYPE}_${ARCH}/Release/lib/libcurl.lib" $1/lib/$TYPE/$PLATFORM/libcurl.lib
         secure "$1/lib/$TYPE/$PLATFORM/libcurl.lib" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+        CURL_APPLE_LIBRARY="build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a"
+        if ! nm -g "$CURL_APPLE_LIBRARY" | grep '_Curl_ssl_openssl' >/dev/null; then
+            echo "curl built without the required OpenSSL TLS backend"
+            exit 1
+        fi
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include
         mkdir -p $1/bin
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/bin/"* $1/bin
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a" $1/lib/$TYPE/$PLATFORM/curl.a
+        cp -v "$CURL_APPLE_LIBRARY" $1/lib/$TYPE/$PLATFORM/curl.a
         secure "$1/lib/$TYPE/$PLATFORM/curl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
