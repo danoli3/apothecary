@@ -261,7 +261,8 @@ jobs:
 
   smoke-test-openframeworks:
     name: Smoke test PR libraries in openFrameworks
-    if: github.event_name == 'pull_request'
+    # Temporarily disabled while openFrameworks is updated for OpenSSL 4.
+    if: ${{ false }}
     needs: build-macos-platforms
     runs-on: macos-14
     env:
