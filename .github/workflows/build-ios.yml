@@ -247,7 +247,7 @@ jobs:
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding') && matrix.bundle == 3
         uses: softprops/action-gh-release@v3.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: latest-modular
           files: xout/oF_poco_ios_64.tar.bz2
       - name: Package
@@ -260,7 +260,7 @@ jobs:
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
 
@@ -447,20 +447,20 @@ jobs:
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout_1/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_1.tar.bz2
       - name: Update Release macOS 2
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout_2/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_2.tar.bz2
       - name: Update Release macOS 3
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           files: xout_3/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_3.tar.bz2
