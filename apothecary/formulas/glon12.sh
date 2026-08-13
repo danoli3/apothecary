@@ -106,11 +106,22 @@ function build() {
     cat >"$bat" <<EOF
 @echo off
 setlocal
+echo glon12 bat: calling vcvarsall ${varch}
 call "${vcvars}" ${varch}
 if errorlevel 1 (
-  echo vcvarsall ${varch} failed, trying x64
+  echo vcvarsall ${varch} failed, trying arm64
+  call "${vcvars}" arm64
+)
+if errorlevel 1 (
+  echo vcvarsall arm64 failed, trying amd64_arm64
+  call "${vcvars}" amd64_arm64
+)
+if errorlevel 1 (
+  echo vcvarsall amd64_arm64 failed, trying x64
   call "${vcvars}" x64
 )
+echo INCLUDE=%INCLUDE%
+where cl
 set "PATH=${flex_win};%PATH%"
 cd /d "${src_win}"
 "${meson_win}" setup "${bdir_win}" --backend=${meson_backend} --buildtype=release --prefix="${prefix_win}" -Dgallium-drivers=d3d12 -Dgallium-d3d12-video=disabled -Dzlib=disabled -Dllvm=disabled -Dplatforms=windows -Dbuild-tests=false
