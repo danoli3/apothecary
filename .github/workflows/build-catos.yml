@@ -1,6 +1,7 @@
 name: build-catos
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - '**/README.md'
@@ -12,12 +13,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 env:
   TARGET: "catos"
   NO_FORCE: 1
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
   USE_ARTIFACT: true
-  DISABLE_WORKFLOW: "true"
+  DISABLE_WORKFLOW: "false"
 
 jobs:
   pre-check:
@@ -30,21 +34,20 @@ jobs:
       shell: bash
       run: |
         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-          echo "disabled=true" >> $GITHUB_ENV
-          echo "::set-output name=disabled::true"
+          echo "disabled=true" >> "$GITHUB_OUTPUT"
         else
-          echo "::set-output name=disabled::false"
+          echo "disabled=false" >> "$GITHUB_OUTPUT"
         fi
   build-catos-platforms:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
-    runs-on: macos-14
+    runs-on: macos-26
     needs: pre-check
     strategy:
       matrix:
         bundle: [1, 2, 3]
     env:
       BUNDLE: ${{ matrix.bundle }}
-      DEVELOPER_DIR: "/Applications/Xcode_16.2.app/Contents/Developer"
+      DEVELOPER_DIR: "/Applications/Xcode_26.6.app/Contents/Developer"
     steps:
       - name: Determine Release
         id: vars
@@ -109,21 +112,17 @@ jobs:
           TARGET: "catos"
           BUNDLE: ${{ matrix.bundle }}
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-#      - name: Package
-#        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-      
-#        working-directory: ${{ env.GITHUB_WORKSPACE }}
-#        run: scripts/package.sh
-#        env:
-#          BUNDLE: ${{ matrix.bundle }}
-#          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-#      - name: Update Release XCFramework
-#        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-      
-#        uses: johnwbyrd/update-release@v1.0.0
-#        with:
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          tag: ${{ env.release }}
-#          release: ${{ env.release }}
-#          prerelease: ${{ env.prerelease }}
-#          files: out/openFrameworksLibs_${{ env.release }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
+      - name: Package XCFramework
+        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: scripts/package.sh
+        env:
+          BUNDLE: ${{ matrix.bundle }}
+          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
+      - name: Update Release XCFramework
+        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        uses: softprops/action-gh-release@v3.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.RELEASE }}
+          files: xout/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2

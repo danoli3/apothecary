@@ -256,7 +256,7 @@ jobs:
         run: scripts/package.sh
         env:
           BUNDLE: ${{ matrix.bundle }}
-      - name: Update Release arm64
+      - name: Update Release XCFramework
         if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
         with:

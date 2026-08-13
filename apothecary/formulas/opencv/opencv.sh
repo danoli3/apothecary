@@ -12,7 +12,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 # define the version
 VER=4.14.0
 SHA256="ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e"
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4140
@@ -45,6 +45,15 @@ function download() {
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
     : # noop
+
+    if grep -q '^#include <exception>$' modules/core/src/system.cpp; then
+        echo "system-exception.patch already applied"
+    elif patch --batch --forward -p1 <"$FORMULA_DIR/system-exception.patch"; then
+        echo "system-exception.patch applied successfully"
+    else
+        echo "Failed to apply system-exception.patch"
+        exit 1
+    fi
 
     #no idea why we are building iOS stuff on Windows - but this might fix it
     if [ "$TYPE" == "vs" ]; then
