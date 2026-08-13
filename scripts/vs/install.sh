@@ -43,14 +43,28 @@ echoDots() {
     done
 }
 
+# winget exits non-zero when the package is already installed / no upgrade.
+# That is not a failure for this script.
+winget_ensure() {
+    local id="$1"
+    if winget list -e --id "$id" >/dev/null 2>&1; then
+        echo "winget: $id already installed"
+        return 0
+    fi
+    winget install -e --id "$id" --accept-package-agreements --accept-source-agreements || {
+        echo "winget: $id install returned $? (already installed is ok)"
+        return 0
+    }
+}
+
 if command -v winget >/dev/null 2>&1; then
-    winget install -e --id Microsoft.WindowsTerminal --accept-package-agreements --accept-source-agreements
-    winget install -e --id Ninja-build.Ninja --accept-package-agreements --accept-source-agreements
-    winget install -e --id mesonbuild.Meson --accept-package-agreements --accept-source-agreements
-    winget install -e --id jqlang.jq --accept-package-agreements --accept-source-agreements
-    winget install -e --id Kitware.CMake --accept-package-agreements --accept-source-agreements
-    winget install -e --id Oracle.JDK.17 --accept-package-agreements --accept-source-agreements
-    winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
+    winget_ensure Microsoft.WindowsTerminal
+    winget_ensure Ninja-build.Ninja
+    winget_ensure mesonbuild.Meson
+    winget_ensure jqlang.jq
+    winget_ensure Kitware.CMake
+    winget_ensure Oracle.JDK.17
+    winget_ensure Python.Python.3.12
 fi
 
 # MSYS2 / Git-Bash-with-pacman (same packages CI uses for GLon12)
