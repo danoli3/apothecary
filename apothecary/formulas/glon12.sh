@@ -17,7 +17,7 @@ VER=26.0.4
 SHA256=6d91541e086f29bb003602d2c81070f2be4c0693a90b181ca91e46fa3953fe78
 WINFLEX_VER=2.5.25
 WINFLEX_SHA256=8d324b62be33604b2c45ad1dd34ab93d722534448f55a16ca7292de32b6ac135
-BUILD_ID=1
+BUILD_ID=2
 DEFINES="-Dgallium-drivers=d3d12 -Dllvm=disabled -Dplatforms=windows"
 
 GIT_URL=https://gitlab.freedesktop.org/mesa/mesa
@@ -50,6 +50,21 @@ function prepare() {
     export PATH="$(pwd)/winflexbison:${PATH}"
 }
 
+# vcvarsall arch: meson needs INCLUDE/LIB, not just cl.exe on PATH.
+function _glon12_vcvars_arch() {
+    case "$ARCH" in
+        32 | x86) echo "x86" ;;
+        arm64 | ARM64)
+            case "${PROCESSOR_ARCHITECTURE:-${HOSTTYPE:-}}" in
+                ARM64 | aarch64 | arm64) echo "arm64" ;;
+                *) echo "amd64_arm64" ;;
+            esac
+            ;;
+        arm64ec) echo "amd64_arm64" ;;
+        *) echo "x64" ;;
+    esac
+}
+
 # executed inside the lib src dir
 function build() {
     if [ "$TYPE" != "vs" ]; then
@@ -62,6 +77,7 @@ function build() {
     export PATH="$(pwd)/winflexbison:${PATH}"
 
     local bdir="build_${TYPE}_${PLATFORM}"
+    rm -rf "${bdir}"
     mkdir -p "${bdir}"
 
     local meson_backend="ninja"
@@ -69,24 +85,48 @@ function build() {
         meson_backend="vs"
     fi
 
-    meson setup "${bdir}" \
-        --backend="${meson_backend}" \
-        --buildtype=release \
-        --prefix="$(pwd)/${bdir}/Release" \
-        -Dgallium-drivers=d3d12 \
-        -Dgallium-d3d12-video=disabled \
-        -Dzlib=disabled \
-        -Dllvm=disabled \
-        -Dplatforms=windows \
-        -Dbuild-tests=false
+    local vsroot vcvars
+    vsroot="${VS_INSTALL_PATH:-$VS_BASE_PATH}"
+    vsroot="$(cygpath -u "$vsroot" 2>/dev/null || echo "$vsroot")"
+    vcvars="$(cygpath -wa "${vsroot}/VC/Auxiliary/Build/vcvarsall.bat")"
+    local varch
+    varch="$(_glon12_vcvars_arch)"
+    local src_win bdir_win flex_win meson_win ninja_win prefix_win
+    src_win="$(cygpath -wa "$(pwd)")"
+    bdir_win="$(cygpath -wa "$(pwd)/${bdir}")"
+    flex_win="$(cygpath -wa "$(pwd)/winflexbison")"
+    meson_win="$(cygpath -wa "$(command -v meson)")"
+    ninja_win="$(cygpath -wa "$(command -v ninja)")"
+    prefix_win="$(cygpath -wa "$(pwd)/${bdir}/Release")"
 
-    if [ "${meson_backend}" = "ninja" ]; then
-        ninja -C "${bdir}" -j"${PARALLEL_MAKE}"
-        ninja -C "${bdir}" install
-    else
-        msbuild "${bdir}/mesa.sln" /m /p:Configuration=Release /p:Platform="${PLATFORM}"
-        meson install -C "${bdir}"
-    fi
+    echo "glon12: vcvarsall=${vcvars} arch=${varch}"
+    echo "glon12: meson=${meson_win} ninja=${ninja_win}"
+
+    local bat="glon12_vs_build.bat"
+    cat >"$bat" <<EOF
+@echo off
+setlocal
+call "${vcvars}" ${varch}
+if errorlevel 1 (
+  echo vcvarsall ${varch} failed, trying x64
+  call "${vcvars}" x64
+)
+set "PATH=${flex_win};%PATH%"
+cd /d "${src_win}"
+"${meson_win}" setup "${bdir_win}" --backend=${meson_backend} --buildtype=release --prefix="${prefix_win}" -Dgallium-drivers=d3d12 -Dgallium-d3d12-video=disabled -Dzlib=disabled -Dllvm=disabled -Dplatforms=windows -Dbuild-tests=false
+if errorlevel 1 exit /b 1
+if "${meson_backend}"=="ninja" (
+  "${ninja_win}" -C "${bdir_win}" -j ${PARALLEL_MAKE:-8}
+  if errorlevel 1 exit /b 1
+  "${ninja_win}" -C "${bdir_win}" install
+) else (
+  msbuild "${bdir_win}\\mesa.sln" /m /p:Configuration=Release /p:Platform=${PLATFORM}
+  if errorlevel 1 exit /b 1
+  "${meson_win}" install -C "${bdir_win}"
+)
+EOF
+
+    cmd.exe //c "$(cygpath -wa "$bat")"
 }
 
 function copy() {
