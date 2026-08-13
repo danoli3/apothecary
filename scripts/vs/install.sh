@@ -43,10 +43,14 @@ echoDots() {
     done
 }
 
-# Git Bash often has no LOCALAPPDATA and no Python on PATH after winget.
+# Git Bash: LOCALAPPDATA is often C:\Users\... (backslash). cygpath that.
 WIN_USER="${USERNAME:-${USER:-}}"
-WIN_LOCAL="${LOCALAPPDATA:-$HOME/AppData/Local}"
-export PATH="$WIN_LOCAL/Programs/Python/Python312:$WIN_LOCAL/Programs/Python/Python312/Scripts:$WIN_LOCAL/Programs/Python/Python313:$WIN_LOCAL/Programs/Python/Python313/Scripts:/c/Program Files/Python312:/c/Program Files/Python312/Scripts:/c/Program Files/Meson:/c/Program Files/Ninja:$PATH"
+WIN_LOCAL="${LOCALAPPDATA:-${HOME}/AppData/Local}"
+if command -v cygpath >/dev/null 2>&1; then
+    WIN_LOCAL="$(cygpath -u "$WIN_LOCAL" 2>/dev/null || echo "$WIN_LOCAL")"
+fi
+WIN_LOCAL="${WIN_LOCAL//\\//}"
+export PATH="$WIN_LOCAL/Programs/Python/Python312:$WIN_LOCAL/Programs/Python/Python312/Scripts:$WIN_LOCAL/Programs/Python/Python313:$WIN_LOCAL/Programs/Python/Python313/Scripts:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/Scripts:/c/Program Files/Python312:/c/Program Files/Python312/Scripts:/c/Program Files/Meson:/c/Program Files/Ninja:$PATH"
 
 # winget: already-installed is ok. Missing package id is not.
 winget_ensure() {
@@ -96,6 +100,7 @@ find_python() {
         "$WIN_LOCAL/Programs/Python/Python313/python.exe" \
         "$HOME/AppData/Local/Programs/Python/Python312/python.exe" \
         "/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/python.exe" \
+        /c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe \
         /c/Program\ Files/Python312/python.exe \
         /c/Program\ Files/Python313/python.exe \
         /c/Windows/py.exe \
@@ -157,6 +162,9 @@ else
     echo "python: MISSING"
 fi
 echo
+if command -v meson >/dev/null 2>&1 && command -v ninja >/dev/null 2>&1; then
+    echo "meson + ninja are enough for glon12. Python is only required for angle (gclient)."
+fi
 echo "Then (Git Bash / MSYS2, from repo root):"
 echo "  NO_COLOR=1 UI_ANIM=0 TYPE=vs ARCH=64 ./apo update glon12"
 echo "  NO_COLOR=1 UI_ANIM=0 TYPE=vs ARCH=64 ./apo update angle"
