@@ -43,14 +43,18 @@ echoDots() {
     done
 }
 
-# Git Bash: LOCALAPPDATA is often C:\Users\... (backslash). cygpath that.
+# Git Bash: LOCALAPPDATA/APPDATA are often C:\Users\... (backslash). cygpath that.
 WIN_USER="${USERNAME:-${USER:-}}"
 WIN_LOCAL="${LOCALAPPDATA:-${HOME}/AppData/Local}"
+WIN_ROAM="${APPDATA:-${HOME}/AppData/Roaming}"
 if command -v cygpath >/dev/null 2>&1; then
     WIN_LOCAL="$(cygpath -u "$WIN_LOCAL" 2>/dev/null || echo "$WIN_LOCAL")"
+    WIN_ROAM="$(cygpath -u "$WIN_ROAM" 2>/dev/null || echo "$WIN_ROAM")"
 fi
 WIN_LOCAL="${WIN_LOCAL//\\//}"
-export PATH="$WIN_LOCAL/Programs/Python/Python312:$WIN_LOCAL/Programs/Python/Python312/Scripts:$WIN_LOCAL/Programs/Python/Python313:$WIN_LOCAL/Programs/Python/Python313/Scripts:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/Scripts:/c/Program Files/Python312:/c/Program Files/Python312/Scripts:/c/Program Files/Meson:/c/Program Files/Ninja:$PATH"
+WIN_ROAM="${WIN_ROAM//\\//}"
+# Official installer + pip --user (x64 and ARM64). User-site Scripts is not on PATH by default.
+export PATH="$WIN_ROAM/Python/Python312-arm64/Scripts:$WIN_ROAM/Python/Python312/Scripts:$WIN_ROAM/Python/Python313-arm64/Scripts:$WIN_ROAM/Python/Python313/Scripts:$WIN_LOCAL/Programs/Python/Python312-arm64:$WIN_LOCAL/Programs/Python/Python312-arm64/Scripts:$WIN_LOCAL/Programs/Python/Python312:$WIN_LOCAL/Programs/Python/Python312/Scripts:$WIN_LOCAL/Programs/Python/Python313-arm64:$WIN_LOCAL/Programs/Python/Python313-arm64/Scripts:$WIN_LOCAL/Programs/Python/Python313:$WIN_LOCAL/Programs/Python/Python313/Scripts:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312:/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/Scripts:/c/Program Files/Python312:/c/Program Files/Python312/Scripts:/c/Program Files/Meson:/c/Program Files/Ninja:$PATH"
 
 # winget: already-installed is ok. Missing package id is not.
 winget_ensure() {
@@ -98,9 +102,13 @@ find_python() {
     local cand
     shopt -s nullglob
     for cand in \
+        "$WIN_LOCAL/Programs/Python/Python312-arm64/python.exe" \
         "$WIN_LOCAL/Programs/Python/Python312/python.exe" \
+        "$WIN_LOCAL/Programs/Python/Python313-arm64/python.exe" \
         "$WIN_LOCAL/Programs/Python/Python313/python.exe" \
+        "$HOME/AppData/Local/Programs/Python/Python312-arm64/python.exe" \
         "$HOME/AppData/Local/Programs/Python/Python312/python.exe" \
+        "/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312-arm64/python.exe" \
         "/c/Users/${WIN_USER}/AppData/Local/Programs/Python/Python312/python.exe" \
         /c/Users/*/AppData/Local/Programs/Python/Python3*/python.exe \
         /c/Program\ Files/Python312/python.exe \
