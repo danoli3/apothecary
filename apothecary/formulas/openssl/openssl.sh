@@ -11,11 +11,11 @@ FORMULA_DEPENDS=("zlib")
 VER=4.0.1
 VERDIR=4.0.0
 VER_TAG="4.0"
-OPENSSL_CMAKE_COMMIT=09cf1b80a64a5de840c2cbc69286c092821bcc39
+OPENSSL_CMAKE_COMMIT=2186f38a68635ada55434b1fc9ee78fdf04a1718
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=8
+BUILD_ID=9
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -55,6 +55,7 @@ DEFINES="-DOPENSSL_NO_DEPRECATED=OFF \
 	-DOPENSSL_STATIC_ENGINE=ON \
 	-DOPENSSL_THREADS=ON \
 	-DOPENSSL_RAND_SEED=os \
+	-DOPENSSL_BUILD_APPS=OFF \
 	-DBUILD_TESTING=OFF \
 	-DOPENSSL_NO_AFALGENG=ON \
 	-DOPENSSL_ZLIB=ON \
@@ -189,7 +190,7 @@ function build() {
             -DOPENSSL_CMP=OFF \
             "
         if [[ "$TYPE" =~ ^(ios|tvos|xros|catos|watchos)$ ]]; then
-            DEFINES="${DEFINES} -DOPENSSL_BUILD_APPS=OFF -DHAVE_FORK=0"
+            DEFINES="${DEFINES} -DHAVE_FORK=0"
         fi
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
