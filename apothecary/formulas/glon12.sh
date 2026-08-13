@@ -17,7 +17,7 @@ VER=26.0.4
 SHA256=6d91541e086f29bb003602d2c81070f2be4c0693a90b181ca91e46fa3953fe78
 WINFLEX_VER=2.5.25
 WINFLEX_SHA256=8d324b62be33604b2c45ad1dd34ab93d722534448f55a16ca7292de32b6ac135
-BUILD_ID=5
+BUILD_ID=6
 DEFINES="-Dgallium-drivers=d3d12 -Dllvm=disabled -Dplatforms=windows"
 
 GIT_URL=https://gitlab.freedesktop.org/mesa/mesa
@@ -80,12 +80,28 @@ function build() {
     setup_vs_vars
     export VSINSTALLDIR="${VS_INSTALL_PATH:-${VS_BASE_PATH}}"
 
+    # Core maps arm64ec → Host*/arm64. Prefer the real ARM64EC toolset
+    # (lib/arm64ec + cl that defaults to /arm64EC) so DLLs link with OF ARM64EC.
+    if [ "$ARCH" = "arm64ec" ]; then
+        local ec_bin
+        ec_bin="$(cd "${VS_BIN_PATH}/../arm64ec" 2>/dev/null && pwd)"
+        if [ -n "$ec_bin" ] && [ -f "${ec_bin}/cl.exe" ]; then
+            VS_BIN_PATH="$ec_bin"
+            echo "glon12: ARM64EC toolset ${VS_BIN_PATH}"
+        else
+            echoWarning "glon12: no Host*/arm64ec/cl.exe; using ${VS_BIN_PATH} + /arm64EC"
+        fi
+    fi
+
     local bdir="build_${TYPE}_${PLATFORM}"
     rm -rf "${bdir}"
     mkdir -p "${bdir}"
 
     local lib_arch msvc_root kits kitver
     lib_arch="$(basename "${VS_BIN_PATH}")"
+    if [ "$ARCH" = "arm64ec" ] && [ "$lib_arch" != "arm64ec" ]; then
+        lib_arch="arm64ec"
+    fi
     msvc_root="$(cd "${VS_BIN_PATH}/../../.." && pwd)"
     kits="/c/Program Files (x86)/Windows Kits/10"
     kitver="$(ls -1 "${kits}/Lib" 2>/dev/null | grep -E '^[0-9]' | sort -V | tail -1)"
@@ -109,6 +125,9 @@ function build() {
     # Mesa adds /we4189. NDEBUG makes assert-only locals unused (C4189).
     # _CL_ is appended after the compiler command, so it beats /we4189.
     export _CL_="${_CL_:+${_CL_} }/wd4189"
+    if [ "$ARCH" = "arm64ec" ]; then
+        export _CL_="${_CL_} /arm64EC"
+    fi
 
     echo "glon12: CC=${CC}"
     echo "glon12: LIB=${LIB}"
@@ -122,7 +141,7 @@ function build() {
     local cpu_family cpu
     case "${ARCH}" in
         32|x86) cpu_family="x86"; cpu="i686" ;;
-        arm64) cpu_family="aarch64"; cpu="aarch64" ;;
+        arm64|arm64ec) cpu_family="aarch64"; cpu="aarch64" ;;
         *) cpu_family="x86_64"; cpu="x86_64" ;;
     esac
     local host_m host_family

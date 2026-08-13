@@ -58,7 +58,7 @@ function prepare() {
 function _angle_cpu() {
     case "${ARCH}" in
         32|x86) echo "x86" ;;
-        arm64) echo "arm64" ;;
+        arm64|arm64ec) echo "arm64" ;;
         *) echo "x64" ;;
     esac
 }
