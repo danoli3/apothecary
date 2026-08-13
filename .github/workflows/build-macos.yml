@@ -12,6 +12,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 env:
   TARGET: "osx"
   NO_FORCE: 1
@@ -262,7 +265,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
-          release: ${{ env.RELEASE }}
           files: xout/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
 
   smoke-test-openframeworks:
