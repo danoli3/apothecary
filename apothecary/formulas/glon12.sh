@@ -17,7 +17,7 @@ VER=26.0.4
 SHA256=6d91541e086f29bb003602d2c81070f2be4c0693a90b181ca91e46fa3953fe78
 WINFLEX_VER=2.5.25
 WINFLEX_SHA256=8d324b62be33604b2c45ad1dd34ab93d722534448f55a16ca7292de32b6ac135
-BUILD_ID=4
+BUILD_ID=5
 DEFINES="-Dgallium-drivers=d3d12 -Dllvm=disabled -Dplatforms=windows"
 
 GIT_URL=https://gitlab.freedesktop.org/mesa/mesa
@@ -106,6 +106,9 @@ function build() {
     export CC="${VS_BIN_PATH}/cl.exe"
     export CXX="${VS_BIN_PATH}/cl.exe"
     export LD="${VS_BIN_PATH}/link.exe"
+    # Mesa adds /we4189. NDEBUG makes assert-only locals unused (C4189).
+    # _CL_ is appended after the compiler command, so it beats /we4189.
+    export _CL_="${_CL_:+${_CL_} }/wd4189"
 
     echo "glon12: CC=${CC}"
     echo "glon12: LIB=${LIB}"
@@ -113,6 +116,40 @@ function build() {
         echoError "glon12: missing ${msvc_root}/lib/${lib_arch}/msvcrt.lib"
         exit 1
     fi
+
+    # Meson host_machine follows the meson/Python process, not cl.exe.
+    # ARM64 Windows + ARCH=64 would compile blake3_neon.c with x64 cl (C1189).
+    local cpu_family cpu
+    case "${ARCH}" in
+        32|x86) cpu_family="x86"; cpu="i686" ;;
+        arm64) cpu_family="aarch64"; cpu="aarch64" ;;
+        *) cpu_family="x86_64"; cpu="x86_64" ;;
+    esac
+    local host_m host_family
+    host_m="$(python -c "import platform; print(platform.machine())" 2>/dev/null || uname -m)"
+    host_m="$(echo "${host_m}" | tr '[:upper:]' '[:lower:]')"
+    case "${host_m}" in
+        aarch64|arm64) host_family="aarch64" ;;
+        x86_64|amd64) host_family="x86_64" ;;
+        x86|i686|i386) host_family="x86" ;;
+        *) host_family="${host_m}" ;;
+    esac
+    local cl_w
+    cl_w="$(cygpath -w "${VS_BIN_PATH}/cl.exe")"
+    # Next to the build dir — meson setup rejects a non-empty build dir.
+    local machine_ini="meson-cpu-${PLATFORM}.ini"
+    {
+        echo "[binaries]"
+        echo "c = '${cl_w}'"
+        echo "cpp = '${cl_w}'"
+        echo
+        echo "[host_machine]"
+        echo "system = 'windows'"
+        echo "cpu_family = '${cpu_family}'"
+        echo "cpu = '${cpu}'"
+        echo "endian = 'little'"
+    } > "${machine_ini}"
+    echo "glon12: meson cpu_family=${cpu_family} (ARCH=${ARCH}) host=${host_family} file=${machine_ini}"
 
     local meson_args=(
         setup "${bdir}"
@@ -126,6 +163,11 @@ function build() {
         -Dplatforms=windows
         -Dbuild-tests=false
     )
+    if [ "${host_family}" = "${cpu_family}" ]; then
+        meson_args+=(--native-file "${machine_ini}")
+    else
+        meson_args+=(--cross-file "${machine_ini}")
+    fi
     # --vsenv is nice on a working VS; CI MSYS meson + our INCLUDE/LIB is enough.
     if ! meson "${meson_args[@]}" --vsenv; then
         echoWarning "glon12: meson --vsenv failed, retrying with INCLUDE/LIB only"
