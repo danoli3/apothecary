@@ -85,7 +85,7 @@ echo "Apothecary path: $APOTHECARY_PATH"
 echo "Output folder is: $OUTPUT_FOLDER"
 
 # Source the calculate_formulas.sh script to get the list of formulas
-source $LOCAL_ROOT/scripts/calculate_formulas.sh
+source "$LOCAL_ROOT/scripts/calculate_formulas.sh" "$TARGET" "$BUNDLE"
 
 if [ -z "$FORMULAS" ]; then
     echo "No formulas to build"
