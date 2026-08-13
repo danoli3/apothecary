@@ -41,6 +41,25 @@ function prepare() {
         exit 1
     fi
 
+    # Mesa 26: Python 3.12 dropped distutils. meson.build requires packaging or distutils.
+    local py
+    py=""
+    if command -v python >/dev/null 2>&1; then
+        py="$(command -v python)"
+    elif command -v python3 >/dev/null 2>&1; then
+        py="$(command -v python3)"
+    fi
+    if [ -n "$py" ]; then
+        if ! "$py" -c "import packaging" >/dev/null 2>&1 && ! "$py" -c "import distutils" >/dev/null 2>&1; then
+            echo "glon12: installing Python packaging/mako (Mesa meson)"
+            "$py" -m pip install --upgrade packaging mako pyyaml setuptools || true
+        fi
+        if ! "$py" -c "import packaging" >/dev/null 2>&1 && ! "$py" -c "import distutils" >/dev/null 2>&1; then
+            echoError "glon12: Python packaging module missing. Run: \"$py\" -m pip install packaging mako"
+            exit 1
+        fi
+    fi
+
     . "$DOWNLOADER_SCRIPT"
     downloader "https://github.com/lexxmark/winflexbison/releases/download/v${WINFLEX_VER}/win_flex_bison-${WINFLEX_VER}.zip"
     verify_sha256 "win_flex_bison-${WINFLEX_VER}.zip" "$WINFLEX_SHA256"

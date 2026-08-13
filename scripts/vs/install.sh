@@ -139,10 +139,10 @@ PY=""
 PY="$(find_python || true)"
 if [ "$PY" = "py" ]; then
     py -3 -m ensurepip --upgrade || true
-    py -3 -m pip install --upgrade meson ninja numpy
+    py -3 -m pip install --upgrade meson ninja numpy packaging mako pyyaml setuptools
 elif [ -n "$PY" ]; then
     "$PY" -m ensurepip --upgrade || true
-    "$PY" -m pip install --upgrade meson ninja numpy
+    "$PY" -m pip install --upgrade meson ninja numpy packaging mako pyyaml setuptools
     PYDIR="$(dirname "$PY")"
     export PATH="$PYDIR:$PYDIR/Scripts:$PATH"
 else
