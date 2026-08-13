@@ -26,7 +26,7 @@ echo "Architecture: $ARCH"
 echo "Bundle: $BUNDLE"
 echo "Apothecary path: $APOTHECARY_PATH"
 
-source ${ROOT}./scripts/calculate_formulas.sh
+source "${ROOT}./scripts/calculate_formulas.sh" "$TARGET" "$BUNDLE"
 if [ -z "$FORMULAS" ]; then
     echo "No formulas to framework"
     exit 0
