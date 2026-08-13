@@ -87,6 +87,7 @@ if [[ "$TARGET" =~ ^(linux)$ ]]; then
         "FreeImage"
         "fmt"
         "uriparser"
+        "dawn"
     )
     if [[ "$TARCH" =~ ^(64|arm64|x86_64)$ ]]; then
         FORMULAS+=(
@@ -140,8 +141,7 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
             "rtAudio"
             "tess2"
             "uriparser"
-            #"metalangle"  # opt-in: TYPE=ios|osx ./apo update metalangle
-            #"dawn"        # opt-in: TYPE=osx ./apo update dawn (large)
+            #"metalangle"
             "cairo"
         )
     fi
@@ -175,6 +175,10 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
         # release asset, not as part of the monolithic iOS bundle.
         if [ "$TARGET" != "ios" ]; then
             FORMULAS+=("poco")
+        fi
+        # Dawn is Metal on Apple; watchOS SDK has no Metal.framework.
+        if [ "$TARGET" != "watchos" ]; then
+            FORMULAS+=("dawn")
         fi
     fi
 elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
@@ -215,8 +219,9 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
             "openssl"
             "curl"
             "poco"
-            #"glon12"  # opt-in: TYPE=vs ./apo update glon12 (Mesa D3D12, large)
-            #"angle"   # opt-in: TYPE=vs ./apo update angle (GLES on D3D11, large)
+            "glon12"
+            "angle"
+            "dawn"
         )
     fi
 fi
