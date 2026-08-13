@@ -7,7 +7,7 @@
 # uses a CMake build system
 
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "watchos" "android")
-FORMULA_DEPENDS=("openssl" "zlib" "brotli")
+FORMULA_DEPENDS=("openssl" "zlib" "brotli" "nghttp2" "nghttp3" "ngtcp2" "libssh2")
 
 # Android to implementation 'com.android.ndk.thirdparty:curl:7.79.1-beta-1'
 
@@ -17,7 +17,7 @@ SHA1="c4a973118684745cb03c38987d131ccbce9e7ab1"
 SHA256="d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
 CACERT_DATE=2026-07-16
 CACERT_SHA256="3ff344e30b9b1ed2971044eabb438a08f2e2245ddb5f8ab1a3ad8b63ab4eaf91"
-BUILD_ID=6
+BUILD_ID=7
 DEFINES=""
 USE_OPENSSL=ON
 
@@ -47,22 +47,6 @@ function download() {
 function prepare() {
     echo "prepare"
 
-    apothecaryDependencies download
-
-    # cp -f $FORMULA_DIR/CMakeLists.txt .
-
-    apothecaryDepend prepare brotli
-    apothecaryDepend build brotli
-    apothecaryDepend copy brotli
-
-    apothecaryDepend prepare zlib
-    apothecaryDepend build zlib
-    apothecaryDepend copy zlib
-
-    apothecaryDepend prepare openssl
-    apothecaryDepend build openssl
-    apothecaryDepend copy openssl
-
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         if grep -q 'char \*input = getpass(prompt);' src/tool_paramhlp.c; then
             echo "apple-patch.diff already applied"
@@ -80,10 +64,60 @@ function prepare() {
 
 }
 
+function verify_required_features() {
+    local config_header="$1"
+    local feature
+    for feature in USE_NGHTTP2 USE_NGTCP2 USE_NGHTTP3 USE_LIBSSH2; do
+        if ! grep -q "^#define ${feature} 1$" "$config_header"; then
+            echo "curl configured without required feature ${feature}"
+            exit 1
+        fi
+    done
+}
+
+function merge_unix_curl_dependencies() {
+    local curl_library="$1"
+    shift
+
+    if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
+        local merged_library="${curl_library}.merged"
+        /usr/bin/libtool -static -o "$merged_library" "$curl_library" "$@"
+        mv "$merged_library" "$curl_library"
+    else
+        local merge_script="${curl_library}.mri"
+        local merged_library="${curl_library}.merged"
+        local archiver="$TOOLCHAIN_PATH/llvm-ar"
+        local ranlib="$TOOLCHAIN_PATH/llvm-ranlib"
+        if [ ! -x "$archiver" ] || [ ! -x "$ranlib" ]; then
+            echo "Unable to find the Android NDK archive tools"
+            exit 1
+        fi
+        rm -f "$merged_library" "$merge_script"
+        {
+            echo "create $merged_library"
+            echo "addlib $curl_library"
+            local dependency
+            for dependency in "$@"; do
+                echo "addlib $dependency"
+            done
+            echo save
+            echo end
+        } >"$merge_script"
+        "$archiver" -M <"$merge_script"
+        "$ranlib" "$merged_library"
+        mv "$merged_library" "$curl_library"
+        rm -f "$merge_script"
+    fi
+}
+
 # executed inside the lib src dir
 function build() {
 
     LIBS_ROOT=$(realpath $LIBS_DIR)
+    NGHTTP2_ROOT="$LIBS_ROOT/nghttp2"
+    NGHTTP3_ROOT="$LIBS_ROOT/nghttp3"
+    NGTCP2_ROOT="$LIBS_ROOT/ngtcp2"
+    LIBSSH2_ROOT="$LIBS_ROOT/libssh2"
     export OF_LIBS_OPENSSL_ABS_PATH=$(realpath ${LIBS_DIR}/)
     local OF_LIBS_OPENSSL="$LIBS_DIR/openssl/"
     local OF_LIBS_OPENSSL_ABS_PATH=$(realpath $OF_LIBS_OPENSSL)
@@ -124,6 +158,12 @@ function build() {
         LIBBROTLI_COMMON_LIB="$LIBBROTLI_LIBRARY/brotlicommon.lib"
         LIBBROTLI_ENC_LIB="$LIBBROTLI_LIBRARY/brotlienc.lib"
         LIBBROTLI_DEC_LIB="$LIBBROTLI_LIBRARY/brotlidec.lib"
+
+        NGHTTP2_LIBRARY="$NGHTTP2_ROOT/lib/$TYPE/$PLATFORM/nghttp2.lib"
+        NGHTTP3_LIBRARY="$NGHTTP3_ROOT/lib/$TYPE/$PLATFORM/nghttp3.lib"
+        NGTCP2_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2.lib"
+        NGTCP2_CRYPTO_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.lib"
+        LIBSSH2_LIBRARY="$LIBSSH2_ROOT/lib/$TYPE/$PLATFORM/libssh2.lib"
 
         if [ "$USE_OPENSSL" == "ON" ]; then
             OPENSSL_DEFS="-DCURL_USE_OPENSSL=ON \
@@ -174,7 +214,21 @@ function build() {
             -DENABLE_UNICODE=ON \
             ${OPENSSL_DEFS} \
             -DUSE_SSLEAY=ON \
-            -DUSE_NGHTTP2=OFF \
+            -DUSE_NGHTTP2=ON \
+            -DNGHTTP2_USE_STATIC_LIBS=ON \
+            -DNGHTTP2_INCLUDE_DIR="$NGHTTP2_ROOT/include" \
+            -DNGHTTP2_LIBRARY="$NGHTTP2_LIBRARY" \
+            -DUSE_NGTCP2=ON \
+            -DNGTCP2_USE_STATIC_LIBS=ON \
+            -DNGTCP2_INCLUDE_DIR="$NGTCP2_ROOT/include" \
+            -DNGTCP2_LIBRARY="$NGTCP2_LIBRARY" \
+            -DNGTCP2_CRYPTO_OSSL_LIBRARY="$NGTCP2_CRYPTO_LIBRARY" \
+            -DNGHTTP3_USE_STATIC_LIBS=ON \
+            -DNGHTTP3_INCLUDE_DIR="$NGHTTP3_ROOT/include" \
+            -DNGHTTP3_LIBRARY="$NGHTTP3_LIBRARY" \
+            -DCURL_USE_LIBSSH2=ON \
+            -DLIBSSH2_INCLUDE_DIR="$LIBSSH2_ROOT/include" \
+            -DLIBSSH2_LIBRARY="$LIBSSH2_LIBRARY" \
             -DUSE_OPENSSL=ON \
             -DCURL_USE_OPENSSL=ON \
             -DCMAKE_INSTALL_LIBDIR="lib" \
@@ -204,7 +258,23 @@ function build() {
             -DOPENSSL_LIBRARIES="$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libcrypto.lib;$OF_LIBS_OPENSSL_ABS_PATH/lib/$TYPE/$PLATFORM/libssl.lib;" \
             -A "${PLATFORM}" \
             -G "${GENERATOR_NAME}"
+        verify_required_features lib/curl_config.h
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
+
+        librarian=$(command -v lib.exe)
+        if [ -z "$librarian" ]; then
+            echo "Unable to find the Visual Studio librarian"
+            exit 1
+        fi
+        MSYS2_ARG_CONV_EXCL='*' "$librarian" /NOLOGO \
+            "/OUT:$(cygpath -w "$PWD/Release/lib/libcurl-merged.lib")" \
+            "$(cygpath -w "$PWD/Release/lib/libcurl.lib")" \
+            "$(cygpath -w "$NGHTTP2_LIBRARY")" \
+            "$(cygpath -w "$NGHTTP3_LIBRARY")" \
+            "$(cygpath -w "$NGTCP2_LIBRARY")" \
+            "$(cygpath -w "$NGTCP2_CRYPTO_LIBRARY")" \
+            "$(cygpath -w "$LIBSSH2_LIBRARY")"
+        mv Release/lib/libcurl-merged.lib Release/lib/libcurl.lib
         cd ..
 
         rm ${OPENSSL_PATH}/lib/libssl.lib
@@ -238,6 +308,11 @@ function build() {
         LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlicommon.a"
         LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlienc.a"
         LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
+        NGHTTP2_LIBRARY="$NGHTTP2_ROOT/lib/$TYPE/$PLATFORM/nghttp2.a"
+        NGHTTP3_LIBRARY="$NGHTTP3_ROOT/lib/$TYPE/$PLATFORM/nghttp3.a"
+        NGTCP2_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2.a"
+        NGTCP2_CRYPTO_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.a"
+        LIBSSH2_LIBRARY="$LIBSSH2_ROOT/lib/$TYPE/$PLATFORM/libssh2.a"
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OPENSSL_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
         echo "building curl $TYPE | $PLATFORM"
@@ -263,7 +338,6 @@ function build() {
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
             -DHAVE_GETPASS_R=0 \
-            -DCURL_USE_LIBSSH2=OFF \
             -DCURL_USE_LIBPSL=OFF \
             -DCMAKE_IGNORE_PATH=/opt/homebrew \
             -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON \
@@ -281,6 +355,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_DISABLE_LDAP=ON \
+            -DCURL_DISABLE_LDAPS=ON \
             -DENABLE_VISIBILITY=OFF \
             ${SSL_DEFS} \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
@@ -297,6 +372,20 @@ function build() {
             -DUSE_SECURE_TRANSPORT=${USE_SECURE_TRANSPORT} \
             -DCURL_USE_SECTRANSP=${USE_SECURE_TRANSPORT} \
             -DUSE_NGHTTP2=ON \
+            -DNGHTTP2_USE_STATIC_LIBS=ON \
+            -DNGHTTP2_INCLUDE_DIR=${NGHTTP2_ROOT}/include \
+            -DNGHTTP2_LIBRARY=${NGHTTP2_LIBRARY} \
+            -DUSE_NGTCP2=ON \
+            -DNGTCP2_USE_STATIC_LIBS=ON \
+            -DNGTCP2_INCLUDE_DIR=${NGTCP2_ROOT}/include \
+            -DNGTCP2_LIBRARY=${NGTCP2_LIBRARY} \
+            -DNGTCP2_CRYPTO_OSSL_LIBRARY=${NGTCP2_CRYPTO_LIBRARY} \
+            -DNGHTTP3_USE_STATIC_LIBS=ON \
+            -DNGHTTP3_INCLUDE_DIR=${NGHTTP3_ROOT}/include \
+            -DNGHTTP3_LIBRARY=${NGHTTP3_LIBRARY} \
+            -DCURL_USE_LIBSSH2=ON \
+            -DLIBSSH2_INCLUDE_DIR=${LIBSSH2_ROOT}/include \
+            -DLIBSSH2_LIBRARY=${LIBSSH2_LIBRARY} \
             -DCURL_DISABLE_POP3=ON \
             -DCURL_DISABLE_IMAP=ON \
             -DENABLE_WEBSOCKETS=ON \
@@ -311,6 +400,8 @@ function build() {
             -DENABLE_VERBOSE=ON \
             -DENABLE_THREADED_RESOLVER=ON \
             -DENABLE_IPV6=ON
+
+        verify_required_features lib/curl_config.h
 
         echo "--------- CMakeCache.txt Content ---------"
         cat CMakeCache.txt
@@ -335,6 +426,9 @@ function build() {
             ar rcs "../libcurl.a" curl_${ARCH}_*.o
             rm -rf curl
             cd ../..
+        merge_unix_curl_dependencies Release/lib/libcurl.a \
+            "$NGHTTP2_LIBRARY" "$NGHTTP3_LIBRARY" "$NGTCP2_LIBRARY" \
+            "$NGTCP2_CRYPTO_LIBRARY" "$LIBSSH2_LIBRARY"
         cd ..
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -363,6 +457,11 @@ function build() {
         LIBBROTLI_LIBRARY="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlicommon.a"
         LIBBROTLI_ENC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlienc.a"
         LIBBROTLI_DEC_LIB="$LIBS_ROOT/brotli/lib/$TYPE/$PLATFORM/libbrotlidec.a"
+        NGHTTP2_LIBRARY="$NGHTTP2_ROOT/lib/$TYPE/$PLATFORM/nghttp2.a"
+        NGHTTP3_LIBRARY="$NGHTTP3_ROOT/lib/$TYPE/$PLATFORM/nghttp3.a"
+        NGTCP2_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2.a"
+        NGTCP2_CRYPTO_LIBRARY="$NGTCP2_ROOT/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.a"
+        LIBSSH2_LIBRARY="$LIBSSH2_ROOT/lib/$TYPE/$PLATFORM/libssh2.a"
 
         export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}:${OPENSSL_ROOT}/lib/$TYPE/$PLATFORM:${ZLIB_ROOT}/lib/$TYPE/$PLATFORM:${LIBBROTLI_ROOT}/lib/$TYPE/$PLATFORM"
 
@@ -381,7 +480,6 @@ function build() {
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 ${FLAG_RELEASE} -Wno-error=implicit-function-declaration" \
             -DENABLE_STRICT_TRY_COMPILE=ON \
             -DHAVE_GETPASS_R=0 \
-            -DCURL_USE_LIBSSH2=OFF \
             -DCURL_USE_LIBPSL=OFF \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
@@ -406,6 +504,7 @@ function build() {
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \
             -DCURL_DISABLE_LDAP=ON \
+            -DCURL_DISABLE_LDAPS=ON \
             -DENABLE_VISIBILITY=OFF \
             -DCURL_DISABLE_ZSTD=ON \
             -DCURL_ZSTD=OFF \
@@ -422,8 +521,21 @@ function build() {
             -DHAVE_LIBSOCKET=OFF \
             -DCURL_ENABLE_SSL=${CURL_ENABLE_SSL} \
             -DCMAKE_MACOSX_BUNDLE=OFF \
-            -DUSE_NGHTTP2=OFF \
-            -DUSE_NGTCP2=OFF \
+            -DUSE_NGHTTP2=ON \
+            -DNGHTTP2_USE_STATIC_LIBS=ON \
+            -DNGHTTP2_INCLUDE_DIR=${NGHTTP2_ROOT}/include \
+            -DNGHTTP2_LIBRARY=${NGHTTP2_LIBRARY} \
+            -DUSE_NGTCP2=ON \
+            -DNGTCP2_USE_STATIC_LIBS=ON \
+            -DNGTCP2_INCLUDE_DIR=${NGTCP2_ROOT}/include \
+            -DNGTCP2_LIBRARY=${NGTCP2_LIBRARY} \
+            -DNGTCP2_CRYPTO_OSSL_LIBRARY=${NGTCP2_CRYPTO_LIBRARY} \
+            -DNGHTTP3_USE_STATIC_LIBS=ON \
+            -DNGHTTP3_INCLUDE_DIR=${NGHTTP3_ROOT}/include \
+            -DNGHTTP3_LIBRARY=${NGHTTP3_LIBRARY} \
+            -DCURL_USE_LIBSSH2=ON \
+            -DLIBSSH2_INCLUDE_DIR=${LIBSSH2_ROOT}/include \
+            -DLIBSSH2_LIBRARY=${LIBSSH2_LIBRARY} \
             -DCURL_CA_FALLBACK=ON \
             -DCURL_DISABLE_POP3=ON \
             -DCURL_CA_FALLBACK=ON \
@@ -448,6 +560,7 @@ function build() {
             echo "curl configured without the required OpenSSL and Apple SecTrust backends"
             exit 1
         fi
+        verify_required_features lib/curl_config.h
         cmake --build . --config Release -j${PARALLEL_MAKE} --target install
         cd "Release/lib/"
             # Rename with prefixes (including library origin to avoid duplicates)
@@ -481,6 +594,9 @@ function build() {
             lipo -info libcurl.a
             rm -rf curl
             cd ../..
+        merge_unix_curl_dependencies Release/lib/libcurl.a \
+            "$NGHTTP2_LIBRARY" "$NGHTTP3_LIBRARY" "$NGTCP2_LIBRARY" \
+            "$NGTCP2_CRYPTO_LIBRARY" "$LIBSSH2_LIBRARY"
         cd ..
     else
         echo "building other for $TYPE"
@@ -521,7 +637,7 @@ function copy() {
         mkdir -p $1/bin
         cp -Rv "build_${TYPE}_${ARCH}/Release/bin/"* $1/bin
         cp -v "build_${TYPE}_${ARCH}/Release/lib/libcurl.lib" $1/lib/$TYPE/$PLATFORM/libcurl.lib
-        secure "$1/lib/$TYPE/$PLATFORM/libcurl.lib" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libcurl.lib" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         CURL_APPLE_LIBRARY="build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a"
         if ! nm -g "$CURL_APPLE_LIBRARY" | grep '_Curl_ssl_openssl' >/dev/null; then
@@ -533,13 +649,13 @@ function copy() {
         mkdir -p $1/bin
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/bin/"* $1/bin
         cp -v "$CURL_APPLE_LIBRARY" $1/lib/$TYPE/$PLATFORM/curl.a
-        secure "$1/lib/$TYPE/$PLATFORM/curl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/curl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
     elif [ "$TYPE" == "android" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/"* $1/include
         mkdir -p $1/bin
         cp -Rv "build_${TYPE}_${PLATFORM}/Release/lib/libcurl.a" $1/lib/$TYPE/$PLATFORM/libcurl.a
-        secure "$1/lib/$TYPE/$PLATFORM/libcurl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        secure "$1/lib/$TYPE/$PLATFORM/libcurl.a" "curl.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
     fi
     # copy license file
     if [ -d "$1/license" ]; then

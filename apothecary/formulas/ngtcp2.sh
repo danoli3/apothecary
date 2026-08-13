@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 #
-# libssh2 - SSH2 client library used by curl for SCP and SFTP
-# https://github.com/libssh2/libssh2
+# ngtcp2 - QUIC transport library with the OpenSSL 3.5+ crypto helper
+# https://github.com/ngtcp2/ngtcp2
 
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "watchos" "android")
-FORMULA_DEPENDS=("zlib" "openssl")
+FORMULA_DEPENDS=("openssl")
 
-VER=1.11.1
-SHA256="d9ec76cbe34db98eec3539fe2c899d26b0c837cb3eb466a56b0f109cabf658f7"
-BUILD_ID=2
-DEFINES="-DLIBSSH2_OPENSSL -DLIBSSH2_HAVE_ZLIB"
+VER=1.25.0
+SHA256="1c0843076528a87b65e9a9d455100941f4cb65d44f96c5da6ae56df146043955"
+BUILD_ID=1
+DEFINES="-DNGTCP2_STATICLIB"
 
-GIT_URL=https://github.com/libssh2/libssh2
-GIT_TAG=libssh2-$VER
+GIT_URL=https://github.com/ngtcp2/ngtcp2
+GIT_TAG=v$VER
 
 function download() {
     . "$DOWNLOADER_SCRIPT"
-    downloader "$GIT_URL/releases/download/libssh2-$VER/libssh2-$VER.tar.gz"
-    verify_sha256 "libssh2-$VER.tar.gz" "$SHA256"
-    tar -xf "libssh2-$VER.tar.gz"
-    mv "libssh2-$VER" libssh2
-    rm -f "libssh2-$VER.tar.gz"
+    downloader "$GIT_URL/releases/download/v$VER/ngtcp2-$VER.tar.gz"
+    verify_sha256 "ngtcp2-$VER.tar.gz" "$SHA256"
+    tar -xf "ngtcp2-$VER.tar.gz"
+    mv "ngtcp2-$VER" ngtcp2
+    rm -f "ngtcp2-$VER.tar.gz"
 }
 
 function prepare() {
@@ -28,11 +28,10 @@ function prepare() {
 }
 
 function build() {
-    local libs_root
+    local libs_root openssl_root build_dir
     libs_root=$(realpath "$LIBS_DIR")
-    local openssl_root="$libs_root/openssl"
-    local zlib_root="$libs_root/zlib"
-    local build_dir="build_${TYPE}_${PLATFORM}"
+    openssl_root="$libs_root/openssl"
+    build_dir="build_${TYPE}_${PLATFORM}"
     local platform_args=()
 
     if [ "$TYPE" == "vs" ]; then
@@ -43,7 +42,6 @@ function build() {
             ${CMAKE_WIN_SDK}
             -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.lib"
             -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.lib"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.lib"
         )
     elif [ "$TYPE" == "android" ]; then
         source "$APOTHECARY_DIR/configure/android_configure.sh" "$ABI" cmake
@@ -54,7 +52,6 @@ function build() {
             -DANDROID_NDK_ROOT="$ANDROID_NDK_ROOT"
             -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
             -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.a"
         )
     else
         platform_args=(
@@ -64,7 +61,6 @@ function build() {
             -DENABLE_BITCODE=OFF
             -DOPENSSL_SSL_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libssl.a"
             -DOPENSSL_CRYPTO_LIBRARY="$openssl_root/lib/$TYPE/$PLATFORM/libcrypto.a"
-            -DZLIB_LIBRARY="$zlib_root/lib/$TYPE/$PLATFORM/zlib.a"
         )
     fi
 
@@ -77,36 +73,45 @@ function build() {
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DBUILD_SHARED_LIBS=OFF \
-        -DBUILD_STATIC_LIBS=ON \
-        -DBUILD_EXAMPLES=OFF \
-        -DBUILD_TESTING=OFF \
+        -DENABLE_STATIC_LIB=ON \
+        -DENABLE_SHARED_LIB=OFF \
+        -DENABLE_LIB_ONLY=ON \
+        -DENABLE_OPENSSL=ON \
+        -DENABLE_BORINGSSL=OFF \
+        -DENABLE_GNUTLS=OFF \
+        -DENABLE_PICOTLS=OFF \
+        -DENABLE_WOLFSSL=OFF \
         -DENABLE_WERROR=OFF \
-        -DCRYPTO_BACKEND=OpenSSL \
+        -DBUILD_TESTING=OFF \
         -DOPENSSL_ROOT_DIR="$openssl_root" \
-        -DOPENSSL_INCLUDE_DIR="$openssl_root/include" \
-        -DZLIB_ROOT="$zlib_root" \
-        -DZLIB_INCLUDE_DIR="$zlib_root/include"
+        -DOPENSSL_INCLUDE_DIR="$openssl_root/include"
 
-    cmake --build "$build_dir" --config Release -j"${PARALLEL_MAKE}" --target install
-    grep -q '^CRYPTO_BACKEND:STRING=OpenSSL$' "$build_dir/CMakeCache.txt" || {
-        echo "libssh2 configured without OpenSSL"
+    grep -q '^HAVE_SSL_SET_QUIC_TLS_CBS:INTERNAL=1$' "$build_dir/CMakeCache.txt" || {
+        echo "ngtcp2 could not verify the OpenSSL QUIC API"
         exit 1
     }
+    cmake --build "$build_dir" --config Release -j"${PARALLEL_MAKE}" --target install
 }
 
 function copy() {
     local build_dir="build_${TYPE}_${PLATFORM}/Release"
     local extension=a
-    [ "$TYPE" == "vs" ] && extension=lib
+    local transport_name=libngtcp2.a
+    local crypto_name=libngtcp2_crypto_ossl.a
+    if [ "$TYPE" == "vs" ]; then
+        extension=lib
+        transport_name=ngtcp2.lib
+        crypto_name=ngtcp2_crypto_ossl.lib
+    fi
 
     mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM" "$1/license"
     cp -Rv "$build_dir/include/"* "$1/include/"
-    cp -v "$build_dir/lib/libssh2.$extension" "$1/lib/$TYPE/$PLATFORM/libssh2.$extension"
+    cp -v "$build_dir/lib/$transport_name" "$1/lib/$TYPE/$PLATFORM/ngtcp2.$extension"
+    cp -v "$build_dir/lib/$crypto_name" "$1/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.$extension"
     cp -v COPYING "$1/license/"
 
     . "$SECURE_SCRIPT"
-    secure "$1/lib/$TYPE/$PLATFORM/libssh2.$extension" "libssh2.pkl" \
+    secure "$1/lib/$TYPE/$PLATFORM/ngtcp2.$extension" "ngtcp2.pkl" \
         "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
 }
 
@@ -117,7 +122,7 @@ function clean() {
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave "$TYPE" "libssh2" "$ARCH" "$VER" \
+    LOAD_RESULT=$(loadsave "$TYPE" "ngtcp2" "$ARCH" "$VER" \
         "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" "$BUILD_ID")
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
     [ "$PREBUILT" -eq 1 ] && echo 1 || echo 0

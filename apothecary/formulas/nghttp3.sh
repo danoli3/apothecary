@@ -1,35 +1,36 @@
 #!/usr/bin/env bash
 #
-# nghttp2 - HTTP/2 C library
-# https://github.com/nghttp2/nghttp2
+# nghttp3 - HTTP/3 and QPACK library
+# https://github.com/ngtcp2/nghttp3
 
 FORMULA_TYPES=("vs" "osx" "ios" "xros" "tvos" "catos" "watchos" "android")
 FORMULA_DEPENDS=()
 
-VER=1.70.0
-SHA256="aa317e2cf9dca6afa0aed68f8fad6ff303ec6982e25a78c75c0b65e2b9b3ded5"
+VER=1.18.0
+SHA256="2812e9c06583fa24c8dc46bdb5291310a69196352ceaca8fbe98106ff36ae7d8"
 BUILD_ID=1
-DEFINES="-DNGHTTP2_STATICLIB"
+DEFINES="-DNGHTTP3_STATICLIB"
 
-GIT_URL=https://github.com/nghttp2/nghttp2
+GIT_URL=https://github.com/ngtcp2/nghttp3
 GIT_TAG=v$VER
 
 function download() {
     . "$DOWNLOADER_SCRIPT"
-    downloader "$GIT_URL/releases/download/v$VER/nghttp2-$VER.tar.gz"
-    verify_sha256 "nghttp2-$VER.tar.gz" "$SHA256"
-    tar -xf "nghttp2-$VER.tar.gz"
-    mv "nghttp2-$VER" nghttp2
-    rm -f "nghttp2-$VER.tar.gz"
+    downloader "$GIT_URL/releases/download/v$VER/nghttp3-$VER.tar.gz"
+    verify_sha256 "nghttp3-$VER.tar.gz" "$SHA256"
+    tar -xf "nghttp3-$VER.tar.gz"
+    mv "nghttp3-$VER" nghttp3
+    rm -f "nghttp3-$VER.tar.gz"
 }
 
 function prepare() {
-    : # noop
+    :
 }
 
 function build() {
     local build_dir="build_${TYPE}_${PLATFORM}"
     local platform_args=()
+
     if [ "$TYPE" == "vs" ]; then
         unset PKG_CONFIG_PATH PKG_CONFIG_SYSTEM_INCLUDE_PATH PKG_CONFIG_SYSTEM_LIBRARY_PATH
         platform_args=(-G "Visual Studio ${VS_VER_GEN}" -A "$PLATFORM" ${CMAKE_WIN_SDK})
@@ -58,17 +59,12 @@ function build() {
         -DCMAKE_INSTALL_INCLUDEDIR=include \
         -DCMAKE_INSTALL_LIBDIR=lib \
         -DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON \
-        -DCMAKE_C_STANDARD=${C_STANDARD} \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DBUILD_SHARED_LIBS=OFF \
-        -DBUILD_STATIC_LIBS=ON \
-        -DBUILD_TESTING=OFF \
-        -DENABLE_APP=OFF \
-        -DENABLE_DOC=OFF \
-        -DENABLE_EXAMPLES=OFF \
-        -DENABLE_HPACK_TOOLS=OFF \
+        -DENABLE_STATIC_LIB=ON \
+        -DENABLE_SHARED_LIB=OFF \
         -DENABLE_LIB_ONLY=ON \
-        -DENABLE_WERROR=OFF
+        -DENABLE_WERROR=OFF \
+        -DBUILD_TESTING=OFF
 
     cmake --build "$build_dir" --config Release -j"${PARALLEL_MAKE}" --target install
 }
@@ -76,35 +72,28 @@ function build() {
 function copy() {
     local build_dir="build_${TYPE}_${PLATFORM}/Release"
     local extension=a
-    local source_name=libnghttp2.a
-    [ "$TYPE" == "vs" ] && extension=lib && source_name=nghttp2.lib
-    mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM"
+    local source_name=libnghttp3.a
+    [ "$TYPE" == "vs" ] && extension=lib && source_name=nghttp3.lib
+
+    mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM" "$1/license"
     cp -Rv "$build_dir/include/"* "$1/include/"
-    cp -v "$build_dir/lib/$source_name" "$1/lib/$TYPE/$PLATFORM/nghttp2.$extension"
+    cp -v "$build_dir/lib/$source_name" "$1/lib/$TYPE/$PLATFORM/nghttp3.$extension"
+    cp -v COPYING "$1/license/"
 
     . "$SECURE_SCRIPT"
-    secure "$1/lib/$TYPE/$PLATFORM/nghttp2.$extension" "nghttp2.pkl" \
+    secure "$1/lib/$TYPE/$PLATFORM/nghttp3.$extension" "nghttp3.pkl" \
         "$VERSION" "$DEFINES" "$BUILD_ID" "${FORMULA_DEPENDS[*]}"
-
-    rm -rf "$1/license"
-    mkdir -p "$1/license"
-    cp -v COPYING "$1/license/"
 }
 
 function clean() {
-    if [ -d "build_${TYPE}_${PLATFORM}" ]; then
-        rm -r "build_${TYPE}_${PLATFORM}"
-    fi
+    local build_dir="build_${TYPE}_${PLATFORM}"
+    [ -d "$build_dir" ] && rm -r "$build_dir"
 }
 
 function load() {
     . "$LOAD_SCRIPT"
-    LOAD_RESULT=$(loadsave "$TYPE" "nghttp2" "$ARCH" "$VER" \
+    LOAD_RESULT=$(loadsave "$TYPE" "nghttp3" "$ARCH" "$VER" \
         "$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM" "$BUILD_ID")
     PREBUILT=$(echo "$LOAD_RESULT" | tail -n 1)
-    if [ "$PREBUILT" -eq 1 ]; then
-        echo 1
-    else
-        echo 0
-    fi
+    [ "$PREBUILT" -eq 1 ] && echo 1 || echo 0
 }
