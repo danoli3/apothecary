@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Proposed OF VS overlay for ANGLE (GLES → D3D11).
+  Import AFTER openFrameworksRelease/Debug.props. Default OFF.
+
+  What VS needs (apothecary first, OF core second):
+  1. TYPE=vs ARCH=64 ./apo update angle
+  2. Link libEGL.dll.lib + libGLESv2.dll.lib
+  3. Copy libEGL.dll + libGLESv2.dll (+ d3dcompiler_47.dll if present)
+     next to the .exe
+  4. Window must be EGL, not WGL/GLEW:
+     GLFW with EGL, or ofAppEGLWindow.
+     ofGLProgrammableRenderer stays; GLSL ES stays.
+  5. Compile OF with OF_USE_ANGLE=1 (and TARGET_OPENGLES once OF core
+     grows the gate). Do not mix with OF_USE_GLON12 (desktop GL ICD).
+
+  This is not GLon12 (OpenGL→D3D12) and not Dawn (WebGPU).
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OF_USE_ANGLE Condition="'$(OF_USE_ANGLE)'==''">0</OF_USE_ANGLE>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(OF_USE_ANGLE)'=='1'">
+    <ClCompile>
+      <PreprocessorDefinitions>OF_USE_ANGLE=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(OF_PATH)\libs\angle\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OF_PATH)\libs\angle\lib\vs\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libEGL.dll.lib;libGLESv2.dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(OF_USE_ANGLE)'=='1'">
+    <None Include="$(OF_PATH)\libs\angle\bin\vs\$(Platform)\libEGL.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OF_PATH)\libs\angle\bin\vs\$(Platform)\libGLESv2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

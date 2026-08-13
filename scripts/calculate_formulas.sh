@@ -216,6 +216,7 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
             "curl"
             "poco"
             #"glon12"  # opt-in: TYPE=vs ./apo update glon12 (Mesa D3D12, large)
+            #"angle"   # opt-in: TYPE=vs ./apo update angle (GLES on D3D11, large)
         )
     fi
 fi
