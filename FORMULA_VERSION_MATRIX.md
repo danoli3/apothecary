@@ -56,7 +56,8 @@
 | **libssh2** | `1.11.0-dev` | `libssh2-1.11.1` | behind / pinned-dev | https://github.com/libssh2/libssh2 | `apothecary/formulas/libssh2.sh` |
 | **libusb** | `1.0.30` | `v1.0.30` | current | https://github.com/libusb/libusb | `apothecary/formulas/libusb/libusb.sh` |
 | **libxml2** | `2.13.9` | `v2.15.3` (also `v2.14.6`, `v2.13.9` on 2.13 line) | major-behind* | https://github.com/GNOME/libxml2 | `apothecary/formulas/libxml2/libxml2.sh` |
-| **metalangle** | `1.0` | tags vary (`v0.0.1`, branch tags); not a clear semver product | n/a | https://github.com/kakashidinho/metalangle | `apothecary/formulas/metalangle/metalangle.sh` |
+| **metalangle** | `1.0` (`ec925142edeb1da3158fd8710ecc6dc2fb1f1f97`) | kakashidinho fork frozen 2023-02-11; google/angle is a different tree (PR #533) | pinned-dev | https://github.com/kakashidinho/metalangle | `apothecary/formulas/metalangle/metalangle.sh` |
+| **dawn** | `2026.07.31` (`cd2d5a667d1140af6e89f4c4c24f6545e1d5d2d7`) | ofLibs pin (Dawn `v20260731.171941`); rolling chromium | pinned-dev | https://dawn.googlesource.com/dawn · mirror https://github.com/google/dawn | `apothecary/formulas/dawn/dawn.sh` |
 | **opencv** | `4.14.0` | `5.0.0` latest · **`4.14.0` latest 4.x** | current (4.x track) | https://github.com/opencv/opencv · contrib: https://github.com/opencv/opencv_contrib | `apothecary/formulas/opencv/opencv.sh` |
 | **openssl** | `4.0.1` (+ cmake wrapper `VER_TAG=4.0`) | `openssl-4.0.1` · LTS still `3.5.7` | current (4.0 track, experimental for OF) | Source: https://github.com/openssl/openssl · CMake wrapper: https://github.com/danoli3/openssl-cmake (`4.0`) · Site: https://www.openssl.org | `apothecary/formulas/openssl/openssl.sh` |
 | **pixman** | `0.46.4` | `pixman-0.46.4` | current | https://gitlab.freedesktop.org/pixman/pixman · https://cairographics.org/releases | `apothecary/formulas/pixman/pixman.sh` |

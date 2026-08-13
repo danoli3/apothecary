@@ -1,0 +1,40 @@
+// OF_USE_ANGLE / OF_USE_DAWN gates — include from CoreOF.xcconfig later.
+// Default OFF. Leave ofGL*Renderer as the default path.
+//
+//   #include "$(OF_PATH)/scripts/apothecary/scripts/xcconfig/OFUseGates.xcconfig"
+//
+// Or copy the two lines into:
+//   libs/openFrameworksCompiled/project/{osx,ios,tvOS,macos}/CoreOF.xcconfig
+
+OF_USE_ANGLE = 0
+OF_USE_DAWN = 0
+
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) OF_USE_ANGLE=$(OF_USE_ANGLE) OF_USE_DAWN=$(OF_USE_DAWN)
+
+// --- ANGLE (GLES -> Metal drop-in). Flip OF_USE_ANGLE=1 ---
+HEADER_METALANGLE = $(OF_PATH)/libs/metalangle/include
+LIB_METALANGLE[sdk=macosx*] = $(OF_PATH)/libs/metalangle/lib/osx/$(PLATFORM)/MetalANGLE.a
+LIB_METALANGLE[sdk=iphoneos*] = $(OF_PATH)/libs/metalangle/lib/ios/$(PLATFORM)/MetalANGLE.a
+LIB_METALANGLE[sdk=iphonesimulator*] = $(OF_PATH)/libs/metalangle/lib/ios/iphonesimulator/MetalANGLE.a
+// fallback when only one sim slice was built:
+LIB_METALANGLE_SIM_SLICE = $(OF_PATH)/libs/metalangle/lib/ios/$(PLATFORM)/MetalANGLE.a
+
+// --- Dawn (WebGPU). Flip OF_USE_DAWN=1 ---
+HEADER_DAWN = $(OF_PATH)/libs/dawn/include
+LIB_DAWN[sdk=macosx*] = $(OF_PATH)/libs/dawn/lib/osx/$(PLATFORM)/libwebgpu_dawn.a
+LIB_DAWN[sdk=iphoneos*] = $(OF_PATH)/libs/dawn/lib/ios/$(PLATFORM)/libwebgpu_dawn.a
+LIB_DAWN[sdk=iphonesimulator*] = $(OF_PATH)/libs/dawn/lib/ios/iphonesimulator/libwebgpu_dawn.a
+
+OF_ANGLE_FRAMEWORKS = -framework Metal -framework MetalKit -framework QuartzCore -framework IOSurface
+OF_DAWN_FRAMEWORKS = -framework Metal -framework MetalKit -framework QuartzCore -framework IOSurface
+
+// Conditional extras — Xcode does not have real ifdefs in xcconfig.
+// When enabling, append these in the target xcconfig:
+//
+//   OF_CORE_HEADERS = $(OF_CORE_HEADERS) $(HEADER_METALANGLE)
+//   OF_CORE_LIBS = $(OF_CORE_LIBS) $(LIB_METALANGLE)
+//   OF_CORE_FRAMEWORKS = $(OF_CORE_FRAMEWORKS) $(OF_ANGLE_FRAMEWORKS)
+//
+//   OF_CORE_HEADERS = $(OF_CORE_HEADERS) $(HEADER_DAWN)
+//   OF_CORE_LIBS = $(OF_CORE_LIBS) $(LIB_DAWN)
+//   OF_CORE_FRAMEWORKS = $(OF_CORE_FRAMEWORKS) $(OF_DAWN_FRAMEWORKS)

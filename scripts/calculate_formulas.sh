@@ -140,7 +140,8 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
             "rtAudio"
             "tess2"
             "uriparser"
-            #"metalangle"
+            #"metalangle"  # opt-in: TYPE=ios|osx ./apo update metalangle
+            #"dawn"        # opt-in: TYPE=osx ./apo update dawn (large)
             "cairo"
         )
     fi
