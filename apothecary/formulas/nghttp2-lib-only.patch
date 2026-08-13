@@ -1,0 +1,18 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -66,6 +66,7 @@ if(NOT ENABLE_LIB_ONLY)
+   find_package(Libbrotlidec 1.0.9)
+ endif()
+ 
++if(NOT ENABLE_LIB_ONLY)
+ if(WITH_WOLFSSL)
+   find_package(WolfSSL 5.7.0)
+ else()
+@@ -95,6 +96,7 @@ find_package(LibXml2 2.6.26)
+ set(WITH_LIBXML2_DEFAULT    ${LIBXML2_FOUND})
+ find_package(Jemalloc)
+ set(WITH_JEMALLOC_DEFAULT   ${JEMALLOC_FOUND})
++endif()
+ 
+ include(CMakeOptions.txt)
+ 

@@ -24,7 +24,14 @@ function download() {
 }
 
 function prepare() {
-    : # noop
+    if patch --batch --forward -p1 <"$FORMULA_DIR/nghttp2-lib-only.patch"; then
+        echo "nghttp2 library-only dependency patch applied"
+    elif [ "$(grep -c '^if(NOT ENABLE_LIB_ONLY)' CMakeLists.txt)" -ge 2 ]; then
+        echo "nghttp2 library-only dependency patch already applied"
+    else
+        echo "Failed to apply nghttp2 library-only dependency patch"
+        exit 1
+    fi
 }
 
 function build() {
