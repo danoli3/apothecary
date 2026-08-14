@@ -416,6 +416,7 @@ jobs:
         working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: scripts/macos/xcframework_all.sh
         env:
+          BUNDLE: 0
           GA_CI_SECRET: ${{ secrets.CI_SECRET }}
       - name: List output directory xout
         run: ls -lah ./xout
