@@ -87,7 +87,8 @@ if [[ "$TARGET" =~ ^(linux)$ ]]; then
         "FreeImage"
         "fmt"
         "uriparser"
-        "dawn"
+        # dawn: not in core until Linux CI is GCC 11+ (atomic::wait / bit_cast)
+        # TYPE=linux ./apo update dawn
     )
     if [[ "$TARCH" =~ ^(64|arm64|x86_64)$ ]]; then
         FORMULAS+=(

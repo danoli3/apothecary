@@ -22,7 +22,7 @@ FORMULA_DEPENDS=()
 
 VER=2026.07.31
 SOURCE_COMMIT=cd2d5a667d1140af6e89f4c4c24f6545e1d5d2d7
-BUILD_ID=3
+BUILD_ID=4
 DEFINES=""
 
 GIT_URL=https://dawn.googlesource.com/dawn
@@ -69,6 +69,16 @@ function prepare() {
     export PATH="${vendor}/depot_tools:${PATH}"
     export DEPOT_TOOLS_UPDATE=0
     export DEPOT_TOOLS_WIN_TOOLCHAIN=0
+
+    # gcc-10 libstdc++ has no std::atomic::wait / notify_all (GCC 11).
+    if [ "$TYPE" = "linux" ]; then
+        local p
+        p="${APOTHECARY_DIR}/formulas/dawn/gcc10-atomic-wait.patch"
+        if [ -f "$p" ] && ! grep -q "mCompletedCv" src/dawn/platform/WorkerThread.h 2>/dev/null; then
+            echo "dawn: applying gcc-10 atomic wait polyfill"
+            patch -p1 < "$p"
+        fi
+    fi
 }
 
 function _dawn_backend_defs() {
