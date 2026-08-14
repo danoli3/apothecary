@@ -22,7 +22,7 @@ FORMULA_DEPENDS=()
 
 VER=2026.07.31
 SOURCE_COMMIT=cd2d5a667d1140af6e89f4c4c24f6545e1d5d2d7
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 
 GIT_URL=https://dawn.googlesource.com/dawn
@@ -100,6 +100,15 @@ function _dawn_backend_defs() {
     esac
 }
 
+function _dawn_cxx_standard() {
+    # Dawn Math.cpp uses std::bit_cast (C++20). Linux CI gcc-10 defaults to 17.
+    local std="${CPP_STANDARD:-17}"
+    case "${std}" in
+        11|14|17) echo 20 ;;
+        *) echo "${std}" ;;
+    esac
+}
+
 function _dawn_deploy_target() {
     case "$TYPE" in
         osx) echo "11.0" ;;
@@ -144,7 +153,7 @@ function build() {
     local DEFS
     DEFS="
         -DCMAKE_C_STANDARD=${C_STANDARD} \
-        -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
+        -DCMAKE_CXX_STANDARD=$(_dawn_cxx_standard) \
         -DCMAKE_CXX_STANDARD_REQUIRED=ON \
         -DCMAKE_CXX_EXTENSIONS=OFF \
         -DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
@@ -203,15 +212,17 @@ function build() {
         if [ "${CROSSCOMPILING:-0}" -eq 1 ]; then
             source "$APOTHECARY_DIR/configure/${TYPE}${PLATFORM}_configure.sh"
         fi
-        echoVerbose "building dawn [$TYPE] PLATFORM:[${PLATFORM:-$ARCH}]"
+        echoVerbose "building dawn [$TYPE] PLATFORM:[${PLATFORM:-$ARCH}] CXX=$(_dawn_cxx_standard)"
         mkdir -p "build_${TYPE}_${PLATFORM}"
         cd "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt *.a *.o
+        local polyfill
+        polyfill="${APOTHECARY_DIR}/formulas/dawn/bit_cast_polyfill.h"
         cmake .. ${DEFS} \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_LIBDIR=lib \
-            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -g0 ${FLAG_RELEASE}" \
+            -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -g0 -include ${polyfill} ${FLAG_RELEASE}" \
             -DCMAKE_C_FLAGS="-DUSE_PTHREADS=1 -g0 ${FLAG_RELEASE}" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_MINIMUM_REQUIRED_VERSION=3.22 \

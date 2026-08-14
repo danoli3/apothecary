@@ -219,9 +219,9 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
             "openssl"
             "curl"
             "poco"
-            "angle"
             "dawn"
-            # glon12: not in core — Mesa meson/D3D12 is opt-in
+            # angle / glon12: not in core — GN/gclient and Mesa meson are opt-in
+            # TYPE=vs ./apo update angle
             # TYPE=vs ./apo update glon12
         )
     fi

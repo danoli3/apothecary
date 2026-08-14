@@ -40,6 +40,55 @@ function download() {
     verify_git_commit angle "${SOURCE_COMMIT}"
 }
 
+# Git for Windows git.exe — Win32 gclient/vpython cannot run MSYS /usr/bin/git.
+function _angle_git_win_dir() {
+    local d
+    for d in \
+        "/c/Program Files/Git/cmd" \
+        "/c/Program Files/Git/bin" \
+        "/c/Program Files (x86)/Git/cmd"
+    do
+        if [ -f "${d}/git.exe" ]; then
+            echo "${d}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+function _angle_depot_env() {
+    local vendor="${1:-$(pwd)/.vendor}"
+    export DEPOT_TOOLS_UPDATE=0
+    export DEPOT_TOOLS_WIN_TOOLCHAIN=0
+    mkdir -p "${vendor}/git_cache"
+    if command -v cygpath >/dev/null 2>&1; then
+        export GIT_CACHE_PATH="$(cygpath -w "${vendor}/git_cache")"
+    else
+        export GIT_CACHE_PATH="${vendor}/git_cache"
+    fi
+    local git_dir
+    git_dir="$(_angle_git_win_dir || true)"
+    export PATH="${vendor}/depot_tools${git_dir:+:${git_dir}}:${PATH}"
+}
+
+# gclient/gn/autoninja are Win32. cmd.exe PATH must be C:\... so git.bat is found.
+function _angle_win_run() {
+    local vendor dt_w winpath git_dir py_dir
+    vendor="$(pwd)/.vendor"
+    dt_w="$(cygpath -w "${vendor}/depot_tools")"
+    winpath="${dt_w}"
+    git_dir="$(_angle_git_win_dir || true)"
+    if [ -n "${git_dir}" ]; then
+        winpath="${winpath};$(cygpath -w "${git_dir}")"
+    fi
+    py_dir="$(dirname "$(command -v python 2>/dev/null || true)")"
+    if [ -n "${py_dir}" ] && [[ "${py_dir}" != *WindowsApps* ]]; then
+        winpath="${winpath};$(cygpath -w "${py_dir}")"
+    fi
+    echo "angle: cmd ${*}"
+    cmd.exe //c "set PATH=${winpath};%PATH% && $*"
+}
+
 function prepare() {
     local vendor
     vendor="$(pwd)/.vendor"
@@ -47,12 +96,21 @@ function prepare() {
     if [ ! -d "${vendor}/depot_tools/.git" ]; then
         git clone --depth=1 "${DEPOT_TOOLS_URL}" "${vendor}/depot_tools"
     fi
-    export PATH="${vendor}/depot_tools:${PATH}"
-    export DEPOT_TOOLS_UPDATE=0
-    export DEPOT_TOOLS_WIN_TOOLCHAIN=0
+    _angle_depot_env "${vendor}"
 
-    python3 scripts/bootstrap.py
-    gclient sync --no-history --shallow
+    if [ "$TYPE" = "vs" ]; then
+        if ! _angle_git_win_dir >/dev/null; then
+            echoError "angle: Git for Windows git.exe not found (MSYS git is not enough)."
+            echoError "  winget install -e --id Git.Git"
+            echoError "  Need: C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe"
+            exit 1
+        fi
+        _angle_win_run "python scripts\\bootstrap.py"
+        _angle_win_run "gclient sync --no-history --shallow"
+    else
+        python3 scripts/bootstrap.py
+        gclient sync --no-history --shallow
+    fi
 }
 
 function _angle_cpu() {
@@ -71,11 +129,7 @@ function build() {
 
     setup_vs_vars
     export VSINSTALLDIR="${VS_INSTALL_PATH:-${VS_BASE_PATH}}"
-    export DEPOT_TOOLS_UPDATE=0
-    export DEPOT_TOOLS_WIN_TOOLCHAIN=0
-    if [ -d "$(pwd)/.vendor/depot_tools" ]; then
-        export PATH="$(pwd)/.vendor/depot_tools:${PATH}"
-    fi
+    _angle_depot_env "$(pwd)/.vendor"
 
     local cpu
     cpu="$(_angle_cpu)"
