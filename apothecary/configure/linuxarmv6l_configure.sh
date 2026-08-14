@@ -16,7 +16,7 @@ export HOST_PLATFORM
 HOST_PLATFORM="$(uname)"
 export GCC_PREFIX="${GCC_PREFIX:-arm-linux-gnueabihf}"
 export GCC_VERSION="${GCC_VERSION:-10}"
-RPI_ARCH_FLAGS="${RPI_ARCH_FLAGS:--march=armv6zk -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard}"
+RPI_ARCH_FLAGS="${RPI_ARCH_FLAGS:--march=armv6zk -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm}"
 
 if type rpi_is_native >/dev/null 2>&1 && rpi_is_native && [[ "$HOST_ARCH" == "armv6l" ]]; then
     CROSSCOMPILE=0

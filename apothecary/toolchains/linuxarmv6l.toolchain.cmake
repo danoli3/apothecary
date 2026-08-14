@@ -103,8 +103,9 @@ foreach(_libdir
     endif()
 endforeach()
 
-# Keep this strictly ARMv6. Ubuntu's armhf gcc defaults to v7.
-set(RPI_ARCH_FLAGS "-march=armv6zk -mcpu=${M_CPU} -mfpu=vfp -mfloat-abi=hard -fPIC")
+# Keep this strictly ARMv6 ARM-state. Ubuntu's armhf gcc wants Thumb,
+# which cannot do hard-float VFP on v6 ("Thumb-1 hard-float VFP ABI").
+set(RPI_ARCH_FLAGS "-march=armv6zk -mcpu=${M_CPU} -mfpu=vfp -mfloat-abi=hard -marm -fPIC")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --sysroot=${CMAKE_SYSROOT} ${RPI_ARCH_FLAGS} ${EXTRA_LINKS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --sysroot=${CMAKE_SYSROOT} ${RPI_ARCH_FLAGS} ${EXTRA_LINKS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --sysroot=${CMAKE_SYSROOT} ${EXTRA_LINKS}")
