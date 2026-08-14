@@ -62,6 +62,7 @@ if [[ "$NATIVE" != "true" ]]; then
         g++-10-aarch64-linux-gnu
         binutils-aarch64-linux-gnu
         python3-pip
+        gnupg
     )
 fi
 apt-get update
@@ -95,7 +96,17 @@ else
                 exit 1
             fi
         fi
+        # Ubuntu's debian-archive-keyring is older than Debian 12's signing key
+        # (F8D2585B8783D481). Fetch the current Bookworm archive keys for debootstrap.
+        BOOKWORM_KEYRING="/usr/share/keyrings/debian-archive-bookworm-merged.gpg"
+        mkdir -p /usr/share/keyrings /tmp/debian-archive-keys
+        : > /tmp/debian-archive-keys/bookworm.asc
+        for key in archive-key-12.asc archive-key-12-security.asc; do
+            curl -fsSL "https://ftp-master.debian.org/keys/${key}" >> /tmp/debian-archive-keys/bookworm.asc
+        done
+        gpg --batch --dearmor < /tmp/debian-archive-keys/bookworm.asc > "$BOOKWORM_KEYRING"
         debootstrap --arch=arm64 --variant=minbase --foreign \
+            --keyring="$BOOKWORM_KEYRING" \
             "$CROSS_OS" "$SYSROOT" "$DEBIAN_MIRROR"
         mkdir -p "$SYSROOT/usr/bin"
         cp /usr/bin/qemu-aarch64-static "$SYSROOT/usr/bin/qemu-aarch64-static"
