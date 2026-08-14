@@ -1,81 +1,54 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd $SCRIPT_DIR
-ROOT=$(
-    cd $(dirname "$0")
-    pwd -P
-)/../../../../../
-APOTHECARY_PATH=$ROOT/apothecary
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+# shellcheck source=../sysroot_utils.sh
+source "$SCRIPT_DIR/../sysroot_utils.sh"
 
-set -o pipefail
-# trap any script errors and exit
-trap "trapError" ERR
+if rpi_is_native && [[ "$(uname -m)" == "aarch64" ]]; then
+    export SYSROOT="${SYSROOT:-/}"
+    export TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-/usr}"
+    if command -v gcc-10 >/dev/null 2>&1; then
+        export CC="${CC:-gcc-10}"
+        export CXX="${CXX:-g++-10}"
+    else
+        export CC="${CC:-gcc}"
+        export CXX="${CXX:-g++}"
+    fi
+else
+    export SYSROOT="${SYSROOT:-/opt/rpi-arm64-sysroot}"
+    export TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-/usr}"
+    export CC="${CC:-aarch64-linux-gnu-gcc-10}"
+    export CXX="${CXX:-aarch64-linux-gnu-g++-10}"
+fi
 
-trapError() {
-    echo
-    echo " ^ Received error ^"
-    cat formula.log
-    exit 1
-}
+export TARGET="${TARGET:-linux}"
+export TYPE="${TYPE:-linux}"
+export ARCH="${ARCH:-aarch64}"
+export GCC="${GCC:-gcc10}"
+export GCC_VERSION="${GCC_VERSION:-10}"
+export TOOLCHAIN_PREFIX="${TOOLCHAIN_PREFIX:-aarch64-linux-gnu}"
+export RPI_QEMU_ARCH="${RPI_QEMU_ARCH:-aarch64}"
+export PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:-$SYSROOT}"
+export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:-$SYSROOT/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT/usr/share/pkgconfig}"
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}"
 
-echo $APOTHECARY_LEVEL
-cd $APOTHECARY_LEVEL
+if [[ -z "${LINUX_ARTIFACT_TARGET:-}" ]]; then
+    # shellcheck source=../../map_artifact_target.sh
+    source "$REPO_ROOT/scripts/linux/map_artifact_target.sh"
+    LINUX_ARTIFACT_TARGET="$(map_linux_artifact_target "$ARCH")"
+    export LINUX_ARTIFACT_TARGET
+fi
 
-# PATH=$RASP_CROSSCOMPILER/bin:$PATH
-# LD_LIBRARY_PATH=$RASP_CROSSCOMPILER/lib
+echo "TARGET=$TARGET ARCH=$ARCH GCC=$GCC"
+echo "SYSROOT=$SYSROOT TOOLCHAIN_ROOT=$TOOLCHAIN_ROOT"
+echo "CC=$CC CXX=$CXX"
+echo "LINUX_ARTIFACT_TARGET=$LINUX_ARTIFACT_TARGET"
 
-# export GCC_PREFIX=aarch64-linux-gnu
-# export GCC_VERSION="14.2.0" # UPDATE THIS AS NEEDED /libexec/gcc/aarch64-linux-gnu/*/
+cd "$REPO_ROOT"
+"$REPO_ROOT/scripts/calculate_formulas.sh"
+"$REPO_ROOT/scripts/build.sh"
 
-# export AR="${GCC_PREFIX}-gcc-ar"
-# export CC="${GCC_PREFIX}-gcc"
-# export CXX="${GCC_PREFIX}-g++"
-# export CPP="${GCC_PREFIX}-cpp"
-# export FC="${GCC_PREFIX}-gfortran"
-# export RANLIB="${GCC_PREFIX}-ranlib"
-# export LD="${GCC_PREFIX}-ld"
-
-# GCCPATH="$RASP/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
-# export ARFLAGS="--plugin $GCCPATH/liblto_plugin.so"
-# export RANLIBFLAGS="--plugin $GCCPATH/liblto_plugin.so"
-
-# export LIBC_USR=${RASP}/${GCC_PREFIX}/libc/usr/
-# export CRT=${LIBC_USR}/lib64
-
-# sudo chmod +x SSymlinker
-# ./SSymlinker -s ${LIBC_USR}/include/asm -d /usr/include
-# ./SSymlinker -s ${LIBC_USR}/include/gnu -d /usr/include
-# ./SSymlinker -s ${LIBC_USR}/include/bits -d /usr/include
-# ./SSymlinker -s ${LIBC_USR}/include/sys -d /usr/include
-# # ./SSymlinker -s ${LIBC_USR}/include/sound -d /usr/include
-# ./SSymlinker -s ${LIBC_USR}/include/video -d /usr/include
-# ./SSymlinker -s ${LIBC_USR}/include -d /usr/include
-# ./SSymlinker -s ${CRT}/crtn.o -d /usr/lib64/crtn.o
-# ./SSymlinker -s ${CRT}/crt1.o -d /usr/lib64/crt1.o
-# ./SSymlinker -s ${CRT}/crti.o -d /usr/lib64/crti.o
-# ./SSymlinker -s ${LIBC_USR}/lib/crtn.o -d /usr/lib/crtn.o
-# ./SSymlinker -s ${LIBC_USR}/lib/crt1.o -d /usr/lib/crt1.o
-# ./SSymlinker -s ${LIBC_USR}/lib/crti.o -d /usr/lib/crti.o
-
-# echo 'export PATH=$PATH' >> .bashrc
-# echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> .bashrc
-# source .bashrc
-
-#echo "ROOT dir "
-#ls -la $ROOT
-#
-#echo "RASP dir "
-#ls -la $RASP
-#
-#echo "GCCPATH IS "
-#echo $GCCPATH
-
-echo "calculate formulas"
-$APOTHECARY_LEVEL/scripts/calculate_formulas.sh
-
-echo "building"
-$APOTHECARY_LEVEL/scripts/build.sh
-
-echo "===build complete==="
-cd $SCRIPT_DIR
+echo "=== raspios aarch64 build complete ==="
+cd "$SCRIPT_DIR"

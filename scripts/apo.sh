@@ -81,7 +81,7 @@ archesForType(){
 		catos)      echo "arm64 x86_64" ;;
 		android)    echo "arm64 armv7 x86 x86_64" ;;
 		emscripten) echo "64 32" ;;
-		linux)      echo "x86_64 arm64 aarch64 armv7l" ;;
+		linux)      echo "x86_64 arm64 aarch64 armv7l armv6l" ;;
 		vs)         echo "64 arm64" ;;
 		msys2)      echo "64" ;;
 		*)          echo "$HOST_ARCH" ;;

@@ -1,58 +1,160 @@
-#!/bin/bash
-set -e
-set -o pipefail
-# trap any script errors and exit
-trap "trapError" ERR
+#!/usr/bin/env bash
+# Host tools + Debian bookworm arm64 sysroot for Raspberry Pi 64-bit.
+# Official compiler is host GCC 10 (aarch64-linux-gnu-gcc-10), not the Pi GCC 14 tarball.
+set -euo pipefail
 
-trapError() {
-    echo
-    echo " ^ Received error ^"
-    cat formula.log
-    exit 1
-}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../sysroot_utils.sh
+source "$SCRIPT_DIR/../sysroot_utils.sh"
 
-if grep -q "Raspbian" /etc/os-release 2>/dev/null && [[ "$(uname -m)" == "aarch64" ]]; then
-    NATIVE="true"
-    echo "Detected Raspberry Pi OS (Raspbian) on arm64. Setting NATIVE=true"
-else
-    NATIVE="false"
-fi
-
-CROSS_COMPILER=${CROSS_COMPILER:-raspbian}
-CROSS_SYSROOT=${CROSS_SYSROOT:-rpi_rootfs}
 CROSS_OS="${CROSS_OS:-bookworm}"
 CROSS_OS="${CROSS_OS,,}"
+DEBIAN_MIRROR="${DEBIAN_MIRROR:-http://deb.debian.org/debian}"
+SYSROOT="${SYSROOT:-/opt/rpi-arm64-sysroot}"
+TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-/usr}"
+RPI_QEMU_ARCH="${RPI_QEMU_ARCH:-aarch64}"
 
-if [ "$CROSS_OS" == "bookworm" ] && [ "$NATIVE" == "false" ]; then
-    CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download"
-    CROSS_NAME="cross-gcc-14.2.0-pi_64"
-    CROSS_EXTRACT="cross-pi-gcc-14.2.0-64"
-    echo "Using Bookworm toolchain: $CROSS_NAME"
-elif [ "$CROSS_OS" == "bookworm" ] && [ "$NATIVE" == "true" ]; then
-    CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Native-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/native-gcc-14.2.0-pi_64.tar.gz/download"
-    CROSS_NAME="native-gcc-14.2.0-pi_64"
-    CROSS_EXTRACT="native-pi-gcc-14.2.0-64"
-    echo "Using Native Bookworm toolchain: $CROSS_NAME"
-elif [ "$CROSS_OS" == "Bullseye" ]; then
-    # CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bullseye/GCC%2013.1.0/cross-gcc-13.1.0-pi_64.tar.gz/download"
-    # CROSS_NAME="cross-gcc-13.1.0-pi_64"
-    # CROSS_EXTRACT="cross-pi-gcc-13.1.0-64"
-    # echo "Using Bullseye toolchain: $CROSS_NAME"
-    echo "Unsupported CROSS_OS Bullseye value: [$CROSS_OS]"
+if [[ "$CROSS_OS" != "bookworm" ]]; then
+    echo "Unsupported CROSS_OS '$CROSS_OS' (official Raspberry Pi sysroot is bookworm)." >&2
     exit 1
+fi
+
+if rpi_is_native && [[ "$(uname -m)" == "aarch64" ]]; then
+    echo "Detected Raspberry Pi OS on aarch64. Using native root as SYSROOT."
+    SYSROOT="/"
+    NATIVE=true
 else
-    echo "Unsupported CROSS_OS value: [$CROSS_OS]"
+    NATIVE=false
+fi
+
+export SYSROOT TOOLCHAIN_ROOT NATIVE RPI_QEMU_ARCH
+
+if [[ "${EUID}" -ne 0 ]]; then
+    echo "This script must run as root (sudo)." >&2
     exit 1
 fi
-    wget "${CROSS_URL}" -O ${CROSS_NAME}.tar.gz && tar xf ${CROSS_NAME}.tar.gz && rm ${CROSS_NAME}.tar.gz && mv ${CROSS_EXTRACT} ${CROSS_COMPILER}
 
+export DEBIAN_FRONTEND=noninteractive
+HOST_PACKAGES=(
+    ca-certificates
+    curl
+    pkg-config
+    build-essential
+    cmake
+    ninja-build
+    autoconf
+    automake
+    libtool
+    flex
+    bison
+    gawk
+    python3
+    xz-utils
+    git
+)
+if [[ "$NATIVE" != "true" ]]; then
+    HOST_PACKAGES+=(
+        debootstrap
+        debian-archive-keyring
+        qemu-user-static
+        binfmt-support
+        gcc-10-aarch64-linux-gnu
+        g++-10-aarch64-linux-gnu
+        binutils-aarch64-linux-gnu
+        python3-pip
+    )
+fi
+apt-get update
+apt-get install -y --no-install-recommends "${HOST_PACKAGES[@]}"
 
-if [ "$NATIVE" == "0" ]; then
-    #wget https://downloads.raspberrypi.com/raspios_lite_arm64/root.tar.xz
-    wget https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-10-02/2025-10-01-raspios-trixie-arm64-lite.img.xz root.tar.xz
-    mkdir -p rpi-arm64-rootfs
-    sudo tar -xJpf raspios_lite_arm64/root.tar.xz -C rpi-arm64-rootfs
+if [[ "$NATIVE" != "true" ]]; then
+    update-binfmts --enable qemu-aarch64 >/dev/null 2>&1 || true
 fi
 
-echo "===setup complete==="
-cd $SCRIPT_DIR
+if [[ "$NATIVE" == "true" ]]; then
+    echo "Native setup complete. SYSROOT=/"
+else
+    echo "Building Raspberry Pi aarch64 sysroot at $SYSROOT ($CROSS_OS)"
+    mkdir -p "$(dirname "$SYSROOT")"
+    if [[ -d "$SYSROOT/debootstrap" && ! -f "$SYSROOT/usr/lib/aarch64-linux-gnu/libc.so.6" ]]; then
+        echo "Incomplete debootstrap leftover in $SYSROOT; rebuilding."
+        rm -rf "$SYSROOT"
+    fi
+    if [[ ! -f "$SYSROOT/usr/lib/aarch64-linux-gnu/libc.so.6" ]]; then
+        rm -rf "$SYSROOT"
+        mkdir -p "$SYSROOT"
+        if [[ ! -e /usr/share/debootstrap/scripts/bookworm ]]; then
+            echo "Host debootstrap has no bookworm script; aliasing a Debian script."
+            mkdir -p /usr/share/debootstrap/scripts
+            if [[ -e /usr/share/debootstrap/scripts/sid ]]; then
+                ln -sf sid /usr/share/debootstrap/scripts/bookworm
+            elif [[ -e /usr/share/debootstrap/scripts/stable ]]; then
+                ln -sf stable /usr/share/debootstrap/scripts/bookworm
+            else
+                echo "No debootstrap sid/stable script to alias as bookworm." >&2
+                exit 1
+            fi
+        fi
+        debootstrap --arch=arm64 --variant=minbase --foreign \
+            "$CROSS_OS" "$SYSROOT" "$DEBIAN_MIRROR"
+        mkdir -p "$SYSROOT/usr/bin"
+        cp /usr/bin/qemu-aarch64-static "$SYSROOT/usr/bin/qemu-aarch64-static"
+        chmod +x "$SYSROOT/usr/bin/qemu-aarch64-static"
+        rpi_sysroot_mount "$SYSROOT"
+        trap 'rpi_sysroot_umount "$SYSROOT"' EXIT
+        rpi_sysroot_run "/debootstrap/debootstrap --second-stage"
+        cat >"$SYSROOT/etc/apt/sources.list" <<EOF
+deb ${DEBIAN_MIRROR} ${CROSS_OS} main contrib
+deb ${DEBIAN_MIRROR} ${CROSS_OS}-updates main contrib
+deb http://security.debian.org/debian-security ${CROSS_OS}-security main contrib
+EOF
+        rpi_sysroot_umount "$SYSROOT"
+        trap - EXIT
+    else
+        echo "Reusing existing sysroot at $SYSROOT"
+        mkdir -p "$SYSROOT/usr/bin"
+        cp /usr/bin/qemu-aarch64-static "$SYSROOT/usr/bin/qemu-aarch64-static"
+        chmod +x "$SYSROOT/usr/bin/qemu-aarch64-static"
+    fi
+fi
+
+if [[ "$NATIVE" != "true" ]]; then
+    if [[ ! -x /usr/bin/aarch64-linux-gnu-gcc-10 ]]; then
+        echo "aarch64-linux-gnu-gcc-10 not found after install." >&2
+        exit 1
+    fi
+    aarch64-linux-gnu-gcc-10 --version | head -1
+    test "$(aarch64-linux-gnu-gcc-10 -dumpversion | cut -d. -f1)" = "10"
+    if ! cmake --version 2>/dev/null | grep -qE 'cmake version 3\.(2[2-9]|[3-9]|[0-9]{2,})'; then
+        python3 -m pip install --no-cache-dir 'cmake==3.31.6'
+    fi
+    cmake --version | head -1
+fi
+
+if [[ -n "${GITHUB_ENV:-}" ]]; then
+    {
+        echo "SYSROOT=$SYSROOT"
+        echo "TOOLCHAIN_ROOT=$TOOLCHAIN_ROOT"
+        echo "TOOLCHAIN_PREFIX=aarch64-linux-gnu"
+        echo "GCC=gcc10"
+        echo "GCC_VERSION=10"
+        echo "NATIVE=$NATIVE"
+        echo "RPI_QEMU_ARCH=$RPI_QEMU_ARCH"
+        echo "PKG_CONFIG_SYSROOT_DIR=$SYSROOT"
+        echo "PKG_CONFIG_LIBDIR=$SYSROOT/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT/usr/share/pkgconfig"
+        echo "PKG_CONFIG_PATH="
+    } >>"$GITHUB_ENV"
+    if [[ "$NATIVE" == "true" ]]; then
+        echo "CC=gcc-10" >>"$GITHUB_ENV"
+        echo "CXX=g++-10" >>"$GITHUB_ENV"
+    else
+        echo "CC=aarch64-linux-gnu-gcc-10" >>"$GITHUB_ENV"
+        echo "CXX=aarch64-linux-gnu-g++-10" >>"$GITHUB_ENV"
+    fi
+fi
+
+echo "=== raspios aarch64 setup complete ==="
+echo "SYSROOT=$SYSROOT"
+echo "TOOLCHAIN_ROOT=$TOOLCHAIN_ROOT"
+echo "NATIVE=$NATIVE"
+cd "$SCRIPT_DIR"
