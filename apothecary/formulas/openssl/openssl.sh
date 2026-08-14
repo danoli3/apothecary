@@ -15,7 +15,7 @@ OPENSSL_CMAKE_COMMIT=2186f38a68635ada55434b1fc9ee78fdf04a1718
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=9
+BUILD_ID=10
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -259,6 +259,17 @@ function build() {
     elif [[ "$TYPE" =~ ^(android)$ ]]; then
 
         source $APOTHECARY_DIR/configure/android_configure.sh $ABI cmake
+
+        # OpenSSL 4.0.1's ARM64 Poly1305 dispatcher takes the address of the
+        # global poly1305_blocks_sve2 symbol with direct ADRP/ADD relocations.
+        # Android shared-library links reject those relocations because the
+        # symbol is preemptible, even when CMake's PIC option is enabled.
+        # Keep ASM enabled on the other supported targets, but retain the
+        # portable C implementation for Android ARM64 until the upstream SVE2
+        # assembly marks the symbol hidden or uses a PIC-safe address sequence.
+        if [ "$ABI" == "arm64-v8a" ]; then
+            DEFINES="${DEFINES} -DOPENSSL_ASM=OFF -DOPENSSL_NO_ASM=ON"
+        fi
 
         ZLIB_ROOT="$LIBS_ROOT/zlib/"
         ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
