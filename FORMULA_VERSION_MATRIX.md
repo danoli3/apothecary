@@ -38,6 +38,7 @@
 
 | Formula | Current (pinned) | Latest upstream | Status | Remote source | Formula path |
 |---------|------------------|-----------------|--------|---------------|--------------|
+| **angle** | `2026.08.13` (`7e8009eb2c42996fe6e7337bf8d12e1cfe4a1b80`) | google/angle main (GN); GLES→D3D11 on VS | pinned-dev | https://github.com/google/angle | `apothecary/formulas/angle/angle.sh` |
 | **assimp** | `5.4.3` | `v6.0.5` | compatibility pin | https://github.com/assimp/assimp | `apothecary/formulas/assimp.sh` |
 | **boost** | `1.66.0` | `boost-1.91.0` (stable); `1.92.0.beta1` | stale | https://www.boost.org / https://github.com/boostorg/boost · tarball via jfrog artifactory in formula | `apothecary/formulas/boost/boost.sh` |
 | **brotli** | `1.2.0` | `v1.2.0` | current | https://github.com/google/brotli | `apothecary/formulas/brotli.sh` |
@@ -47,6 +48,7 @@
 | **FreeImage** | `3.19.11` (`VER=31911` legacy id) | `3.19.11` | current | https://github.com/danoli3/FreeImage (OF fork) | `apothecary/formulas/FreeImage/FreeImage.sh` |
 | **freetype** | `2.14.3` | `VER-2-14-3` / `2.14.3` | current | https://github.com/freetype/freetype · https://freetype.org | `apothecary/formulas/freetype/freetype.sh` |
 | **glew** | `2.3.1` | `glew-2.3.1` | current | https://github.com/nigels-com/glew | `apothecary/formulas/glew/glew.sh` |
+| **glon12** | Mesa `26.0.4` | Mesa 26.0.x (D3D12 gallium) | pinned-dev | https://archive.mesa3d.org · https://docs.mesa3d.org/drivers/d3d12.html | `apothecary/formulas/glon12.sh` |
 | **glfw** | `3.5.1` | `3.5.1` | current | https://github.com/glfw/glfw | `apothecary/formulas/glfw.sh` |
 | **glm** | `1.0.3` | `1.0.3` | current | https://github.com/g-truc/glm | `apothecary/formulas/glm/glm.sh` |
 | **gstreamer** | `1.24.0` | `1.28.5` (stable line); `1.29.2` newer | behind | https://gitlab.freedesktop.org/gstreamer/gstreamer | `apothecary/formulas/gstreamer.sh` |
@@ -56,7 +58,8 @@
 | **libssh2** | `1.11.0-dev` | `libssh2-1.11.1` | behind / pinned-dev | https://github.com/libssh2/libssh2 | `apothecary/formulas/libssh2.sh` |
 | **libusb** | `1.0.30` | `v1.0.30` | current | https://github.com/libusb/libusb | `apothecary/formulas/libusb/libusb.sh` |
 | **libxml2** | `2.13.9` | `v2.15.3` (also `v2.14.6`, `v2.13.9` on 2.13 line) | major-behind* | https://github.com/GNOME/libxml2 | `apothecary/formulas/libxml2/libxml2.sh` |
-| **metalangle** | `1.0` | tags vary (`v0.0.1`, branch tags); not a clear semver product | n/a | https://github.com/kakashidinho/metalangle | `apothecary/formulas/metalangle/metalangle.sh` |
+| **metalangle** | `1.0` (`ec925142edeb1da3158fd8710ecc6dc2fb1f1f97`) | kakashidinho fork frozen 2023-02-11; google/angle is a different tree (PR #533) | pinned-dev | https://github.com/kakashidinho/metalangle | `apothecary/formulas/metalangle/metalangle.sh` |
+| **dawn** | `2026.07.31` (`cd2d5a667d1140af6e89f4c4c24f6545e1d5d2d7`) | ofLibs pin (Dawn `v20260731.171941`); rolling chromium | pinned-dev | https://dawn.googlesource.com/dawn · mirror https://github.com/google/dawn | `apothecary/formulas/dawn/dawn.sh` |
 | **opencv** | `4.14.0` | `5.0.0` latest · **`4.14.0` latest 4.x** | current (4.x track) | https://github.com/opencv/opencv · contrib: https://github.com/opencv/opencv_contrib | `apothecary/formulas/opencv/opencv.sh` |
 | **openssl** | `4.0.1` (+ cmake wrapper `VER_TAG=4.0`) | `openssl-4.0.1` · LTS still `3.5.7` | current (4.0 track, experimental for OF) | Source: https://github.com/openssl/openssl · CMake wrapper: https://github.com/danoli3/openssl-cmake (`4.0`) · Site: https://www.openssl.org | `apothecary/formulas/openssl/openssl.sh` |
 | **pixman** | `0.46.4` | `pixman-0.46.4` | current | https://gitlab.freedesktop.org/pixman/pixman · https://cairographics.org/releases | `apothecary/formulas/pixman/pixman.sh` |

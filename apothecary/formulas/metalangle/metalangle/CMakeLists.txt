@@ -23,6 +23,7 @@
 # 20211017 - Le Hoang Quyen (A.K.A kakashidinho) - GL backend & MGLKit added
 
 cmake_minimum_required(VERSION 3.16)
+project(metalangle LANGUAGES C CXX OBJC OBJCXX)
 
 set (TARGET_NAME metalangle)
 set (SRC_FILES)
@@ -1031,29 +1032,54 @@ endif()
 source_group("glslang"            FILES ${glslang})
 list (APPEND SRC_FILES ${glslang})
 
-# Auto generated files
-add_custom_command(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id/commit.h
-  COMMAND
-    python ${CMAKE_CURRENT_SOURCE_DIR}/src/commit_id.py
-    gen
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id/commit.h
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/.git/index
-)
-
-add_custom_target(libangle-autogen
-  DEPENDS
-  ${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id/commit.h)
+# Auto generated files — bash commit_id.sh (python commit_id.py was removed
+# from this fork). prepare() writes src/id/commit.h; fall back to generating it.
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/id/commit.h")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/id/commit.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id/commit.h"
+    COPYONLY)
+else()
+  execute_process(
+    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/src/commit_id.sh
+            gen
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_BINARY_DIR}/angle-gen/id/commit.h)
+endif()
 
 include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}/angle-gen
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Setup target
 add_library(${TARGET_NAME} STATIC ${SRC_FILES})
 
-target_link_libraries(${TARGET_NAME} "-framework QuartzCore -framework Metal -framework CoreFoundation -framework Foundation -framework UIKIT -framework CoreGraphics -framework OpenGLES -framework IOSurface")
+if(IOS OR TVOS)
+  target_link_libraries(${TARGET_NAME} PRIVATE
+    "-framework QuartzCore"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework CoreFoundation"
+    "-framework Foundation"
+    "-framework UIKit"
+    "-framework CoreGraphics"
+    "-framework OpenGLES"
+    "-framework IOSurface")
+else()
+  # macOS / Catalyst — no UIKit, no OpenGLES
+  target_link_libraries(${TARGET_NAME} PRIVATE
+    "-framework QuartzCore"
+    "-framework Metal"
+    "-framework MetalKit"
+    "-framework CoreFoundation"
+    "-framework Foundation"
+    "-framework AppKit"
+    "-framework CoreGraphics"
+    "-framework IOSurface"
+    "-framework IOKit")
+endif()
 
 
 if (TYPE STREQUAL "catos")

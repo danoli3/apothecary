@@ -42,8 +42,10 @@ git_pull()
 #!/bin/sh
 set -e
 
+# Pins must match kakashidinho/metalangle @ ec92514 (2022 Metal backend).
+# A newer SPIRV-Cross (e.g. 4d4b79bd) breaks mtl_glslang_utils.mm overrides.
 glslang_revision="7d65f09b83112c1ec9e29313cb9913ed2b850aa0"
-spirv_cross_revision="4d4b79bd7b69b07fabdeb06f849334ba79ea7cee"
+spirv_cross_revision="f38cbeb814c73510b85697adbe5e894f9eac978f"
 jsoncpp_revision="48246a099549ab325c01f69f24a34fc72e5c42e4"
 jsoncpp_src_revision="645250b6690785be60ab6780ce4b58698d884d11"
 

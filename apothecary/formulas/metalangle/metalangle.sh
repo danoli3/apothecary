@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 #
 # metalangle
+# GLES -> Metal translation (MGLKit drop-in for EAGL/GLKit)
 # https://github.com/kakashidinho/metalangle.git
+#
+# This is the MGLKit fork, NOT google/angle. The fork is frozen at
+# ec92514 (2023-02-11) — that is the last tree that matches
+# formulas/metalangle/metalangle/CMakeLists.txt + MGLKit.
+# A chromium 2025+ SHA is a different formula (apothecary PR #533 `angle`).
+# Swapping SOURCE_COMMIT onto google/angle will break this overlay.
 
 FORMULA_TYPES=("osx" "ios" "tvos") # "catos" "xros" "watchos" @ TODO
 FORMULA_DEPENDS=()
@@ -9,8 +16,8 @@ FORMULA_DEPENDS=()
 # define the version
 VER=1.0
 SOURCE_COMMIT=ec925142edeb1da3158fd8710ecc6dc2fb1f1f97
-BUILD_ID=2
-DEFINES=""
+BUILD_ID=3
+DEFINES="ANGLE_IS_64_BIT_CPU"
 
 # tools for git use
 GIT_URL=https://github.com/kakashidinho/metalangle.git
@@ -24,35 +31,84 @@ BUILD_CMAKE=true
 BUILD_XCARCHIVE=false
 BUILD_STATIC=false
 FRAMEWORKS=""
-DEFINES="ANGLE_IS_64_BIT_CPU"
 
 # download the source code and unpack it into LIB_NAME
 function download() {
     . "$DOWNLOADER_SCRIPT"
-    git clone ${GIT_URL}
+
+    if [ -d metalangle ]; then
+        rm -rf metalangle
+    fi
+    git clone "${GIT_URL}" metalangle
     git -C metalangle checkout "$SOURCE_COMMIT"
     verify_git_commit metalangle "$SOURCE_COMMIT"
 }
 
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
-    echo
+    echoVerbose "prepare metalangle @ $(pwd)"
 
-    cp -r $FORMULA_DIR/metalangle/ ./
+    cp -R "${FORMULA_DIR}/metalangle/." ./
 
-    echo "Fetch Subdependancies"
+    echo "Fetch MetalANGLE third_party (glslang / spirv-cross / jsoncpp)"
     ./ios/xcode/fetchDependencies.sh
 
+    # SPIRV-Cross f38cbeb (2020) calls std::terminate() without <exception>.
+    # AppleClang 15+ / libc++ no longer pull that in transitively.
+    local exception_hdr="third_party/spirv-cross/src/spirv_cross_containers.hpp"
+    if [ -f "${exception_hdr}" ] && ! grep -q '#include <exception>' "${exception_hdr}"; then
+        if [ -f "${FORMULA_DIR}/spirv-cross-exception.patch" ]; then
+            patch -p1 --forward --reject-file=- < "${FORMULA_DIR}/spirv-cross-exception.patch" || true
+        fi
+        if ! grep -q '#include <exception>' "${exception_hdr}"; then
+            sed -i.bak '/#include "spirv_cross_error_handling.hpp"/a\
+#include <exception>
+' "${exception_hdr}"
+            rm -f "${exception_hdr}.bak"
+        fi
+    fi
 
-    mkdir -p "src/id"
-    ./src/commit_id.sh gen /Users/one/SOURCE/apothecary/apothecary/build/metalangle/src ./src/id/commit.h
+    # commit_id.sh wants <angle_dir> <output>. Never hardcode a machine path.
+    mkdir -p src/id
+    if [ -x src/commit_id.sh ] || [ -f src/commit_id.sh ]; then
+        bash src/commit_id.sh gen "$(pwd)" "$(pwd)/src/id/commit.h"
+    else
+        echoError "src/commit_id.sh missing after overlay"
+        exit 1
+    fi
+}
 
-    # cp -r $FORMULA_DIR/metalangle/CMakeLists.txt metalangle/CMakeLists.txt
+function _metalangle_apple_frameworks() {
+    # Static lib: these land on the archive's link line for consumers too.
+    if [[ "$TYPE" == "osx" ]]; then
+        echo "-framework QuartzCore -framework Metal -framework MetalKit -framework CoreFoundation -framework Foundation -framework AppKit -framework CoreGraphics -framework IOSurface -framework IOKit"
+    elif [[ "$TYPE" == "tvos" ]]; then
+        echo "-framework QuartzCore -framework Metal -framework MetalKit -framework CoreFoundation -framework Foundation -framework UIKit -framework CoreGraphics -framework OpenGLES -framework IOSurface"
+    else
+        echo "-framework QuartzCore -framework Metal -framework MetalKit -framework CoreFoundation -framework Foundation -framework UIKit -framework CoreGraphics -framework OpenGLES -framework IOSurface"
+    fi
+}
+
+function _lipo_ios_simulator() {
+    local dest="$1"
+    local arm64="${dest}/lib/ios/SIMULATORARM64/MetalANGLE.a"
+    local x64="${dest}/lib/ios/SIMULATOR64/MetalANGLE.a"
+    local fatdir="${dest}/lib/ios/iphonesimulator"
+    if [[ -f "${arm64}" && -f "${x64}" ]]; then
+        mkdir -p "${fatdir}"
+        echo "lipo iOS simulator MetalANGLE.a (arm64 + x86_64)"
+        lipo -create "${arm64}" "${x64}" -output "${fatdir}/MetalANGLE.a"
+        lipo -info "${fatdir}/MetalANGLE.a"
+    fi
 }
 
 # executed inside the lib src dir
 function build() {
     echo
+
+    # `apo build` skips prepareFormula. Always re-apply overlay + third_party pins
+    # so a stale SPIRV-Cross checkout cannot silently break the Metal backend.
+    prepare
 
     LIBS_ROOT=$(realpath $LIBS_DIR)
     CORE_DIR=$(pwd)
@@ -67,8 +123,6 @@ function build() {
 
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
 
-        # rm -f build_${TYPE}_${PLATFORM}
-
         XC_PROJECT_PATH="./ios/xcode/OpenGLES.xcodeproj"
 
         mkdir -p "build_${TYPE}_${PLATFORM}"
@@ -82,13 +136,9 @@ function build() {
             else
                 X_DEFS=""
             fi
-            if [[ "$TYPE" =~ ^(ios)$ ]]; then
-                X_LINKER=" -framework OpenGLES -framework IOSurface "
-            else
-                X_LINKER=" -framework OpenGLES -framework IOSurface"
-            fi
 
-            FRAMEWORKS="-framework QuartzCore -framework Metal -framework CoreFoundation -framework Foundation -framework UIKIT -framework CoreGraphics ${X_LINKER}"
+            FRAMEWORKS="$(_metalangle_apple_frameworks)"
+            DEFINES="${DEFINES} ${FRAMEWORKS}"
             cmake .. ${DEFS} ${X_DEFS} \
                 -DCMAKE_TOOLCHAIN_FILE=$APOTHECARY_DIR/toolchains/ios.toolchain.cmake \
                 -DPLATFORM=$PLATFORM \
@@ -203,98 +253,74 @@ function build() {
 
 # executed inside the lib src dir, first arg $1 is the dest libs dir root
 function copy() {
-    echo "copy"
-    # # headers
-    mkdir -p $1
+    echo "copy metalangle -> $1"
+    mkdir -p "$1"
     if [ -d "$1/include" ]; then
-        rm -rf $1/include/*
+        rm -rf "$1/include"
     fi
-    mkdir -p $1/include
-    cp -Rv include/* $1/include
+    mkdir -p "$1/include"
 
-    echo "Copying src headers..."
-    mkdir -p "$1/include/src"
-    cp -Rv src/* "$1/include/src"
-
-    if [ -d "$1/include/src/tests" ]; then
-        echo "Removing existing folder: $1/include/src/tests"
-        rm -rf "$1/include/src/tests"
+    # Public GLES / EGL / KHR headers from the install prefix when present,
+    # otherwise the source include/ tree.
+    if [ -d "build_${TYPE}_${PLATFORM}/Release/include" ]; then
+        cp -R "build_${TYPE}_${PLATFORM}/Release/include/." "$1/include/"
+    elif [ -d include ]; then
+        cp -R include/. "$1/include/"
     fi
 
-    echo "Copying third-party glslang headers..."
-    mkdir -p "$1/include/third_party/glslang/src"
-    cp -Rv third_party/glslang/src/* "$1/include/third_party/glslang/src/"
-
-    # echo "Copying third-party glslang headers..."
-    # mkdir -p "$1/include/third_party/glslang/src"
-    # cp -Rv third_party/glslang/src/* "$1/include/third_party/glslang/src/"
-
-    if [ -d "$1/include/third_party/glslang/src/Test" ]; then
-        echo "Removing existing folder: $1/include/third_party/glslang/src/Test"
-        rm -rf "$1/include/third_party/glslang/src/Test"
+    # MGLKit drop-in (MGLContext / MGLKView / MGLLayer)
+    if [ -d ios/xcode/MGLKit ]; then
+        mkdir -p "$1/include/MGLKit"
+        find ios/xcode/MGLKit -maxdepth 1 \( -name '*.h' -o -name '*.hpp' \) -exec cp -v {} "$1/include/MGLKit/" \;
     fi
 
-    echo "Copying third-party spirv-cross headers..."
-    mkdir -p "$1/include/third_party/spirv-cross/src"
-    cp -Rv third_party/spirv-cross/src/* "$1/include/third_party/spirv-cross/src/"
-
-    # echo "Copying third-party jsoncpp overrides..."
-    # mkdir -p "$1/include/third_party/jsoncpp/overrides/include"
-    # cp -Rv third_party/jsoncpp/overrides/include/* "$1/include/third_party/jsoncpp/overrides/include/"
-
-    echo "Copying third-party jsoncpp source..."
-    mkdir -p "$1/include/third_party/jsoncpp/source/include"
-    cp -Rv third_party/jsoncpp/source/include/* "$1/include/third_party/jsoncpp/source/include/"
-
-    # find "$1/include" -type f > "$1/include/files.txt"
-    EXTENSIONS=(
-        ".asm" ".jpg" ".gif" ".sh" ".py" ".gn" ".gni" ".yml" ".cfg"
-        ".frag" ".comp" ".vert" ".tese" ".tesc" ".geom" ".hlsl" ".spv"
-        ".vk" ".patch" ".rchit" ".multi" ".template" ".m4" ".inc" ".DS_Store" ".clang-format"
-    )
-
-    # Iterate through each extension and remove matching files
-    for ext in "${EXTENSIONS[@]}"; do
-        find "$1/include" -type f -name "*$ext" -exec rm -v {} \;
-    done
-
-    echo "Removing not needed shaders folder: 1/include/src/libANGLE/renderer/d3d"
-    if [ -d "$1/include/src/libANGLE/renderer/d3d/d3d9/shaders" ]; then
-        rm -rf "$1/include/src/libANGLE/renderer/d3d/d3d9/shaders"
+    if [ -f src/id/commit.h ]; then
+        mkdir -p "$1/include/id"
+        cp -v src/id/commit.h "$1/include/id/commit.h"
     fi
-    if [ -d "$1/include/src/libANGLE/renderer/d3d/d3d11/shaders" ]; then
-        rm -rf "$1/include/src/libANGLE/renderer/d3d/d3d11/shaders"
-    fi
-
-    # find "$1/include" -type f > "$1/include/filesafter.txt"
 
     . "$SECURE_SCRIPT"
-    mkdir -p $1/lib/$TYPE
+    mkdir -p "$1/lib/$TYPE"
 
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        cp -v -r build_${TYPE}_${PLATFORM}/Release/include/* $1/include
-        mkdir -p $1/lib/$TYPE/$PLATFORM/
+        mkdir -p "$1/lib/$TYPE/$PLATFORM/"
         if [[ $BUILD_STATIC == true ]] || [[ $BUILD_CMAKE == true ]]; then
-            cp -Rv build_${TYPE}_${PLATFORM}/Release/lib/libmetalangle.a $1/lib/$TYPE/$PLATFORM/MetalANGLE.a
-            secure "$1/lib/$TYPE/$PLATFORM/metalangle.a" "metalangle.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+            local built=""
+            if [ -f "build_${TYPE}_${PLATFORM}/Release/lib/libmetalangle.a" ]; then
+                built="build_${TYPE}_${PLATFORM}/Release/lib/libmetalangle.a"
+            elif [ -f "build_${TYPE}_${PLATFORM}/Release/lib/MetalANGLE.a" ]; then
+                built="build_${TYPE}_${PLATFORM}/Release/lib/MetalANGLE.a"
+            fi
+            if [ -z "$built" ]; then
+                echoError "metalangle: no libmetalangle.a under build_${TYPE}_${PLATFORM}/Release/lib"
+                exit 1
+            fi
+            cp -v "$built" "$1/lib/$TYPE/$PLATFORM/MetalANGLE.a"
+            secure "$1/lib/$TYPE/$PLATFORM/MetalANGLE.a" "metalangle.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
         fi
         if [[ $BUILD_XCARCHIVE == true ]]; then
-            cp -Rv build_${TYPE}_${PLATFORM}/Release/MetalANGLE.xcarchive $1/lib/$TYPE/$PLATFORM/MetalANGLE.xcarchive
+            if [ -d "build_${TYPE}_${PLATFORM}/Release/MetalANGLE.xcarchive" ]; then
+                cp -R "build_${TYPE}_${PLATFORM}/Release/MetalANGLE.xcarchive" "$1/lib/$TYPE/$PLATFORM/MetalANGLE.xcarchive"
+            fi
+        fi
+        if [[ "$TYPE" == "ios" ]]; then
+            _lipo_ios_simulator "$1"
         fi
     fi
 
-    # copy license files
     if [ -d "$1/license" ]; then
-        rm -rf $1/license
+        rm -rf "$1/license"
     fi
-    mkdir -p $1/license
-    cp -v LICENSE $1/license/
+    mkdir -p "$1/license"
+    if [ -f LICENSE ]; then
+        cp -v LICENSE "$1/license/"
+    fi
 }
 
 # executed inside the lib src dir
 function clean() {
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
-        rm -f build_${TYPE}_${PLATFORM}
+        rm -rf "build_${TYPE}_${PLATFORM}"
         rm -f CMakeCache.txt
     fi
 }
@@ -307,7 +333,6 @@ function load() {
         echo 1
     else
         TARGET_DIR="$LIBS_DIR_REAL/$1/lib/$TYPE/$PLATFORM"
-        # Check if the folder exists
         if [ -d "$TARGET_DIR" ]; then
             echoInfo "Deleting existing folder: $TARGET_DIR"
             rm -rf "$TARGET_DIR"

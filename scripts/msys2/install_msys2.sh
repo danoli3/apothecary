@@ -4,6 +4,7 @@
 # Update package database
 pacman -Syuu --noconfirm
 pacman -S --noconfirm base-devel unzip dos2unix git
+pacman -S --noconfirm --needed mingw-w64-x86_64-gum || pacman -S --noconfirm --needed gum || true
 pacboy -S --noconfirm gcc cmake gperf libxml2 python3 zlib libpng fftw3 zlib wget2 curl
 
 # Additional

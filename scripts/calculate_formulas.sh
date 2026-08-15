@@ -87,6 +87,8 @@ if [[ "$TARGET" =~ ^(linux)$ ]]; then
         "FreeImage"
         "fmt"
         "uriparser"
+        # dawn: not in core until Linux CI is GCC 11+ (atomic::wait / bit_cast)
+        # TYPE=linux ./apo update dawn
     )
     if [[ "$TARCH" =~ ^(64|arm64|x86_64)$ ]]; then
         FORMULAS+=(
@@ -175,6 +177,10 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
         if [ "$TARGET" != "ios" ]; then
             FORMULAS+=("poco")
         fi
+        # Dawn is Metal on Apple; watchOS SDK has no Metal.framework.
+        if [ "$TARGET" != "watchos" ]; then
+            FORMULAS+=("dawn")
+        fi
     fi
 elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
     FORMULAS=()
@@ -214,6 +220,10 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
             "openssl"
             "curl"
             "poco"
+            "dawn"
+            # angle / glon12: not in core — GN/gclient and Mesa meson are opt-in
+            # TYPE=vs ./apo update angle
+            # TYPE=vs ./apo update glon12
         )
     fi
 fi
