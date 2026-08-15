@@ -119,11 +119,15 @@ echo "Current PBUNDLE: [$PBUNDLE]"
 
 TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.tar.bz2
 if [ "$TARGET" == "linux" ]; then
+    # shellcheck source=linux/map_artifact_target.sh
+    source "$ROOT/scripts/linux/map_artifact_target.sh"
+    expected_artifact_target="$(map_linux_artifact_target "$ARCH")" || exit 1
     LINUX_ARTIFACT_TARGET=${LINUX_ARTIFACT_TARGET:-}
     case "$LINUX_ARTIFACT_TARGET" in
         linux_64|linux_arm64|linux_raspberrypi_arm64|linux_raspberrypi_armv6|linux_raspberrypi_armv7) ;;
         *)
             echo "Error: LINUX_ARTIFACT_TARGET must be an explicit supported Linux release target." >&2
+            echo "Supported: linux_64 linux_arm64 linux_raspberrypi_arm64 linux_raspberrypi_armv6 linux_raspberrypi_armv7" >&2
             exit 1
             ;;
     esac
@@ -132,9 +136,8 @@ if [ "$TARGET" == "linux" ]; then
         exit 1
     fi
     TARBALL="openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}_${GCC}.tar.bz2"
-    expected_artifact_target="${TARGET}_${ARCH}"
     if [ "$LINUX_ARTIFACT_TARGET" != "$expected_artifact_target" ]; then
-        echo "Error: Linux target mapping '$LINUX_ARTIFACT_TARGET' does not match '$expected_artifact_target'." >&2
+        echo "Error: Linux target mapping '$LINUX_ARTIFACT_TARGET' does not match ARCH '$ARCH' ($expected_artifact_target)." >&2
         exit 1
     fi
     echo "TARBALL: [$TARBALL]"

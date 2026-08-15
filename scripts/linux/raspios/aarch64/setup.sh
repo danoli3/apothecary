@@ -1,58 +1,13 @@
-#!/bin/bash
-set -e
-set -o pipefail
-# trap any script errors and exit
-trap "trapError" ERR
-
-trapError() {
-    echo
-    echo " ^ Received error ^"
-    cat formula.log
-    exit 1
-}
-
-if grep -q "Raspbian" /etc/os-release 2>/dev/null && [[ "$(uname -m)" == "aarch64" ]]; then
-    NATIVE="true"
-    echo "Detected Raspberry Pi OS (Raspbian) on arm64. Setting NATIVE=true"
-else
-    NATIVE="false"
-fi
-
-CROSS_COMPILER=${CROSS_COMPILER:-raspbian}
-CROSS_SYSROOT=${CROSS_SYSROOT:-rpi_rootfs}
-CROSS_OS="${CROSS_OS:-bookworm}"
-CROSS_OS="${CROSS_OS,,}"
-
-if [ "$CROSS_OS" == "bookworm" ] && [ "$NATIVE" == "false" ]; then
-    CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/cross-gcc-14.2.0-pi_64.tar.gz/download"
-    CROSS_NAME="cross-gcc-14.2.0-pi_64"
-    CROSS_EXTRACT="cross-pi-gcc-14.2.0-64"
-    echo "Using Bookworm toolchain: $CROSS_NAME"
-elif [ "$CROSS_OS" == "bookworm" ] && [ "$NATIVE" == "true" ]; then
-    CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Native-Compiler%20Toolchains/Bookworm/GCC%2014.2.0/native-gcc-14.2.0-pi_64.tar.gz/download"
-    CROSS_NAME="native-gcc-14.2.0-pi_64"
-    CROSS_EXTRACT="native-pi-gcc-14.2.0-64"
-    echo "Using Native Bookworm toolchain: $CROSS_NAME"
-elif [ "$CROSS_OS" == "Bullseye" ]; then
-    # CROSS_URL="https://sourceforge.net/projects/raspberry-pi-cross-compilers/files/Bonus%20Raspberry%20Pi%20GCC%2064-Bit%20Toolchains/Raspberry%20Pi%20GCC%2064-Bit%20Cross-Compiler%20Toolchains/Bullseye/GCC%2013.1.0/cross-gcc-13.1.0-pi_64.tar.gz/download"
-    # CROSS_NAME="cross-gcc-13.1.0-pi_64"
-    # CROSS_EXTRACT="cross-pi-gcc-13.1.0-64"
-    # echo "Using Bullseye toolchain: $CROSS_NAME"
-    echo "Unsupported CROSS_OS Bullseye value: [$CROSS_OS]"
-    exit 1
-else
-    echo "Unsupported CROSS_OS value: [$CROSS_OS]"
-    exit 1
-fi
-    wget "${CROSS_URL}" -O ${CROSS_NAME}.tar.gz && tar xf ${CROSS_NAME}.tar.gz && rm ${CROSS_NAME}.tar.gz && mv ${CROSS_EXTRACT} ${CROSS_COMPILER}
-
-
-if [ "$NATIVE" == "0" ]; then
-    #wget https://downloads.raspberrypi.com/raspios_lite_arm64/root.tar.xz
-    wget https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-10-02/2025-10-01-raspios-trixie-arm64-lite.img.xz root.tar.xz
-    mkdir -p rpi-arm64-rootfs
-    sudo tar -xJpf raspios_lite_arm64/root.tar.xz -C rpi-arm64-rootfs
-fi
-
-echo "===setup complete==="
-cd $SCRIPT_DIR
+#!/usr/bin/env bash
+# Host tools + Debian bookworm arm64 sysroot for Raspberry Pi 64-bit.
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export RPI_SLICE=aarch64
+export DEB_ARCH=arm64
+export GCC_TRIPLE=aarch64-linux-gnu
+export QEMU_STATIC=qemu-aarch64-static
+export QEMU_BINFMT=qemu-aarch64
+export NATIVE_UNAME=aarch64
+export DEFAULT_SYSROOT=/opt/rpi-arm64-sysroot
+# shellcheck source=../setup_common.sh
+source "$SCRIPT_DIR/../setup_common.sh"

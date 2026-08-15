@@ -1,4 +1,5 @@
 name: build-linux-rpi
+
 on:
   push:
     paths-ignore:
@@ -6,6 +7,7 @@ on:
   pull_request:
     paths-ignore:
       - "**/README.md"
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -15,264 +17,96 @@ permissions:
   contents: write
 
 env:
-  TARGET: "linux"
-  NO_FORCE: 1
-  GA_CI_SECRET: ${{ secrets.CI_SECRET }}
-  USE_ARTIFACT: false
-  DISABLE_WORKFLOW: "true"
+  TARGET: linux
+  TYPE: linux
+  GCC: gcc10
   DISTRO: raspios
+  CROSS_OS: bookworm
+  NO_FORCE: 1
+  USE_ARTIFACT: false
+  # Prove the QEMU sysroot + GCC 10 cross compiler before brewing the full core set.
+  FORMULAS_OVERRIDE: zlib
+  GA_CI_SECRET: ${{ secrets.CI_SECRET }}
 
-jobs:  
-  pre-check:
-    runs-on: ubuntu-latest
-    outputs:
-      workflow_disabled: ${{ steps.check-disabled.outputs.disabled }}
-    steps:
-    - name: Check if Workflow is disabled
-      id: check-disabled
-      shell: bash
-      run: |
-        if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-          echo "disabled=true" >> $GITHUB_ENV
-          echo "::set-output name=disabled::true"
-        else
-          echo "::set-output name=disabled::false"
-        fi
-    - name: Determine Release
-      id: vars
-      shell: bash
-      run: |
-        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-          echo "::set-output name=RELEASE=${{ github.ref_name }}"
-        elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-          echo "::set-output name=RELEASE=nightly"
-        elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-          echo "::set-output name=RELEASE=latest"
-        else
-          echo "::set-output name=RELEASE=latest"
-        fi
-
-  build-linux-aarch64:
-    if: needs.pre-check.outputs.workflow_disabled != 'true'
-    needs: pre-check
-    runs-on: ubuntu-latest
+jobs:
+  build-linux-rpi:
+    name: Raspberry Pi ${{ matrix.arch }} - GCC10
+    runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
-        CROSS_CPU: [cortex-a53] #cortex-a72, cortex-a76
-        CROSS_OS: [bookworm]
-        ARCH: [aarch64]
-
+        include:
+          - arch: aarch64
+            artifact_target: linux_raspberrypi_arm64
+            sysroot: /opt/rpi-arm64-sysroot
+            prefix: aarch64-linux-gnu
+            qemu_arch: aarch64
+          - arch: armv7l
+            artifact_target: linux_raspberrypi_armv7
+            sysroot: /opt/rpi-armv7l-sysroot
+            prefix: arm-linux-gnueabihf
+            qemu_arch: armv7l
+          - arch: armv6l
+            artifact_target: linux_raspberrypi_armv6
+            sysroot: /opt/rpi-armv6l-sysroot
+            prefix: arm-linux-gnueabihf
+            qemu_arch: armv6l
     env:
-      CROSS_COMPILER: raspbian
-      WORKDIR: "/home/runner/work/apothecary/apothecary"
-      SYSROOT: "${WORKDIR}/${{ matrix.CROSS_OS }}_sysroot"
-      TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
-
+      ARCH: ${{ matrix.arch }}
+      LINUX_ARTIFACT_TARGET: ${{ matrix.artifact_target }}
+      SYSROOT: ${{ matrix.sysroot }}
+      TOOLCHAIN_ROOT: /usr
+      TOOLCHAIN_PREFIX: ${{ matrix.prefix }}
+      CC: ${{ matrix.prefix }}-gcc-10
+      CXX: ${{ matrix.prefix }}-g++-10
+      GCC_VERSION: "10"
+      RPI_QEMU_ARCH: ${{ matrix.qemu_arch }}
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: Setup Environment
-        run: |
-          echo "Setting up environment for ${{ matrix.CROSS_OS }} ${{ matrix.CROSS_CPU }} ${ARCH}"
-          echo "CROSS_CPU: ${{ matrix.CROSS_CPU }}"
-          echo "SYSROOT: ${SYSROOT}"
-          echo "TOOLCHAIN_ROOT: ${TOOLCHAIN_ROOT}"
-          echo "CROSS_OS=${{ matrix.CROSS_OS }}" >> $GITHUB_ENV
-          echo "ARCH=${{ matrix.ARCH }}" >> $GITHUB_ENV
+      - name: Trust checked-out workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-      - name: Determine Release
-        id: vars
+      - name: Check Linux artifact mapping
+        run: bash scripts/linux/map_artifact_target.sh
+
+      - name: Determine release identity
         shell: bash
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "RELEASE=nightly" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-            echo "RELEASE=latest" >> $GITHUB_ENV
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            release="$GITHUB_REF_NAME"
+          elif [[ "$GITHUB_REF" == "refs/heads/master" ]]; then
+            release=nightly
           else
-            echo "RELEASE=latest" >> $GITHUB_ENV
+            release=latest
           fi
+          echo "RELEASE=$release" >> "$GITHUB_ENV"
 
-      - name: Setup Cross Compiler and Target Local File System
-        run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/setup.sh
+      - name: Setup QEMU sysroot and GCC 10
+        run: sudo --preserve-env=SYSROOT,TOOLCHAIN_ROOT,CROSS_OS,RPI_QEMU_ARCH,GITHUB_ENV ./scripts/linux/raspios/${{ matrix.arch }}/setup.sh
 
-      - name: Script Install and Build
-        run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/install.sh
+      - name: Install target packages into sysroot
+        run: sudo --preserve-env=SYSROOT,RPI_QEMU_ARCH ./scripts/linux/raspios/${{ matrix.arch }}/install.sh
 
-      - name: Script Install and Build
-        run: ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/build.sh
+      - name: Build
+        run: ./scripts/linux/raspios/${{ matrix.arch }}/build.sh
 
-      - name: Package
-        #if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-        working-directory: ${{ env.GITHUB_WORKSPACE }}
+      - name: Package canonical archive
         run: scripts/package.sh
-        env:
-          BUNDLE: ${{ matrix.bundle }}
-          DISTRO: ${{ env.DISTRO }}
-          GCC: "_${{ matrix.CROSS_CPU }}_${{ matrix.CROSS_OS }}"
 
-      - name: List output directory
-        run: ls -lah out/
+      - name: List output
+        run: |
+          ls -lah out/ || true
+          find out/ -type f \( -name "*.tar.bz2" -o -name "*.sha256" -o -name "*.json" \) -print || true
 
       - name: Update Release
-        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
+        if: github.repository == 'openframeworks/apothecary' && github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         uses: softprops/action-gh-release@v3.0.2
-        env:
-          GCC: "_${{ matrix.CROSS_CPU }}_${{ matrix.CROSS_OS }}"
         with:
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: ${{ env.RELEASE }}
           draft: false
-          files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.DISTRO }}_${{ env.ARCH }}_{{ env.GCC }}.tar.bz2
-
-  # build-linux-armv6l-pi-1zero:
-  #   if: needs.pre-check.outputs.workflow_disabled != 'true'
-  #   needs: pre-check
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     TARGET: linux
-  #     ARCH: armv7l
-  #     CROSS_COMPILER: raspbian
-  #     CROSS_OS: bookworm
-  #     WORKDIR: "/home/runner/work/apothecary/apothecary"
-  #     SYSROOT: "${WORKDIR}/${CROSS_SYSROOT}"
-  #     TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
-  #     TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
-
-  #   steps:
-  #     - uses: actions/checkout@v7.0.1
-  #     - name: Determine Release
-  #       id: vars
-  #       shell: bash
-  #       run: |
-  #         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-  #           echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
-  #         elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-  #           echo "RELEASE=nightly" >> $GITHUB_ENV
-  #         elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-  #           echo "RELEASE=latest" >> $GITHUB_ENV
-  #         else
-  #           echo "RELEASE=latest" >> $GITHUB_ENV
-  #         fi
-  #     - name: Update and Upgrade System Packages
-  #       run: |
-  #         sudo apt update && sudo apt dist-upgrade -y
-  #         sudo apt-get install -y build-essential gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
-      
-  #     - name: Setup Cross Compiler and Target Local File System
-  #       run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/setup.sh
-
-  #     - name: Script Install and Build
-  #       run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/install.sh
-
-  #     - name: Script Install and Build
-  #       run: ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/build.sh
-
-  #     - name: Package
-  #       #if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-  #       working-directory: ${{ env.GITHUB_WORKSPACE }}
-  #       run: scripts/package.sh
-  #       env:
-  #         BUNDLE: ${{ matrix.bundle }}
-  #         DISTRO: ${{ env.DISTRO }}
-  #         GCC: "_${{ matrix.CROSS_CPU }}_${{ matrix.CROSS_OS }}"
-
-  #     - name: List output directory
-  #       run: ls -lah out/
-
-  #     - name: Update Release armv6l
-  #       if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-  #       uses: softprops/action-gh-release@v3.0.2
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         tag_name: ${{ env.RELEASE }}
-  #         draft: false
-  #         files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.DISTRO }}_${{ env.ARCH }}_{{ env.GCC }}.tar.bz2
-
-  # build-linux-armv7-pi3ab45:
-  #   if: needs.pre-check.outputs.workflow_disabled != 'true'
-  #   needs: pre-check
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     TARGET: linux
-  #     ARCH: armv7l
-  #     CROSS_COMPILER: raspbian
-  #     CROSS_OS: bookworm
-  #     WORKDIR: "/home/runner/work/apothecary/apothecary"
-  #     SYSROOT: "${WORKDIR}/${CROSS_SYSROOT}"
-  #     TOOLCHAIN_ROOT: "${WORKDIR}/${CROSS_COMPILER}"
-  #     TOOLCHAIN_PREFIX: "arm-linux-gnueabihf"
-  #   steps:
-  #     - uses: actions/checkout@v7.0.1
-  #     - name: Check if Workflow is disabled
-  #       run: |
-  #         if [ "${{ env.DISABLE_WORKFLOW }}" == "true" ]; then
-  #           echo "Workflow is disabled. Exiting."
-  #           exit 78
-  #         fi
-
-  #     - name: Determine Release
-  #       id: vars
-  #       shell: bash
-  #       run: |
-  #         if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-  #           echo "RELEASE=${{ github.ref_name }}" >> $GITHUB_ENV
-  #         elif [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-  #           echo "RELEASE=nightly" >> $GITHUB_ENV
-  #         elif [[ "${{ github.ref }}" == "refs/heads/bleeding" ]]; then
-  #           echo "RELEASE=latest" >> $GITHUB_ENV
-  #         else
-  #           echo "RELEASE=latest" >> $GITHUB_ENV
-  #         fi
-
-  #     - name: Update and Upgrade System Packages
-  #       run: |
-  #         sudo apt update && sudo apt dist-upgrade -y
-  #         sudo apt-get install -y build-essential gcc g++ gfortran git texinfo bison libncurses-dev tar wget qemu-user-static rsync xz-utils
-      
-  #     # - name: Cache raspbian folder
-  #     #   uses: actions/cache@v5.0.4
-  #     #   with:
-  #     #     path: /home/runner/work/apothecary/apothecary/raspbian
-  #     #     key: raspbian-pi3ab45-cache-2
-            
-  #     # - name: Check if folder exists
-  #     #   id: folder-check
-  #     #   run: >
-  #     #     if [ -d $TOOLCHAIN_ROOT ]; then
-  #     #       echo "Raspbian folder already exists. Skipping download and extract."
-  #     #       echo "::set-output name=folder-exists::true"
-  #     #     else
-  #     #       echo "::set-output name=folder-exists::false"
-  #     #     fi
-
-  #     - name: Setup Cross Compiler and Target Local File System
-  #       run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/setup.sh
-
-  #     - name: Script Install and Build
-  #       run: sudo ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/install.sh
-
-  #     - name: Script Install and Build
-  #       run: ./scripts/${{ env.TARGET }}/${{ env.DISTRO }}/${{ env.ARCH }}/build.sh
-
-  #     - name: Package
-  #       #if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-  #       working-directory: ${{ env.GITHUB_WORKSPACE }}
-  #       run: scripts/package.sh
-  #       env:
-  #         BUNDLE: ${{ matrix.bundle }}
-  #         DISTRO: ${{ env.DISTRO }}
-  #         GCC: "_${{ matrix.CROSS_CPU }}_${{ matrix.CROSS_OS }}"
-
-  #     - name: List output directory
-  #       run: ls -lah out/
-
-  #     - name: Update Release
-  #       if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
-  #       uses: softprops/action-gh-release@v3.0.2
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         tag_name: ${{ env.RELEASE }}
-  #         draft: false
-  #         files: out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.DISTRO }}_${{ env.ARCH }}_{{ env.GCC }}.tar.bz2
+          files: |
+            out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ env.GCC }}.tar.bz2
+            out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ env.GCC }}.tar.bz2.sha256
+            out/openFrameworksLibs_${{ env.RELEASE }}_${{ env.TARGET }}_${{ env.ARCH }}_${{ env.GCC }}.tar.bz2.manifest.json

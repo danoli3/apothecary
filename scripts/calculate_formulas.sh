@@ -241,6 +241,12 @@ array_contains() {
     return $in
 }
 
+if [ -n "${FORMULAS_OVERRIDE:-}" ]; then
+    # shellcheck disable=SC2206
+    FORMULAS=(${FORMULAS_OVERRIDE})
+    echo "FORMULAS_OVERRIDE: [${FORMULAS[*]}]"
+fi
+
 echo "Potions to Brew - formulas: [${FORMULAS[@]}]"
 if [ -z ${FORMULAS} ]; then
     echo "===No formulas to build, failing==="

@@ -1,94 +1,86 @@
 #!/usr/bin/env bash
+# Raspberry Pi OS 64-bit (ARCH=aarch64) compiler/sysroot.
+# Official CI uses host GCC 10 + a bookworm arm64 sysroot.
 
+ORIGINAL_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd $SCRIPT_DIR
 APOTHECARY_LEVEL="$(cd "$SCRIPT_DIR/../.." && pwd)"
-cd $APOTHECARY_LEVEL
+# shellcheck source=../../scripts/linux/raspios/sysroot_utils.sh
+if [[ -f "$APOTHECARY_LEVEL/scripts/linux/raspios/sysroot_utils.sh" ]]; then
+    source "$APOTHECARY_LEVEL/scripts/linux/raspios/sysroot_utils.sh"
+fi
 
-CROSS_COMPILER="raspbian"
-CROSS_SYSROOT="rpi-arm64-rootfs"
-CROSS_ARCH="aarch64"
-CROSSCOMPILE=${CROSSCOMPILE:-1}
-SYSROOT_PATH="/usr/${CROSS_ARCH}-linux-gnu"
-export HOST_ARCH=$(uname -m)
-export HOST_PLATFORM=$(uname)
+export HOST_ARCH
+HOST_ARCH="$(uname -m)"
+export HOST_PLATFORM
+HOST_PLATFORM="$(uname)"
+export GCC_PREFIX="${GCC_PREFIX:-aarch64-linux-gnu}"
+export GCC_VERSION="${GCC_VERSION:-10}"
 
-if [[ "$HOST_ARCH" != "$CROSS_ARCH" ]]; then
-    CROSSCOMPILE=1
-    echo "Detected different host ($HOST_ARCH) and target ($CROSS_ARCH). Enabling cross-compilation."
-else
+if type rpi_is_native >/dev/null 2>&1 && rpi_is_native && [[ "$HOST_ARCH" == "aarch64" ]]; then
     CROSSCOMPILE=0
-    echo "Native compilation detected. No cross-compilation needed."
-fi
-
-if [ "${CROSSCOMPILE}" -eq 0 ]; then
-    export ROOTFS="/"
-    export TOOLCHAIN_ROOT="/usr"
 else
-    export ROOTFS="/rpi-arm64-rootfs/"
-    export TOOLCHAIN_ROOT="/usr/aarch64-linux-gnu/"
+    if [[ "$HOST_ARCH" == "aarch64" || "$HOST_ARCH" == "arm64" ]]; then
+        CROSSCOMPILE=0
+    else
+        CROSSCOMPILE=1
+    fi
+fi
+export CROSSCOMPILE
+export CROSSCOMPILING="$CROSSCOMPILE"
+
+if [[ "$CROSSCOMPILE" -eq 0 ]]; then
+    export ROOTFS="${SYSROOT:-/}"
+    export SYSROOT="${SYSROOT:-/}"
+    export TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-/usr}"
+    if command -v gcc-10 >/dev/null 2>&1; then
+        export CC="${CC:-gcc-10}"
+        export CXX="${CXX:-g++-10}"
+    else
+        export CC="${CC:-gcc}"
+        export CXX="${CXX:-g++}"
+    fi
+    export AR="${AR:-ar}"
+    export AS="${AS:-as}"
+    export RANLIB="${RANLIB:-ranlib}"
+    export LD="${LD:-ld}"
+else
+    export ROOTFS="${SYSROOT:-/opt/rpi-arm64-sysroot}"
+    export SYSROOT="${SYSROOT:-/opt/rpi-arm64-sysroot}"
+    export TOOLCHAIN_ROOT="${TOOLCHAIN_ROOT:-/usr}"
+    export CC="${CC:-${GCC_PREFIX}-gcc-10}"
+    export CXX="${CXX:-${GCC_PREFIX}-g++-10}"
+    export AR="${AR:-${GCC_PREFIX}-ar}"
+    export AS="${AS:-${GCC_PREFIX}-as}"
+    export RANLIB="${RANLIB:-${GCC_PREFIX}-ranlib}"
+    export LD="${LD:-${GCC_PREFIX}-ld}"
 fi
 
-export SYSROOT=${ROOTFS}
-export GCC_PREFIX="${CROSS_ARCH}-linux-gnu"
-if [ "${GCC_VERSION}" -eq 0 ]; then
-    export GCC_VERSION="14.2.0"
-fi
-
-export CMAKE_LIBRARY_ARCHITECTURE=${GCC_PREFIX}
-export LIBRARY_PATH=${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64:${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib:${TOOLCHAIN_ROOT}/lib
-export LD_LIBRARY_PATH=${TOOLCHAIN_ROOT}/lib
-export PATH=$TOOLCHAIN_ROOT/bin:$LIBRARY_PATH:$PATH
-
-export CC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gcc"
-export CXX="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-g++"
-export CPP="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-cpp"
-export AR="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ar"
-export AS="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-as"
-export RANLIB="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ranlib"
-export FC="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-gfortran"
-export LD="${TOOLCHAIN_ROOT}/bin/${GCC_PREFIX}-ld"
-
-GCCPATH="$TOOLCHAIN_ROOT/libexec/gcc/${GCC_PREFIX}/${GCC_VERSION}"
-export ARFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
-export RANLIBFLAGS="--plugin ${GCCPATH}/liblto_plugin.so"
-
-export CFLAGS="--sysroot=${SYSROOT} \
-    -I${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/include \
-    -I${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}/include \
-    -DSTANDALONE -DPIC -D_REENTRANT -D_LARGEFILE64_SOURCE \
-    -D_FILE_OFFSET_BITS=64 \
-    -DHAVE_LIBBCM_HOST -DUSE_EXTERNAL_LIBBCM_HOST"
-
-export LDFLAGS="--sysroot=${SYSROOT} \
-    -Wl,-rpath-link,${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -L${SYSROOT}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -Wl,-rpath-link,${SYSROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -L${SYSROOT}/usr/lib64/${CMAKE_LIBRARY_ARCHITECTURE} \
-    -Wl,-rpath-link,${TOOLCHAIN_ROOT}/${GCC_PREFIX}/lib64 \
-    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/lib64 \
-    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib \
-    -L${TOOLCHAIN_ROOT}/${GCC_PREFIX}/libc/usr/lib64 \
-    -L${TOOLCHAIN_ROOT}/lib/gcc/${GCC_PREFIX}/${GCC_VERSION}"
-
-[ -d "${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" ] && ls -la "${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}" || echo "Directory not found: ${ROOTFS}/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
-[ -d "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" ] && ls -la "${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64" || echo "Directory not found: ${TOOLCHAIN_ROOT}/${CMAKE_LIBRARY_ARCHITECTURE}/lib64"
-[ -d "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" ] && ls -la "${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" || echo "Directory not found: ${TOOLCHAIN_ROOT}/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
-
+export CMAKE_LIBRARY_ARCHITECTURE="${GCC_PREFIX}"
+export PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:-$SYSROOT}"
+export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:-$SYSROOT/usr/lib/${GCC_PREFIX}/pkgconfig:$SYSROOT/usr/share/pkgconfig}"
+export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}"
 export HOST="${GCC_PREFIX}"
 
-# Debugging output
+if [[ "$SYSROOT" == "/" ]]; then
+    export CFLAGS="${CFLAGS:--fPIC -O2 -march=armv8-a -mtune=cortex-a53}"
+    export CXXFLAGS="${CXXFLAGS:--fPIC -O2 -march=armv8-a -mtune=cortex-a53}"
+    export LDFLAGS="${LDFLAGS:-}"
+else
+    export CFLAGS="${CFLAGS:---sysroot=${SYSROOT} -fPIC -O2 -march=armv8-a -mtune=cortex-a53}"
+    export CXXFLAGS="${CXXFLAGS:---sysroot=${SYSROOT} -fPIC -O2 -march=armv8-a -mtune=cortex-a53}"
+    export LDFLAGS="${LDFLAGS:---sysroot=${SYSROOT} -Wl,-rpath-link,${SYSROOT}/usr/lib/${GCC_PREFIX} -L${SYSROOT}/usr/lib/${GCC_PREFIX}}"
+fi
+
 echo "--------------------"
-echo "openFrameworks apothecary Cross Compiler: $GCC_PREFIX"
-echo "Using GCC Version: $GCC_VERSION"
-echo "Library Path: $LIBRARY_PATH"
-echo "ROOTFS Path: $ROOTFS"
-echo "Toolchain ROOT: $TOOLCHAIN_ROOT"
-echo "CROSS_ARCH: $CROSS_ARCH"
+echo "openFrameworks apothecary Raspberry Pi aarch64"
+echo "CROSSCOMPILE: $CROSSCOMPILE"
+echo "GCC_PREFIX: $GCC_PREFIX"
+echo "GCC_VERSION: $GCC_VERSION"
+echo "CC: $CC"
+echo "CXX: $CXX"
+echo "SYSROOT: $SYSROOT"
+echo "TOOLCHAIN_ROOT: $TOOLCHAIN_ROOT"
 echo "HOST_ARCH: $HOST_ARCH"
-echo "HOST_PLATFORM: $HOST_PLATFORM"
-echo "GCC Path: $GCCPATH"
-echo "LDFLAGS : $LDFLAGS"
-echo "CFLAGS : $CFLAGS"
-echo "Path: [$PATH]"
 echo "--------------------"
+cd "$ORIGINAL_DIR"
