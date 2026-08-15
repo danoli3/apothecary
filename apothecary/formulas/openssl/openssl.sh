@@ -15,7 +15,7 @@ OPENSSL_CMAKE_COMMIT=2186f38a68635ada55434b1fc9ee78fdf04a1718
 SHA1=eaf5ac943564691e22c3a303bc8ffc9ea928fd5a
 SHA256=2db3f3a0d6ea4b59e1f094ace2c8cd536dffb87cdc39084c5afa1e6f7f37dd09
 
-BUILD_ID=10
+BUILD_ID=11
 
 CSTANDARD=c17 # c89 | c99 | c11 | gnu11
 SITE=https://www.openssl.org
@@ -191,6 +191,14 @@ function build() {
             "
         if [[ "$TYPE" =~ ^(ios|tvos|xros|catos|watchos)$ ]]; then
             DEFINES="${DEFINES} -DHAVE_FORK=0"
+        fi
+        # openssl-cmake currently selects the ELF perlasm flavour for Mac
+        # Catalyst. The generated sources contain directives such as .hidden,
+        # .type and .section .init, which AppleClang's Mach-O assembler rejects.
+        # Use OpenSSL's portable C implementation for Catalyst until the CMake
+        # wrapper passes a Catalyst-aware Darwin perlasm target.
+        if [ "$TYPE" == "catos" ]; then
+            DEFINES="${DEFINES} -DOPENSSL_ASM=OFF -DOPENSSL_NO_ASM=ON"
         fi
         rm -f CMakeCache.txt *.a *.o
         cmake .. \
