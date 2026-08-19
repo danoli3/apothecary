@@ -53,6 +53,10 @@ FORMULAS=(
     "kiss"
     "opencv"
     "openssl"
+    "nghttp2"
+    "nghttp3"
+    "ngtcp2"
+    "libssh2"
     "portaudio"
     "pugixml"
     "utf8"
@@ -117,6 +121,10 @@ elif [[ "$TARGET" =~ ^(android)$ ]]; then
         "assimp"
         "opencv"
         "openssl"
+        "nghttp2"
+        "nghttp3"
+        "ngtcp2"
+        "libssh2"
         "curl"
     )
 elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
@@ -170,6 +178,10 @@ elif [[ "$TARGET" =~ ^(osx|macos|ios|tvos|xros|catos|watchos)$ ]]; then
         FORMULAS+=(
             "fmt"
             "openssl"
+            "nghttp2"
+            "nghttp3"
+            "ngtcp2"
+            "libssh2"
             "curl"
         )
         # Poco is built separately for iOS and published only as a modular
@@ -218,6 +230,10 @@ elif [[ "$TARGET" =~ ^(vs|msys2)$ ]]; then
         FORMULAS+=(
             "fmt"
             "openssl"
+            "nghttp2"
+            "nghttp3"
+            "ngtcp2"
+            "libssh2"
             "curl"
             "poco"
             "dawn"

@@ -1431,7 +1431,50 @@ function doCommand() {
   done
 }
 
-# update a given library
+# True if every FORMULA_DEPENDS output dir exists for this TYPE/PLATFORM.
+# A valid parent pickle must not skip the parent when a depend was never copied.
+function formulaDependsReady() {
+  if [ ${#FORMULA_DEPENDS[@]} -eq 0 ] ; then
+    return 0
+  fi
+  local depend dep_dir
+  for depend in "${FORMULA_DEPENDS[@]}" ; do
+    dep_dir="$LIBS_DIR_REAL/$depend/lib/$TYPE/$PLATFORM"
+    if [ ! -d "$dep_dir" ] ; then
+      echoInfo " depend \"$depend\" missing at $dep_dir"
+      return 1
+    fi
+  done
+  return 0
+}
+
+# 0 = skip this step (prebuilt current and depends present)
+function skipCachedFormula() {
+  local name="$1"
+  local step="$2"
+  if [ -e "$name" ] ; then
+    echoInfo "  Not using cache : [! -e $name] for $step \"$name\" "
+    return 1
+  fi
+  if [[ $FORCE_DOWNLOAD -ne 0 ]] || [[ $USE_SAVE != 1 ]]; then
+    echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for $step \"$name\" "
+    return 1
+  fi
+  local result
+  result=$(load "$name" | tail -n 1)
+  echoInfo " $name - Checking if Precompiled binary :[$result]"
+  if [ "$result" -ne 1 ]; then
+    echoInfo " Precompiled not found or outdated. Continue $step for \"$name\" "
+    return 1
+  fi
+  if ! formulaDependsReady ; then
+    echoInfo " \"$name\" pickle is valid but FORMULA_DEPENDS are missing. Continue $step"
+    return 1
+  fi
+  echoInfo " \"$name\" Precompiled binary validated. Skipping $step"
+  return 0
+}
+
 function updateFormula() {
 
   export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
@@ -1442,21 +1485,8 @@ function updateFormula() {
   # fi
   echoStart " Building \"$1\" ...."
 
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " $1 - Checking if Precompiled binary :[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping updateFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue updateFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for updateFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for updateFormula \"$1\" "
+  if skipCachedFormula "$1" "updateFormula" ; then
+    return 0
   fi
 
   downloadFormula $1
@@ -1483,22 +1513,8 @@ function downloadFormula(){
     echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
   fi
   echo
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      LOAD_RESULT=$(load $1)
-      FINAL_RESULT=$(echo "$LOAD_RESULT" | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$FINAL_RESULT] - [$LOAD_RESULT]"
-      if [ $FINAL_RESULT -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping download"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue downloadFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for downloadFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for downloadFormula \"$1\" "
+  if skipCachedFormula "$1" "downloadFormula" ; then
+    return 0
   fi
 
   cd $BUILD_DIR
@@ -1540,21 +1556,8 @@ function prepareFormula() {
   echo
   echoInfo " Preparing \"$1\""
   echo
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping prepare"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue prepareFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for prepareFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for prepareFormula \"$1\" "
+  if skipCachedFormula "$1" "prepareFormula" ; then
+    return 0
   fi
 
   if [ ! -e $BUILD_DIR/$1 ] ; then
@@ -1578,21 +1581,8 @@ function buildFormula() {
   export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
   echo
   echoInfo " Building \"$1\""
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping buildFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue buildFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for buildFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for buildFormula \"$1\" "
+  if skipCachedFormula "$1" "buildFormula" ; then
+    return 0
   fi
   echo
   if [ ! -e $BUILD_DIR/$1 ] ; then
@@ -1625,21 +1615,8 @@ function copyFormula() {
   echoInfo " Lib dest dir: $LIBS_DIR_REAL/$1"
   echo
 
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping copyFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue copyFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for copyFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for copyFormula \"$1\" "
+  if skipCachedFormula "$1" "copyFormula" ; then
+    return 0
   fi
 
   if [ ! -e $BUILD_DIR/$1 ] ; then
