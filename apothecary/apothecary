@@ -1706,8 +1706,10 @@ function frameworkFormula() {
 
   if [ ! -e "$LIBS_DIR/$1" ] ; then
     echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
-  elif [  $1 == "pkg-config" ] || [  $1 == "kiss" ]; then
-    echoVerbose " No need to create framework for: \"$1\""
+  elif [  $1 == "pkg-config" ] || [  $1 == "kiss" ] \
+      || [  $1 == "nghttp2" ] || [  $1 == "nghttp3" ] \
+      || [  $1 == "ngtcp2" ] || [  $1 == "libssh2" ]; then
+    echoVerbose " No need to create framework for: \"$1\" (merged into curl)"
   else
     XDIR="${XLIBS_DIR_REAL}/"
     rm -rf $XLIBS_DIR_REAL/$1/lib/$TYPE_OUT/*.xcframework
@@ -2045,7 +2047,7 @@ function xframeworkFormula() {
 
   if [ ! -e "$LIBS_DIR/$1" ] ; then
     echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
-  elif [[ "$1" =~ ^(kiss|portaudio|pkg-config|videoInput)$ ]]; then
+  elif [[ "$1" =~ ^(kiss|portaudio|pkg-config|videoInput|nghttp2|nghttp3|ngtcp2|libssh2)$ ]]; then
     echoVerbose " No need to create framework for: \"$1\""
   else
     # rm -rf $LIBS_DIR_REAL/$1/lib/$TYPE/*.xcframework

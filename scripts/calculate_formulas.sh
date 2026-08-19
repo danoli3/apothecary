@@ -263,6 +263,21 @@ if [ -n "${FORMULAS_OVERRIDE:-}" ]; then
     echo "FORMULAS_OVERRIDE: [${FORMULAS[*]}]"
 fi
 
+# Built for curl and merged into libcurl. Keep in FORMULAS for brew order
+# and pickles. Do not xcframework or put in the published tarball.
+FORMULAS_INTERNAL=("nghttp2" "nghttp3" "ngtcp2" "libssh2")
+
+formula_is_internal() {
+    local name="$1"
+    local f
+    for f in "${FORMULAS_INTERNAL[@]}"; do
+        if [ "$f" = "$name" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 echo "Potions to Brew - formulas: [${FORMULAS[@]}]"
 if [ -z ${FORMULAS} ]; then
     echo "===No formulas to build, failing==="
