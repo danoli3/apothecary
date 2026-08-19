@@ -4,8 +4,7 @@
 # cross platform image io
 # http://freeimage.sourceforge.net
 #
-# Makefile build system,
-# some Makefiles are out of date so patching/modification may be required
+# Uses the CMakeLists shipped in danoli3/FreeImage (3.19.12+).
 
 FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux")
 
@@ -17,7 +16,7 @@ VER=3.19.12
 SHA256="2687a21ce3521bf1cc74672788878b4ec031abb09a5bceb026d40db4205847af"
 GIT_URL=https://github.com/danoli3/FreeImage
 GIT_TAG=$VER
-BUILD_ID=6
+BUILD_ID=7
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
@@ -39,8 +38,7 @@ function download() {
 
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
-
-    cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
+    # Keep the library's own CMakeLists.txt (unbundle + apothecary zlib/png hints).
 
     if [ "$TYPE" == "android" ]; then
         local BUILD_TO_DIR=$BUILD_DIR/FreeImage
