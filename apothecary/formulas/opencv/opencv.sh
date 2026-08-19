@@ -220,7 +220,10 @@ function build() {
 
         # Keep CMAKE_SYSTEM_NAME from ios-cmake 4.6 (tvOS/watchOS/visionOS).
         # OpenCV-*.cmake + imgcodecs patch skip AppKit/Cocoa.
-        if [[ "$TYPE" =~ ^(tvos|watchos)$ ]]; then
+        if [ "$TYPE" == "tvos" ]; then
+            # tvOS has AVFoundation (playback); it does not have AppKit or a camera.
+            EXTRA_DEFS="$EXTRA_DEFS -DWITH_CAP_IOS=OFF -DBUILD_opencv_highgui=OFF"
+        elif [ "$TYPE" == "watchos" ]; then
             EXTRA_DEFS="$EXTRA_DEFS -DWITH_CAP_IOS=OFF -DWITH_AVFOUNDATION=OFF -DBUILD_opencv_highgui=OFF"
         elif [ "$TYPE" == "xros" ]; then
             EXTRA_DEFS="$EXTRA_DEFS -DXROS=ON -DBUILD_opencv_highgui=OFF"
