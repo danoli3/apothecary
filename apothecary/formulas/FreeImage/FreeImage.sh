@@ -108,6 +108,7 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DBUILD_LIBPNG=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
@@ -426,7 +427,26 @@ function copy() {
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
+        # Xcode (-GXcode) puts the archive in CONFIGURATION_BUILD_DIR:
+        #   catos:  Release/libFreeImage.a  (not Release/lib/)
+        #   others: Release/lib/libFreeImage.a  or  lib/libFreeImage.a
+        BUILD_ROOT="build_${TYPE}_${PLATFORM}"
+        if [ -f "${BUILD_ROOT}/Release/lib/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/lib/libFreeImage.a"
+        elif [ -f "${BUILD_ROOT}/Release/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/libFreeImage.a"
+        elif [ -f "${BUILD_ROOT}/lib/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/lib/libFreeImage.a"
+        else
+            LIB_PATH=$(find "${BUILD_ROOT}" -name "libFreeImage.a" -print -quit)
+            if [ -z "$LIB_PATH" ]; then
+                echo "Error: libFreeImage.a not found under ${BUILD_ROOT}"
+                find "${BUILD_ROOT}" -name "*.a" -ls
+                exit 1
+            fi
+            echo " Using libFreeImage.a at ${LIB_PATH}"
+        fi
+        cp -v "$LIB_PATH" $1/lib/$TYPE/$PLATFORM/FreeImage.a
         cp Source/FreeImage.h $1/include
         secure "$1/lib/$TYPE/$PLATFORM/FreeImage.a" "FreeImage.pkl" "$VER" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [[ "$TYPE" =~ ^(linux)$ ]]; then
