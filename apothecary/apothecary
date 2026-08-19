@@ -1672,6 +1672,21 @@ function cleanFormula() {
   cd $APOTHECARY_DIR
 }
 
+# Combine several .a files into dest. Write to a temp first so dest can also
+# be one of the inputs (ngtcp2.a + ngtcp2_crypto_ossl.a -> ngtcp2.a).
+function mergeStaticArchives() {
+  local dest="$1"
+  shift
+  local tmp="${dest}.merge.tmp.a"
+  local src
+  rm -f "$tmp"
+  libtool -static -o "$tmp" "$@"
+  for src in "$@"; do
+    rm -f "$src"
+  done
+  mv -f "$tmp" "$dest"
+}
+
 function frameworkFormula() {
 
   echoStart " frameworkFormula [\"$1\"] for:[${TYPE}]"
@@ -1898,12 +1913,8 @@ function frameworkFormula() {
 
         # Merge all .a files into a single static library
         if [ "${#a_files[@]}" -gt 1 ]; then
-          libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+          mergeStaticArchives "${dir}/${1}.a" "${a_files[@]}"
           echo "Merged .a files into ${dir}/${1}.a"
-          # Clean up individual .a files after merging
-          for a_file in "${a_files[@]}"; do
-            rm -f "$a_file"
-          done
           lipo -info "${dir}/${1}.a"
           # Add to xcframework flags
           if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
@@ -2225,11 +2236,8 @@ function xframeworkFormula() {
       num_files=${#a_files[@]}
       if [ "$num_files" -gt 1 ]; then
         echo "Multiple archives found in $dir. Commencing the merge..."
-        libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+        mergeStaticArchives "${dir}/${1}.a" "${a_files[@]}"
         echo "Merged into ${dir}/${1}.a"
-        for a_file in "${a_files[@]}"; do
-          rm -f "$a_file"
-        done
         lipo -info "${dir}/${1}.a"
         #xcrun codesign --sign - "${dir}/${1}.a" || true
         if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
