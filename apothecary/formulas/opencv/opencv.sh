@@ -12,7 +12,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 # define the version
 VER=4.14.0
 SHA256="ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e"
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4140
@@ -63,6 +63,16 @@ function prepare() {
 
     rm -f ./modules/imgcodecs/src/ios_conversions.mm
     cp $FORMULA_DIR/ios_conversions.mm ./modules/imgcodecs/src/ios_conversions.mm
+
+    # OpenCV CMake does: APPLE AND NOT IOS AND NOT XROS → macosx_conversions.mm
+    # CMAKE_SYSTEM_NAME=tvOS/watchOS is APPLE but not IOS, so it pulls AppKit.
+    if [[ "$TYPE" =~ ^(tvos|watchos)$ ]]; then
+        cat >./modules/imgcodecs/src/macosx_conversions.mm <<'EOF'
+// AppKit is not available on tvOS/watchOS.
+// OpenCV 4.x adds this file whenever APPLE && !IOS && !XROS.
+#include <TargetConditionals.h>
+EOF
+    fi
 }
 
 # executed inside the lib src dir
@@ -194,7 +204,15 @@ function build() {
         if [[ "$TYPE" =~ ^(tvos|xros|watchos|catos)$ ]]; then
             EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
         else
-            EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+            EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+        fi
+
+        # tvOS/watchOS: force OpenCV's IOS flag so imgcodecs does not add
+        # macosx_conversions.mm (AppKit). visionOS uses the XROS path.
+        if [[ "$TYPE" =~ ^(tvos|watchos)$ ]]; then
+            EXTRA_DEFS="$EXTRA_DEFS -DIOS=ON -DWITH_CAP_IOS=OFF -DWITH_AVFOUNDATION=OFF"
+        elif [ "$TYPE" == "xros" ]; then
+            EXTRA_DEFS="$EXTRA_DEFS -DXROS=ON"
         fi
 
         FRAMEWORKS="-framework Foundation -framework AVFoundation -framework CoreFoundation -framework CoreVideo"
