@@ -1007,7 +1007,8 @@ if [ "$TYPE" = "xros" ]; then
   if [ $ARCH == "arm64" ] ; then
     export PLATFORM="VISIONOS"
   elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
-    export PLATFORM="SIMULATOR64_VISIONOS"
+    # ios-cmake 4.6 dropped SIMULATOR64_VISIONOS; visionOS sim is arm64-only.
+    export PLATFORM="SIMULATOR_VISIONOS"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATOR_VISIONOS"
   fi
