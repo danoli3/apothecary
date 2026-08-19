@@ -118,6 +118,12 @@ function build() {
     NGHTTP3_ROOT="$LIBS_ROOT/nghttp3"
     NGTCP2_ROOT="$LIBS_ROOT/ngtcp2"
     LIBSSH2_ROOT="$LIBS_ROOT/libssh2"
+    if [ ! -f "$NGTCP2_ROOT/include/ngtcp2/version.h" ]; then
+        echo " ngtcp2 version.h missing at $NGTCP2_ROOT/include/ngtcp2/version.h"
+        echo " curl 8.21 treats an unknown ngtcp2 version as < 1.12.0 (OpenSSL QUIC)."
+        echo " Rebuild ngtcp2, then retry curl."
+        exit 1
+    fi
     export OF_LIBS_OPENSSL_ABS_PATH=$(realpath ${LIBS_DIR}/)
     local OF_LIBS_OPENSSL="$LIBS_DIR/openssl/"
     local OF_LIBS_OPENSSL_ABS_PATH=$(realpath $OF_LIBS_OPENSSL)
