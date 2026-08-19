@@ -12,7 +12,7 @@ FORMULA_DEPENDS=("zlib")
 # define the version by sha
 VER=2.13.9
 SOURCE_COMMIT=04af2cabb9f859c198b8a553c028a87481199410
-BUILD_ID=1
+BUILD_ID=2
 DEFINES=""
 
 URL=https://github.com/GNOME/libxml2/archive/refs/tags/v${VER}
@@ -410,10 +410,42 @@ function copy() {
 
     elif [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libxml2.a" $1/lib/$TYPE/$PLATFORM/libxml2.a
+
+        # Xcode (-GXcode) puts the archive in CONFIGURATION_BUILD_DIR:
+        #   catos:  Release/libxml2.a  (not Release/lib/)
+        #   others: Release/lib/libxml2.a  or  lib/libxml2.a
+        BUILD_ROOT="build_${TYPE}_${PLATFORM}"
+        if [ -f "${BUILD_ROOT}/Release/lib/libxml2.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/lib/libxml2.a"
+        elif [ -f "${BUILD_ROOT}/Release/libxml2.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/libxml2.a"
+        elif [ -f "${BUILD_ROOT}/lib/libxml2.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/lib/libxml2.a"
+        else
+            LIB_PATH=$(find "${BUILD_ROOT}" -name "libxml2.a" -print -quit)
+            if [ -z "$LIB_PATH" ]; then
+                echo "Error: libxml2.a not found under ${BUILD_ROOT}"
+                find "${BUILD_ROOT}" -name "*.a" -ls
+                exit 1
+            fi
+            echo " Using libxml2.a at ${LIB_PATH}"
+        fi
+
+        cp -v "$LIB_PATH" $1/lib/$TYPE/$PLATFORM/libxml2.a
         secure "$1/lib/$TYPE/$PLATFORM/libxml2.a" "libxml2.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
-        cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+
+        if [ -d "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml" ]; then
+            cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/libxml2/libxml/" $1/include/libxml
+        elif [ -d "build_${TYPE}_${PLATFORM}/include/libxml2/libxml" ]; then
+            cp -Rv "build_${TYPE}_${PLATFORM}/include/libxml2/libxml/" $1/include/libxml
+        else
+            echo "Error: libxml headers not found in expected locations"
+            find "build_${TYPE}_${PLATFORM}" -type d -name libxml -ls
+            exit 1
+        fi
+        if [ -f "build_${TYPE}_${PLATFORM}/libxml/xmlversion.h" ]; then
+            cp -Rv build_${TYPE}_${PLATFORM}/libxml/xmlversion.h $1/include/libxml/xmlversion.h
+        fi
 
     elif [ "$TYPE" == "msys2" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
