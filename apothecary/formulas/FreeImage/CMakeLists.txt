@@ -196,8 +196,8 @@ endif()
     # (e.g. openFrameworks' apothecary formula) that used -DBUILD_LIBPNG=OFF
     # itself (not just USE_SYSTEM_LIBPNG) to mean "link a system libpng"
     # rather than "no PNG support at all".
-if(BUILD_LIBPNG OR DEFINED PNG_LIBRARY)
-    if(USE_SYSTEM_LIBPNG OR DEFINED PNG_LIBRARY)
+if(BUILD_LIBPNG OR (PNG_LIBRARY AND NOT PNG_LIBRARY MATCHES "NOTFOUND"))
+    if(USE_SYSTEM_LIBPNG OR (PNG_LIBRARY AND NOT PNG_LIBRARY MATCHES "NOTFOUND"))
         find_package(PNG REQUIRED)
         list(APPEND FreeImage_LIBS PNG::PNG)
         add_definitions(-DFREEIMAGE_SYSTEM_LIBPNG)
@@ -259,8 +259,8 @@ endif()
     # (e.g. openFrameworks' apothecary formula) that used -DBUILD_ZLIB=OFF
     # itself (not just USE_SYSTEM_ZLIB) to mean "link a system zlib" rather
     # than "no zlib support at all".
-if(BUILD_ZLIB OR DEFINED ZLIB_LIBRARY)
-    if(USE_SYSTEM_ZLIB OR DEFINED ZLIB_LIBRARY)
+if(BUILD_ZLIB OR (ZLIB_LIBRARY AND NOT ZLIB_LIBRARY MATCHES "NOTFOUND"))
+    if(USE_SYSTEM_ZLIB OR (ZLIB_LIBRARY AND NOT ZLIB_LIBRARY MATCHES "NOTFOUND"))
         find_package(ZLIB REQUIRED)
         list(APPEND FreeImage_LIBS ZLIB::ZLIB)
         add_definitions(-DFREEIMAGE_SYSTEM_ZLIB)
