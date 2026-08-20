@@ -65,7 +65,8 @@ jobs:
     - name: Setup msys2
       uses: msys2/setup-msys2@v2.32.0
       with:
-        update: true
+        cache: true
+        update: ${{ github.event_name != 'pull_request' }}
         install: >-
           base-devel
           unzip

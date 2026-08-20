@@ -65,7 +65,8 @@ jobs:
         if: inputs.platform == 'windows'
         uses: msys2/setup-msys2@v2
         with:
-          update: true
+          cache: true
+          update: ${{ github.event_name != 'pull_request' }}
           install: git unzip
 
       - name: Install selected libraries
