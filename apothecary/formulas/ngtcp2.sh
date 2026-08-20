@@ -8,7 +8,7 @@ FORMULA_DEPENDS=("openssl")
 
 VER=1.25.0
 SHA256="1c0843076528a87b65e9a9d455100941f4cb65d44f96c5da6ae56df146043955"
-BUILD_ID=1
+BUILD_ID=2
 DEFINES="-DNGTCP2_STATICLIB"
 
 GIT_URL=https://github.com/ngtcp2/ngtcp2
@@ -128,8 +128,24 @@ function copy() {
         CRYPTO_NAME=ngtcp2_crypto_ossl.lib
     fi
 
-    mkdir -p "$1/include" "$1/lib/$TYPE/$PLATFORM" "$1/license"
+    mkdir -p "$1/include/ngtcp2" "$1/lib/$TYPE/$PLATFORM" "$1/license"
     cp -Rv "$BUILD_DIR/include/"* "$1/include/"
+    # curl FindNGTCP2 reads include/ngtcp2/version.h for NGTCP2_VERSION.
+    # An empty version is treated as < 1.12.0 and fails OpenSSL QUIC.
+    local VERSION_H="$BUILD_DIR/include/ngtcp2/version.h"
+    if [ ! -f "$VERSION_H" ]; then
+        VERSION_H="build_${TYPE}_${PLATFORM}/lib/includes/ngtcp2/version.h"
+    fi
+    if [ -f "$VERSION_H" ]; then
+        cp -v "$VERSION_H" "$1/include/ngtcp2/version.h"
+    elif [ ! -f "$1/include/ngtcp2/version.h" ]; then
+        printf '#define NGTCP2_VERSION "%s"\n' "$VER" >"$1/include/ngtcp2/version.h"
+        echo " wrote $1/include/ngtcp2/version.h (NGTCP2_VERSION=$VER)"
+    fi
+    if ! grep -q 'NGTCP2_VERSION' "$1/include/ngtcp2/version.h"; then
+        echo "ngtcp2 version.h is missing NGTCP2_VERSION"
+        exit 1
+    fi
     cp -v "$BUILD_DIR/lib/$TRANSPORT_NAME" "$1/lib/$TYPE/$PLATFORM/ngtcp2.$EXTENSION"
     cp -v "$BUILD_DIR/lib/$CRYPTO_NAME" "$1/lib/$TYPE/$PLATFORM/ngtcp2_crypto_ossl.$EXTENSION"
     cp -v COPYING "$1/license/"

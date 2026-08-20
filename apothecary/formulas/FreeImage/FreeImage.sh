@@ -4,8 +4,7 @@
 # cross platform image io
 # http://freeimage.sourceforge.net
 #
-# Makefile build system,
-# some Makefiles are out of date so patching/modification may be required
+# Uses the CMakeLists shipped in danoli3/FreeImage (3.19.12+).
 
 FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscripten" "linux")
 
@@ -13,11 +12,11 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscr
 
 FORMULA_DEPENDS=("zlib" "libpng")
 
-VER=3.19.11
-SHA256="ce34e2946b4fe458d55d390c83943141e0b13bfb69331c3494ab539826753adc"
+VER=3.19.13
+SHA256="499a4692b16aab3248e1474f6391f61690a37f8d1f50793d2c06177ef7c346e9"
 GIT_URL=https://github.com/danoli3/FreeImage
 GIT_TAG=$VER
-BUILD_ID=4
+BUILD_ID=9
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
@@ -39,8 +38,7 @@ function download() {
 
 # prepare the build environment, executed inside the lib src dir
 function prepare() {
-
-    cp -v $FORMULA_DIR/CMakeLists.txt ./CMakeLists.txt
+    # Keep the library's own CMakeLists.txt (unbundle + apothecary zlib/png hints).
 
     if [ "$TYPE" == "android" ]; then
         local BUILD_TO_DIR=$BUILD_DIR/FreeImage
@@ -110,6 +108,7 @@ function build() {
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
             -DBUILD_LIBPNG=OFF \
             -DCMAKE_INSTALL_PREFIX=Release \
+            -DCMAKE_INSTALL_LIBDIR="lib" \
             -DCMAKE_PREFIX_PATH="${LIBS_ROOT}" \
             -DZLIB_ROOT=${ZLIB_ROOT} \
             -DZLIB_LIBRARY=${ZLIB_LIBRARY} \
@@ -265,6 +264,10 @@ function build() {
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
         LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.lib"
 
+        ZLIB_ROOT="$LIBS_ROOT/zlib/"
+        ZLIB_INCLUDE_DIR="$LIBS_ROOT/zlib/include"
+        ZLIB_LIBRARY="$LIBS_ROOT/zlib/lib/$TYPE/$PLATFORM/zlib.lib"
+
         DEFINES="-DLIBRARY_SUFFIX=${ARCH} \
 	        -DCMAKE_C_STANDARD=${C_STANDARD} \
 			-DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
@@ -274,14 +277,21 @@ function build() {
         	-DCMAKE_INSTALL_INCLUDEDIR=include \
         	-DBUILD_LIBRAWLITE=OFF \
         	-DBUILD_LIBPNG=OFF \
+			-DBUILD_ZLIB=OFF \
 			-DBUILD_OPENEXR=OFF \
 			-DBUILD_WEBP=OFF \
 			-DBUILD_JXR=OFF \
             ${MT_TYPE_DEFINES} \
 			-DENABLE_VISIBILITY=OFF \
+			-DCMAKE_PREFIX_PATH=${LIBS_ROOT} \
 			-DPNG_ROOT=${LIBPNG_ROOT} \
 			-DPNG_PNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
+			-DPNG_INCLUDE_DIR=${LIBPNG_INCLUDE_DIR} \
             -DPNG_LIBRARY=${LIBPNG_LIBRARY} \
+			-DZLIB_ROOT=${ZLIB_ROOT} \
+			-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR} \
+			-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIR} \
+			-DZLIB_LIBRARY=${ZLIB_LIBRARY} \
 			-DBUILD_SHARED_LIBS=OFF"
         env CXXFLAGS="-DUSE_PTHREADS=1 ${VS_C_FLAGS} ${FLAGS_RELEASE} ${EXCEPTION_FLAGS}"
         cmake .. ${DEFINES} \
@@ -417,7 +427,26 @@ function copy() {
     if [[ "$TYPE" =~ ^(osx|ios|tvos|xros|catos|watchos)$ ]]; then
         mkdir -p $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libFreeImage.a" $1/lib/$TYPE/$PLATFORM/FreeImage.a
+        # Xcode (-GXcode) puts the archive in CONFIGURATION_BUILD_DIR:
+        #   catos:  Release/libFreeImage.a  (not Release/lib/)
+        #   others: Release/lib/libFreeImage.a  or  lib/libFreeImage.a
+        BUILD_ROOT="build_${TYPE}_${PLATFORM}"
+        if [ -f "${BUILD_ROOT}/Release/lib/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/lib/libFreeImage.a"
+        elif [ -f "${BUILD_ROOT}/Release/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/Release/libFreeImage.a"
+        elif [ -f "${BUILD_ROOT}/lib/libFreeImage.a" ]; then
+            LIB_PATH="${BUILD_ROOT}/lib/libFreeImage.a"
+        else
+            LIB_PATH=$(find "${BUILD_ROOT}" -name "libFreeImage.a" -print -quit)
+            if [ -z "$LIB_PATH" ]; then
+                echo "Error: libFreeImage.a not found under ${BUILD_ROOT}"
+                find "${BUILD_ROOT}" -name "*.a" -ls
+                exit 1
+            fi
+            echo " Using libFreeImage.a at ${LIB_PATH}"
+        fi
+        cp -v "$LIB_PATH" $1/lib/$TYPE/$PLATFORM/FreeImage.a
         cp Source/FreeImage.h $1/include
         secure "$1/lib/$TYPE/$PLATFORM/FreeImage.a" "FreeImage.pkl" "$VER" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [[ "$TYPE" =~ ^(linux)$ ]]; then

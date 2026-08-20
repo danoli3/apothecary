@@ -75,8 +75,15 @@ fi
 
 echo "Compressing libraries from $OUTPUT_FOLDER"
 cd $OUTPUT_FOLDER
-LIBS=$(ls $OUTPUT_FOLDER)
-LIBS=$(echo "$LIBS" | tr '\n' ' ')
+# nghttp2/nghttp3/ngtcp2/libssh2 are curl private deps (merged into libcurl)
+LIBS=""
+for LIB in $(ls "$OUTPUT_FOLDER"); do
+    case "$LIB" in
+        nghttp2|nghttp3|ngtcp2|libssh2) echo "Skipping internal '$LIB'" ;;
+        *) LIBS="$LIBS $LIB" ;;
+    esac
+done
+LIBS=$(echo "$LIBS" | xargs)
 
 if [ -z "${RELEASE+x}" ]; then
     if [ "${GITHUB_ACTIONS:-0}" = true ]; then

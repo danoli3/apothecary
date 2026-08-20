@@ -12,7 +12,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 # define the version
 VER=4.14.0
 SHA256="ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e"
-BUILD_ID=2
+BUILD_ID=5
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4140
@@ -63,6 +63,27 @@ function prepare() {
 
     rm -f ./modules/imgcodecs/src/ios_conversions.mm
     cp $FORMULA_DIR/ios_conversions.mm ./modules/imgcodecs/src/ios_conversions.mm
+
+    # OpenCV loads cmake/platforms/OpenCV-${CMAKE_SYSTEM_NAME}.cmake.
+    # There is no stock OpenCV-tvOS.cmake / OpenCV-watchOS.cmake.
+    mkdir -p cmake/platforms
+    cp "$FORMULA_DIR/OpenCV-tvOS.cmake" cmake/platforms/OpenCV-tvOS.cmake
+    cp "$FORMULA_DIR/OpenCV-watchOS.cmake" cmake/platforms/OpenCV-watchOS.cmake
+    cp "$FORMULA_DIR/OpenCV-visionOS.cmake" cmake/platforms/OpenCV-visionOS.cmake
+
+    # imgcodecs: APPLE && !IOS && !XROS → macosx_conversions.mm (AppKit).
+    # tvOS/watchOS/visionOS are Apple but not macOS.
+    IMGCODECS_CMAKE=modules/imgcodecs/CMakeLists.txt
+    if [ -f "$IMGCODECS_CMAKE" ] && ! grep -q 'CMAKE_SYSTEM_NAME STREQUAL "tvOS"' "$IMGCODECS_CMAKE"; then
+        perl -pi -e 's/if\(APPLE AND \(NOT IOS\) AND \(NOT XROS\)\)/if(APPLE AND (NOT IOS) AND (NOT XROS) AND (NOT CMAKE_SYSTEM_NAME STREQUAL "tvOS") AND (NOT CMAKE_SYSTEM_NAME STREQUAL "watchOS") AND (NOT CMAKE_SYSTEM_NAME STREQUAL "visionOS"))/' "$IMGCODECS_CMAKE"
+    fi
+
+    if [[ "$TYPE" =~ ^(tvos|watchos|xros)$ ]]; then
+        cat >./modules/imgcodecs/src/macosx_conversions.mm <<'EOF'
+// AppKit is not available on tvOS/watchOS/visionOS.
+#include <TargetConditionals.h>
+EOF
+    fi
 }
 
 # executed inside the lib src dir
@@ -194,7 +215,18 @@ function build() {
         if [[ "$TYPE" =~ ^(tvos|xros|watchos|catos)$ ]]; then
             EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=OFF -DBUILD_opencv_videostab=OFF"
         else
-            EXTRA_DEFS="-DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+            EXTRA_DEFS="$EXTRA_DEFS -DBUILD_opencv_videoio=ON -DBUILD_opencv_videostab=ON"
+        fi
+
+        # Keep CMAKE_SYSTEM_NAME from ios-cmake 4.6 (tvOS/watchOS/visionOS).
+        # OpenCV-*.cmake + imgcodecs patch skip AppKit/Cocoa.
+        if [ "$TYPE" == "tvos" ]; then
+            # tvOS has AVFoundation (playback); it does not have AppKit or a camera.
+            EXTRA_DEFS="$EXTRA_DEFS -DWITH_CAP_IOS=OFF -DBUILD_opencv_highgui=OFF"
+        elif [ "$TYPE" == "watchos" ]; then
+            EXTRA_DEFS="$EXTRA_DEFS -DWITH_CAP_IOS=OFF -DWITH_AVFOUNDATION=OFF -DBUILD_opencv_highgui=OFF"
+        elif [ "$TYPE" == "xros" ]; then
+            EXTRA_DEFS="$EXTRA_DEFS -DXROS=ON -DBUILD_opencv_highgui=OFF"
         fi
 
         FRAMEWORKS="-framework Foundation -framework AVFoundation -framework CoreFoundation -framework CoreVideo"

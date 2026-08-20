@@ -84,6 +84,10 @@ LIBS=$(echo "$LIBS" | tr '\n' ' ')
 LIBS=""
 for LIB in "${FORMULAS[@]}"; do
     LIB=$(echo "$LIB" | tr -d '[:space:]')  # Remove all whitespace
+    if formula_is_internal "$LIB"; then
+        echo "Skipping internal formula '$LIB' (merged into curl)"
+        continue
+    fi
     if [ -d "$OUTPUT_FOLDER/$LIB" ] || [ -f "$OUTPUT_FOLDER/$LIB" ]; then
         LIBS="$LIBS $LIB"
     else

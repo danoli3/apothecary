@@ -42,14 +42,15 @@ jobs:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
     strategy:
+      fail-fast: false
       matrix:
         flavor:
           - mingw64
           - ucrt64
           - clang64
-         # - clangarm64
+          - clangarm64
     name: ${{ matrix.flavor }}
-    runs-on: windows-latest
+    runs-on: ${{ matrix.flavor == 'clangarm64' && 'windows-11-arm' || 'windows-latest' }}
     defaults:
       run:
         shell: msys2 {0}
@@ -58,7 +59,9 @@ jobs:
         uses: msys2/setup-msys2@v2.32.0
         with:
           update: true
-          release : false
+          # windows-latest has C:\msys64 already. windows-11-arm does not,
+          # so clangarm64 needs a fresh installer (msys2-arm64).
+          release: ${{ matrix.flavor == 'clangarm64' }}
           cache: false
           msystem: ${{ matrix.flavor }}
           install: >-

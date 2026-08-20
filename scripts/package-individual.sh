@@ -56,6 +56,9 @@ if [ -z "$FORMULAS" ]; then
     echo "No formulas to build"
     exit 0
 fi
+if ! type formula_is_internal >/dev/null 2>&1; then
+    formula_is_internal() { return 1; }
+fi
 
 CUR_BRANCH="master"
 EXIT_BEFORE=0
@@ -91,6 +94,10 @@ echo "Compressing individual libraries from [$OUTPUT_FOLDER]... FORMULAS:[$FORMU
 for LIB in "${FORMULAS[@]}"; do
     LIB=$(echo "$LIB" | tr -d '[:space:]')  # Remove all whitespace
     echo "Loop: [$LIB]"
+    if formula_is_internal "$LIB"; then
+        echo "Skipping internal formula '$LIB' (merged into curl)"
+        continue
+    fi
     if [ -d "$LIB" ]; then
         if [[ "$TARGET" == "msys2" || "$TARGET" == "vs" ]]; then
             # ZIP format for Windows (msys2 / vs)

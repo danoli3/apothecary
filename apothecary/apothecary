@@ -860,42 +860,35 @@ fi
 
 ####  Platform Determination for Targets
 export VERBOSE_MAKEFILE=NO
+# CMake 3.31+/4.x deprecates cmake_minimum_required(< 3.10). Keep vendored
+# third-party CMakeLists (zlib, libpng, opencv, …) on 3.16 policies.
+export CMAKE_POLICY_VERSION_MINIMUM="${CMAKE_POLICY_VERSION_MINIMUM:-3.16}"
 
 if [ "$TYPE" = "msys2" ]; then
   export FLAG_RELEASE="-O3"
-  if [ "${MINGW_PACKAGE_PREFIX+x}" ]; then
-    export ARCH=$MINGW_PACKAGE_PREFIX
-  else
-    if [ -z "$ARCH" ]; then
-      if [ "$MSYSTEM" == "MINGW64" ] || [ "$MSYSTEM" == "mingw64" ]; then
+  case "${ARCH:-}" in
+    mingw64|clangarm64|ucrt64|clang64)
+      ;;
+    *)
+      if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
         export ARCH=mingw64
-      elif [ "$MSYSTEM" == "CLANGARM64" ] || [ "$MSYSTEM" == "clangarm64" ]; then
+      elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
         export ARCH=clangarm64
-      elif [ "$MSYSTEM" == "UCRT64" ]; then
+      elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
         export ARCH=ucrt64
-      elif [ "$MSYSTEM" == "CLANG64" ]; then
+      elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
         export ARCH=clang64
       fi
-    else
-      case "$ARCH" in
-        mingw64|clangarm64|ucrt64|clang64)
-          ;;
-        *)
-          if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
-            export ARCH=mingw64
-          elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
-            export ARCH=clangarm64
-          elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
-            export ARCH=ucrt64
-          elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
-            export ARCH=clang64
-          fi
-          ;;
-      esac
-    fi
-  fi
+      ;;
+  esac
+  # CLANGARM64 already puts aarch64 clang on PATH. uname -m is still x86_64
+  # when setup-msys2 installs the x64 MSYS2 runtime, so do not treat that
+  # as a cross build (formulas then look for a missing msys2x86_64 toolchain).
   if [ "${ARCH:-}" == "clangarm64" ]; then
-    export CROSSCOMPILING=1
+    case "${MSYSTEM:-}" in
+      CLANGARM64|clangarm64) export CROSSCOMPILING=0 ;;
+      *) export CROSSCOMPILING=1 ;;
+    esac
   fi
   GCC_VERSION=14
   export PLATFORM=${ARCH}
@@ -1007,7 +1000,8 @@ if [ "$TYPE" = "xros" ]; then
   if [ $ARCH == "arm64" ] ; then
     export PLATFORM="VISIONOS"
   elif [ $ARCH == "x86_64" ] || [ $ARCH == 64 ]; then
-    export PLATFORM="SIMULATOR64_VISIONOS"
+    # ios-cmake 4.6 dropped SIMULATOR64_VISIONOS; visionOS sim is arm64-only.
+    export PLATFORM="SIMULATOR_VISIONOS"
   elif [ $ARCH == "SIM_arm64" ]; then
     export PLATFORM="SIMULATOR_VISIONOS"
   fi
@@ -1427,7 +1421,50 @@ function doCommand() {
   done
 }
 
-# update a given library
+# True if every FORMULA_DEPENDS output dir exists for this TYPE/PLATFORM.
+# A valid parent pickle must not skip the parent when a depend was never copied.
+function formulaDependsReady() {
+  if [ ${#FORMULA_DEPENDS[@]} -eq 0 ] ; then
+    return 0
+  fi
+  local depend dep_dir
+  for depend in "${FORMULA_DEPENDS[@]}" ; do
+    dep_dir="$LIBS_DIR_REAL/$depend/lib/$TYPE/$PLATFORM"
+    if [ ! -d "$dep_dir" ] ; then
+      echoInfo " depend \"$depend\" missing at $dep_dir"
+      return 1
+    fi
+  done
+  return 0
+}
+
+# 0 = skip this step (prebuilt current and depends present)
+function skipCachedFormula() {
+  local name="$1"
+  local step="$2"
+  if [ -e "$name" ] ; then
+    echoInfo "  Not using cache : [! -e $name] for $step \"$name\" "
+    return 1
+  fi
+  if [[ $FORCE_DOWNLOAD -ne 0 ]] || [[ $USE_SAVE != 1 ]]; then
+    echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for $step \"$name\" "
+    return 1
+  fi
+  local result
+  result=$(load "$name" | tail -n 1)
+  echoInfo " $name - Checking if Precompiled binary :[$result]"
+  if [ "$result" -ne 1 ]; then
+    echoInfo " Precompiled not found or outdated. Continue $step for \"$name\" "
+    return 1
+  fi
+  if ! formulaDependsReady ; then
+    echoInfo " \"$name\" pickle is valid but FORMULA_DEPENDS are missing. Continue $step"
+    return 1
+  fi
+  echoInfo " \"$name\" Precompiled binary validated. Skipping $step"
+  return 0
+}
+
 function updateFormula() {
 
   export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
@@ -1438,21 +1475,8 @@ function updateFormula() {
   # fi
   echoStart " Building \"$1\" ...."
 
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " $1 - Checking if Precompiled binary :[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping updateFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue updateFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for updateFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for updateFormula \"$1\" "
+  if skipCachedFormula "$1" "updateFormula" ; then
+    return 0
   fi
 
   downloadFormula $1
@@ -1479,22 +1503,8 @@ function downloadFormula(){
     echoVerbose " Dependencies: ${FORMULA_DEPENDS[*]}"
   fi
   echo
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      LOAD_RESULT=$(load $1)
-      FINAL_RESULT=$(echo "$LOAD_RESULT" | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$FINAL_RESULT] - [$LOAD_RESULT]"
-      if [ $FINAL_RESULT -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping download"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue downloadFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for downloadFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for downloadFormula \"$1\" "
+  if skipCachedFormula "$1" "downloadFormula" ; then
+    return 0
   fi
 
   cd $BUILD_DIR
@@ -1536,21 +1546,8 @@ function prepareFormula() {
   echo
   echoInfo " Preparing \"$1\""
   echo
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping prepare"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue prepareFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for prepareFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for prepareFormula \"$1\" "
+  if skipCachedFormula "$1" "prepareFormula" ; then
+    return 0
   fi
 
   if [ ! -e $BUILD_DIR/$1 ] ; then
@@ -1574,21 +1571,8 @@ function buildFormula() {
   export LIBS_DIR_REAL=$(realpath $LIBS_DIR)
   echo
   echoInfo " Building \"$1\""
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping buildFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue buildFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for buildFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for buildFormula \"$1\" "
+  if skipCachedFormula "$1" "buildFormula" ; then
+    return 0
   fi
   echo
   if [ ! -e $BUILD_DIR/$1 ] ; then
@@ -1621,21 +1605,8 @@ function copyFormula() {
   echoInfo " Lib dest dir: $LIBS_DIR_REAL/$1"
   echo
 
-  if [ ! -e $1 ] ; then
-    if [[ $FORCE_DOWNLOAD -eq 0 ]] && [[ $USE_SAVE == 1 ]]; then
-      result=$(load $1 | tail -n 1)
-      echoInfo " Checking for Precompiled binary \"$1\" with result:[$result]"
-      if [ $result -eq 1 ]; then
-        echoInfo " \"$1\" Precompiled binary validated. Skipping copyFormula"
-        return 0
-      else
-        echoInfo " Precompiled not found or outdated. Continue copyFormula for \"$1\" "
-      fi
-    else
-      echoInfo "  Not using cache : [FORCE_DOWNLOAD=$FORCE_DOWNLOAD] [USE_SAVE=$USE_SAVE == 1] for copyFormula \"$1\" "
-    fi
-  else
-    echoInfo "  Not using cache : [! -e $1] for copyFormula \"$1\" "
+  if skipCachedFormula "$1" "copyFormula" ; then
+    return 0
   fi
 
   if [ ! -e $BUILD_DIR/$1 ] ; then
@@ -1646,6 +1617,10 @@ function copyFormula() {
 
   cd $BUILD_DIR/$1
   copy $LIBS_DIR_REAL/$1
+  if [ "$TYPE" == "msys2" ]; then
+    promoteMsys2ArchPath "$LIBS_DIR_REAL/$1"
+    reindexMsys2GnuArchives "$LIBS_DIR_REAL/$1"
+  fi
   cd $APOTHECARY_DIR
 }
 
@@ -1691,6 +1666,176 @@ function cleanFormula() {
   cd $APOTHECARY_DIR
 }
 
+# clang64 llvm-ar writes a mixed GNU/MSVC symbol index that MinGW ld and lld
+# reject. Prefer binutils/gcc-ar. CPU folder is x86_64 (mingw64/ucrt64/clang64)
+# or aarch64 (clangarm64) so OF can prefer lib/msys2/x86_64.
+function msys2CpuArch() {
+  case "${ARCH:-}-${MSYSTEM:-}" in
+    *clangarm64*|*CLANGARM64*|aarch64*|arm64*) echo "aarch64" ;;
+    *) echo "x86_64" ;;
+  esac
+}
+
+function findGnuAr() {
+  local c path
+  for c in \
+      x86_64-w64-mingw32-gcc-ar \
+      x86_64-w64-mingw32-ar \
+      aarch64-w64-mingw32-gcc-ar \
+      aarch64-w64-mingw32-ar \
+      gcc-ar \
+      /usr/bin/ar \
+      ar
+  do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        continue
+      fi
+      echo "$path"
+      return 0
+    fi
+  done
+  return 1
+}
+
+function findGnuRanlib() {
+  local c path
+  for c in \
+      x86_64-w64-mingw32-gcc-ranlib \
+      x86_64-w64-mingw32-ranlib \
+      aarch64-w64-mingw32-gcc-ranlib \
+      aarch64-w64-mingw32-ranlib \
+      gcc-ranlib \
+      /usr/bin/ranlib \
+      ranlib
+  do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        continue
+      fi
+      echo "$path"
+      return 0
+    fi
+  done
+  return 1
+}
+
+function findLlvmAr() {
+  local c path
+  for c in llvm-ar ar; do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        echo "$path"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
+function gnuReindexArchive() {
+  local archive="$1"
+  local ar_bin="$2"
+  local ranlib_bin="$3"
+  local ar_kind="${4:-gnu}"
+  local tmpdir archive_abs objs f
+  [ -f "$archive" ] || return 0
+  case "$archive" in
+    *.dll.a) return 0 ;;
+  esac
+  archive_abs="$(cd "$(dirname "$archive")" && pwd)/$(basename "$archive")"
+  tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t apoar)
+  (
+    cd "$tmpdir" || exit 1
+    "$ar_bin" x "$archive_abs" >/dev/null 2>&1 || exit 1
+    objs=""
+    for f in *; do
+      case "$f" in
+        *.o|*.obj|*.O) objs="$objs $f" ;;
+      esac
+    done
+    if [ -z "$objs" ]; then
+      exit 0
+    fi
+    rm -f "$archive_abs"
+    # shellcheck disable=SC2086
+    if [ "$ar_kind" = llvm ]; then
+      "$ar_bin" --format=gnu rcs "$archive_abs" $objs || exit 1
+    else
+      "$ar_bin" rcs "$archive_abs" $objs || exit 1
+      if [ -n "$ranlib_bin" ]; then
+        "$ranlib_bin" "$archive_abs" >/dev/null 2>&1 || true
+      fi
+    fi
+  )
+  local status=$?
+  rm -rf "$tmpdir"
+  return $status
+}
+
+function reindexMsys2GnuArchives() {
+  local root="$1"
+  local ar_bin ranlib_bin archive ar_kind
+  ar_kind=gnu
+  ranlib_bin=""
+  if ar_bin=$(findGnuAr); then
+    ranlib_bin=$(findGnuRanlib || true)
+  elif ar_bin=$(findLlvmAr); then
+    ar_kind=llvm
+  else
+    echoWarning " No ar on PATH; skip MSYS2 static-lib reindex"
+    return 0
+  fi
+  echoInfo " Re-indexing MSYS2 static libraries with $(basename "$ar_bin") ($ar_kind)"
+  [ -d "$root/lib/msys2" ] || return 0
+  while IFS= read -r archive; do
+    [ -n "$archive" ] || continue
+    if gnuReindexArchive "$archive" "$ar_bin" "$ranlib_bin" "$ar_kind"; then
+      echoVerbose "  reindexed [$archive]"
+    else
+      echoWarning "  could not reindex [$archive]"
+    fi
+  done < <(find "$root/lib/msys2" -type f -name '*.a' ! -name '*.dll.a' -print 2>/dev/null)
+}
+
+function promoteMsys2ArchPath() {
+  local root="$1"
+  local cpu dest flavor src
+  cpu=$(msys2CpuArch)
+  dest="$root/lib/msys2/$cpu"
+  [ -d "$root/lib/msys2" ] || return 0
+  mkdir -p "$dest"
+  for src in "$root/lib/msys2"/*.a "$root/lib/msys2"/libsorder.make; do
+    [ -e "$src" ] || continue
+    cp -f "$src" "$dest/"
+  done
+  for flavor in clang64 mingw64 ucrt64 clangarm64 "${ARCH:-}"; do
+    [ -n "$flavor" ] || continue
+    [ "$flavor" = "$cpu" ] && continue
+    if [ -d "$root/lib/msys2/$flavor" ]; then
+      cp -a "$root/lib/msys2/$flavor/." "$dest/"
+    fi
+  done
+}
+
+# Combine several .a files into dest. Write to a temp first so dest can also
+# be one of the inputs (ngtcp2.a + ngtcp2_crypto_ossl.a -> ngtcp2.a).
+function mergeStaticArchives() {
+  local dest="$1"
+  shift
+  local tmp="${dest}.merge.tmp.a"
+  local src
+  rm -f "$tmp"
+  libtool -static -o "$tmp" "$@"
+  for src in "$@"; do
+    rm -f "$src"
+  done
+  mv -f "$tmp" "$dest"
+}
+
 function frameworkFormula() {
 
   echoStart " frameworkFormula [\"$1\"] for:[${TYPE}]"
@@ -1710,8 +1855,10 @@ function frameworkFormula() {
 
   if [ ! -e "$LIBS_DIR/$1" ] ; then
     echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
-  elif [  $1 == "pkg-config" ] || [  $1 == "kiss" ]; then
-    echoVerbose " No need to create framework for: \"$1\""
+  elif [  $1 == "pkg-config" ] || [  $1 == "kiss" ] \
+      || [  $1 == "nghttp2" ] || [  $1 == "nghttp3" ] \
+      || [  $1 == "ngtcp2" ] || [  $1 == "libssh2" ]; then
+    echoVerbose " No need to create framework for: \"$1\" (merged into curl)"
   else
     XDIR="${XLIBS_DIR_REAL}/"
     rm -rf $XLIBS_DIR_REAL/$1/lib/$TYPE_OUT/*.xcframework
@@ -1917,12 +2064,8 @@ function frameworkFormula() {
 
         # Merge all .a files into a single static library
         if [ "${#a_files[@]}" -gt 1 ]; then
-          libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+          mergeStaticArchives "${dir}/${1}.a" "${a_files[@]}"
           echo "Merged .a files into ${dir}/${1}.a"
-          # Clean up individual .a files after merging
-          for a_file in "${a_files[@]}"; do
-            rm -f "$a_file"
-          done
           lipo -info "${dir}/${1}.a"
           # Add to xcframework flags
           if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
@@ -2053,7 +2196,7 @@ function xframeworkFormula() {
 
   if [ ! -e "$LIBS_DIR/$1" ] ; then
     echoVerbose " Nothing to create framework from to merge in lib dest dir: \"$1\""
-  elif [[ "$1" =~ ^(kiss|portaudio|pkg-config|videoInput)$ ]]; then
+  elif [[ "$1" =~ ^(kiss|portaudio|pkg-config|videoInput|nghttp2|nghttp3|ngtcp2|libssh2)$ ]]; then
     echoVerbose " No need to create framework for: \"$1\""
   else
     # rm -rf $LIBS_DIR_REAL/$1/lib/$TYPE/*.xcframework
@@ -2244,11 +2387,8 @@ function xframeworkFormula() {
       num_files=${#a_files[@]}
       if [ "$num_files" -gt 1 ]; then
         echo "Multiple archives found in $dir. Commencing the merge..."
-        libtool -static -o "${dir}/${1}.a" "${a_files[@]}"
+        mergeStaticArchives "${dir}/${1}.a" "${a_files[@]}"
         echo "Merged into ${dir}/${1}.a"
-        for a_file in "${a_files[@]}"; do
-          rm -f "$a_file"
-        done
         lipo -info "${dir}/${1}.a"
         #xcrun codesign --sign - "${dir}/${1}.a" || true
         if [[ ! "$xcframework_flags" =~ "${dir}/${1}.a" ]]; then
