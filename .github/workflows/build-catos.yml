@@ -98,7 +98,7 @@ jobs:
         with:
           name: libs-mac-cataylst-${{ env.TARGET }}-${{ matrix.bundle }}
           path: out/openFrameworksLibs_${{ env.release }}_${{ env.TARGET }}_${{ matrix.bundle }}.tar.bz2
-          retention-days: 30
+          retention-days: 90
       - name: Remove .tar.bz2 files
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/bleeding')
         run: |

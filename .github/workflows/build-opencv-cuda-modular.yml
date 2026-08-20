@@ -33,6 +33,7 @@ jobs:
         with:
           name: ${{ inputs.profile }}-linux-x86_64
           path: xout/oF_${{ inputs.profile }}_linux_x86_64.tar.bz2
+          retention-days: 90
       - name: Attach to modular release
         if: inputs.release_tag != ''
         env:
@@ -53,6 +54,7 @@ jobs:
         with:
           name: ${{ inputs.profile }}-windows-x64
           path: xout/oF_${{ inputs.profile }}_vs_64.zip
+          retention-days: 90
       - name: Attach to modular release
         if: inputs.release_tag != ''
         shell: bash
