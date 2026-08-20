@@ -59,6 +59,8 @@ jobs:
       TOOLCHAIN_PREFIX: ${{ matrix.prefix }}
       CC: ${{ matrix.prefix }}-gcc-10
       CXX: ${{ matrix.prefix }}-g++-10
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
       GCC_VERSION: "10"
       RPI_QEMU_ARCH: ${{ matrix.qemu_arch }}
     steps:
@@ -66,6 +68,12 @@ jobs:
 
       - name: Trust checked-out workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.23
+        with:
+          key: linux-rpi-${{ matrix.arch }}-gcc10
+          max-size: 1G
 
       - name: Check Linux artifact mapping
         run: bash scripts/linux/map_artifact_target.sh

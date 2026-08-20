@@ -59,6 +59,7 @@ HOST_PACKAGES=(
     python3
     xz-utils
     git
+    ccache
 )
 if [[ "$NATIVE" != "true" ]]; then
     HOST_PACKAGES+=(

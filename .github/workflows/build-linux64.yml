@@ -45,6 +45,8 @@ jobs:
       USE_ARTIFACT: true
       CC: gcc-10
       CXX: g++-10
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
       CFLAGS: -O2 -fPIC ${{ matrix.arch_flags }}
       CXXFLAGS: -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=1 ${{ matrix.arch_flags }}
     steps:
@@ -52,7 +54,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: /github/home/.cache/apt/archives
-          key: apt-focal-${{ matrix.arch }}-gcc10-v1
+          key: apt-focal-${{ matrix.arch }}-gcc10-v2
 
       - name: Install build tools and GCC 10
         shell: bash
@@ -80,14 +82,27 @@ jobs:
           retry env DEBIAN_FRONTEND=noninteractive apt-get \
             -o "Dir::Cache::archives=$APT_ARCHIVES" \
             -o Acquire::Retries=5 \
-            install -y ca-certificates git sudo gcc-10 g++-10 gfortran-10 binutils file curl unzip bzip2 autoconf automake build-essential ccache coreutils dos2unix flex gperf libtool make ninja-build pkg-config python3 python3-pip xz-utils freeglut3-dev libasound2-dev libc6-dev libegl1-mesa-dev libfftw3-dev libgl1-mesa-dev libglu1-mesa-dev libjack-dev libpulse-dev libwayland-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev oss4-dev xorg-dev
+            install -y --no-install-recommends \
+            ca-certificates git sudo gcc-10 g++-10 binutils file curl unzip bzip2 \
+            autoconf automake build-essential ccache coreutils flex gperf libtool \
+            make ninja-build pkg-config python3 python3-pip xz-utils \
+            libegl1-mesa-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libwayland-dev wayland-protocols \
+            libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev \
+            libxkbcommon-dev libxrandr-dev
           python3 -m pip install --no-cache-dir cmake==3.31.6
           cmake --version
           gcc-10 --version
           test "$(gcc-10 -dumpversion | cut -d. -f1)" = 10
+          echo "/usr/lib/ccache" >> "$GITHUB_PATH"
       - uses: actions/checkout@v7.0.1
       - name: Trust checked-out workspace
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.23
+        with:
+          key: linux-${{ matrix.arch }}-gcc10
+          max-size: 1G
       - name: Determine release identity
         shell: bash
         run: |
