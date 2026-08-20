@@ -866,39 +866,28 @@ export CMAKE_POLICY_VERSION_MINIMUM="${CMAKE_POLICY_VERSION_MINIMUM:-3.16}"
 
 if [ "$TYPE" = "msys2" ]; then
   export FLAG_RELEASE="-O3"
-  if [ "${MINGW_PACKAGE_PREFIX+x}" ]; then
-    export ARCH=$MINGW_PACKAGE_PREFIX
-  else
-    if [ -z "$ARCH" ]; then
-      if [ "$MSYSTEM" == "MINGW64" ] || [ "$MSYSTEM" == "mingw64" ]; then
+  case "${ARCH:-}" in
+    mingw64|clangarm64|ucrt64|clang64)
+      ;;
+    *)
+      if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
         export ARCH=mingw64
-      elif [ "$MSYSTEM" == "CLANGARM64" ] || [ "$MSYSTEM" == "clangarm64" ]; then
+      elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
         export ARCH=clangarm64
-      elif [ "$MSYSTEM" == "UCRT64" ]; then
+      elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
         export ARCH=ucrt64
-      elif [ "$MSYSTEM" == "CLANG64" ]; then
+      elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
         export ARCH=clang64
       fi
-    else
-      case "$ARCH" in
-        mingw64|clangarm64|ucrt64|clang64)
-          ;;
-        *)
-          if [ "${MSYSTEM:-}" == "MINGW64" ] || [ "${MSYSTEM:-}" == "mingw64" ]; then
-            export ARCH=mingw64
-          elif [ "${MSYSTEM:-}" == "CLANGARM64" ] || [ "${MSYSTEM:-}" == "clangarm64" ]; then
-            export ARCH=clangarm64
-          elif [ "${MSYSTEM:-}" == "UCRT64" ]; then
-            export ARCH=ucrt64
-          elif [ "${MSYSTEM:-}" == "CLANG64" ]; then
-            export ARCH=clang64
-          fi
-          ;;
-      esac
-    fi
-  fi
+      ;;
+  esac
+  # Native on windows-11-arm; cross only when the host is x86_64.
   if [ "${ARCH:-}" == "clangarm64" ]; then
-    export CROSSCOMPILING=1
+    HOST_MACHINE=$(uname -m 2>/dev/null || true)
+    case "$HOST_MACHINE" in
+      aarch64|arm64|ARM64) export CROSSCOMPILING=0 ;;
+      *) export CROSSCOMPILING=1 ;;
+    esac
   fi
   GCC_VERSION=14
   export PLATFORM=${ARCH}

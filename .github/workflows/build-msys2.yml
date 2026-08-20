@@ -42,14 +42,15 @@ jobs:
     if: needs.pre-check.outputs.workflow_disabled != 'true'
     needs: pre-check
     strategy:
+      fail-fast: false
       matrix:
         flavor:
           - mingw64
           - ucrt64
           - clang64
-         # - clangarm64
+          - clangarm64
     name: ${{ matrix.flavor }}
-    runs-on: windows-latest
+    runs-on: ${{ matrix.flavor == 'clangarm64' && 'windows-11-arm' || 'windows-latest' }}
     defaults:
       run:
         shell: msys2 {0}
