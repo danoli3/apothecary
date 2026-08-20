@@ -1732,10 +1732,25 @@ function findGnuRanlib() {
   return 1
 }
 
+function findLlvmAr() {
+  local c path
+  for c in llvm-ar ar; do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        echo "$path"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 function gnuReindexArchive() {
   local archive="$1"
   local ar_bin="$2"
   local ranlib_bin="$3"
+  local ar_kind="${4:-gnu}"
   local tmpdir archive_abs objs f
   [ -f "$archive" ] || return 0
   case "$archive" in
@@ -1755,10 +1770,15 @@ function gnuReindexArchive() {
     if [ -z "$objs" ]; then
       exit 0
     fi
+    rm -f "$archive_abs"
     # shellcheck disable=SC2086
-    "$ar_bin" rcs "$archive_abs" $objs || exit 1
-    if [ -n "$ranlib_bin" ]; then
-      "$ranlib_bin" "$archive_abs" >/dev/null 2>&1 || true
+    if [ "$ar_kind" = llvm ]; then
+      "$ar_bin" --format=gnu rcs "$archive_abs" $objs || exit 1
+    else
+      "$ar_bin" rcs "$archive_abs" $objs || exit 1
+      if [ -n "$ranlib_bin" ]; then
+        "$ranlib_bin" "$archive_abs" >/dev/null 2>&1 || true
+      fi
     fi
   )
   local status=$?
@@ -1768,17 +1788,22 @@ function gnuReindexArchive() {
 
 function reindexMsys2GnuArchives() {
   local root="$1"
-  local ar_bin ranlib_bin archive
-  if ! ar_bin=$(findGnuAr); then
-    echoWarning " No GNU ar on PATH; skip MSYS2 static-lib reindex"
+  local ar_bin ranlib_bin archive ar_kind
+  ar_kind=gnu
+  ranlib_bin=""
+  if ar_bin=$(findGnuAr); then
+    ranlib_bin=$(findGnuRanlib || true)
+  elif ar_bin=$(findLlvmAr); then
+    ar_kind=llvm
+  else
+    echoWarning " No ar on PATH; skip MSYS2 static-lib reindex"
     return 0
   fi
-  ranlib_bin=$(findGnuRanlib || true)
-  echoInfo " Re-indexing MSYS2 static libraries with $(basename "$ar_bin")"
+  echoInfo " Re-indexing MSYS2 static libraries with $(basename "$ar_bin") ($ar_kind)"
   [ -d "$root/lib/msys2" ] || return 0
   while IFS= read -r archive; do
     [ -n "$archive" ] || continue
-    if gnuReindexArchive "$archive" "$ar_bin" "$ranlib_bin"; then
+    if gnuReindexArchive "$archive" "$ar_bin" "$ranlib_bin" "$ar_kind"; then
       echoVerbose "  reindexed [$archive]"
     else
       echoWarning "  could not reindex [$archive]"
