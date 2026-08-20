@@ -11,6 +11,7 @@
 !/.github
 !/.github/workflows
 /.github/workflows/*
+!/.github/workflows/detect-path-changes.yml
 !/.github/workflows/move-latest-tags.yml
 !/.github/workflows/release-openframeworks.yml
 !/.github/workflows/build-opencv-cuda-modular.yml

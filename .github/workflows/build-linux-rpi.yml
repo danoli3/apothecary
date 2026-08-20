@@ -2,11 +2,60 @@ name: build-linux-rpi
 
 on:
   push:
-    paths-ignore:
-      - "**/README.md"
+    paths: &path-filter
+      - '.github/workflows/build-linux-rpi.yml'
+      - '.github/workflows/detect-path-changes.yml'
+      - '.github/path-filters.yml'
+      - '.github/actions/**'
+      - 'apothecary/apothecary'
+      - 'apothecary/ostype.sh'
+      - 'apothecary/toolchains/**'
+      - 'apothecary/formulas/_depends/**'
+      - 'scripts/build.sh'
+      - 'scripts/package.sh'
+      - 'scripts/package-individual.sh'
+      - 'scripts/load.sh'
+      - 'scripts/save.sh'
+      - 'scripts/secure.sh'
+      - 'scripts/downloader.sh'
+      - 'scripts/format.sh'
+      - 'scripts/calculate_formulas.sh'
+      - 'scripts/artifact/**'
+      - 'scripts/linux/**'
+      - 'apothecary/formulas/glm/**'
+      - 'apothecary/formulas/glm.sh'
+      - 'apothecary/formulas/json/**'
+      - 'apothecary/formulas/json.sh'
+      - 'apothecary/formulas/utf8/**'
+      - 'apothecary/formulas/utf8.sh'
+      - 'apothecary/formulas/brotli/**'
+      - 'apothecary/formulas/brotli.sh'
+      - 'apothecary/formulas/zlib/**'
+      - 'apothecary/formulas/zlib.sh'
+      - 'apothecary/formulas/libpng/**'
+      - 'apothecary/formulas/libpng.sh'
+      - 'apothecary/formulas/glew/**'
+      - 'apothecary/formulas/glew.sh'
+      - 'apothecary/formulas/glfw/**'
+      - 'apothecary/formulas/glfw.sh'
+      - 'apothecary/formulas/freetype/**'
+      - 'apothecary/formulas/freetype.sh'
+      - 'apothecary/formulas/libxml2/**'
+      - 'apothecary/formulas/libxml2.sh'
+      - 'apothecary/formulas/svgtiny/**'
+      - 'apothecary/formulas/svgtiny.sh'
+      - 'apothecary/formulas/tess2/**'
+      - 'apothecary/formulas/tess2.sh'
+      - 'apothecary/formulas/kiss/**'
+      - 'apothecary/formulas/kiss.sh'
+      - 'apothecary/formulas/FreeImage/**'
+      - 'apothecary/formulas/FreeImage.sh'
+      - 'apothecary/formulas/fmt/**'
+      - 'apothecary/formulas/fmt.sh'
+      - 'apothecary/formulas/uriparser/**'
+      - 'apothecary/formulas/uriparser.sh'
   pull_request:
-    paths-ignore:
-      - "**/README.md"
+    paths: *path-filter
   workflow_dispatch:
 
 concurrency:
@@ -29,7 +78,16 @@ env:
   GA_CI_SECRET: ${{ secrets.CI_SECRET }}
 
 jobs:
+  changes:
+    uses: ./.github/workflows/detect-path-changes.yml
+
   build-linux-rpi:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.engine == 'true' ||
+      needs.changes.outputs.linux-scripts == 'true' ||
+      needs.changes.outputs.linux-formulas == 'true'
+    needs: changes
     name: Raspberry Pi ${{ matrix.arch }} - GCC10
     runs-on: ubuntu-22.04
     strategy:

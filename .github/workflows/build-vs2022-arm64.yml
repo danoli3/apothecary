@@ -2,11 +2,94 @@ name: build-vs2022-arm64
 
 on:
   push:
-    paths-ignore:
-    - '**/*.md'
+    paths: &path-filter
+      - '.github/workflows/build-vs2022-arm64.yml'
+      - '.github/workflows/detect-path-changes.yml'
+      - '.github/path-filters.yml'
+      - '.github/actions/**'
+      - 'apothecary/apothecary'
+      - 'apothecary/ostype.sh'
+      - 'apothecary/toolchains/**'
+      - 'apothecary/formulas/_depends/**'
+      - 'scripts/build.sh'
+      - 'scripts/package.sh'
+      - 'scripts/package-individual.sh'
+      - 'scripts/load.sh'
+      - 'scripts/save.sh'
+      - 'scripts/secure.sh'
+      - 'scripts/downloader.sh'
+      - 'scripts/format.sh'
+      - 'scripts/calculate_formulas.sh'
+      - 'scripts/artifact/**'
+      - 'scripts/vs/**'
+      - 'apothecary/formulas/pixman/**'
+      - 'apothecary/formulas/pixman.sh'
+      - 'apothecary/formulas/zlib/**'
+      - 'apothecary/formulas/zlib.sh'
+      - 'apothecary/formulas/libpng/**'
+      - 'apothecary/formulas/libpng.sh'
+      - 'apothecary/formulas/brotli/**'
+      - 'apothecary/formulas/brotli.sh'
+      - 'apothecary/formulas/freetype/**'
+      - 'apothecary/formulas/freetype.sh'
+      - 'apothecary/formulas/libxml2/**'
+      - 'apothecary/formulas/libxml2.sh'
+      - 'apothecary/formulas/svgtiny/**'
+      - 'apothecary/formulas/svgtiny.sh'
+      - 'apothecary/formulas/assimp/**'
+      - 'apothecary/formulas/assimp.sh'
+      - 'apothecary/formulas/FreeImage/**'
+      - 'apothecary/formulas/FreeImage.sh'
+      - 'apothecary/formulas/glew/**'
+      - 'apothecary/formulas/glew.sh'
+      - 'apothecary/formulas/glfw/**'
+      - 'apothecary/formulas/glfw.sh'
+      - 'apothecary/formulas/glm/**'
+      - 'apothecary/formulas/glm.sh'
+      - 'apothecary/formulas/json/**'
+      - 'apothecary/formulas/json.sh'
+      - 'apothecary/formulas/libusb/**'
+      - 'apothecary/formulas/libusb.sh'
+      - 'apothecary/formulas/kiss/**'
+      - 'apothecary/formulas/kiss.sh'
+      - 'apothecary/formulas/portaudio/**'
+      - 'apothecary/formulas/portaudio.sh'
+      - 'apothecary/formulas/pugixml/**'
+      - 'apothecary/formulas/pugixml.sh'
+      - 'apothecary/formulas/utf8/**'
+      - 'apothecary/formulas/utf8.sh'
+      - 'apothecary/formulas/videoInput/**'
+      - 'apothecary/formulas/videoInput.sh'
+      - 'apothecary/formulas/rtAudio/**'
+      - 'apothecary/formulas/rtAudio.sh'
+      - 'apothecary/formulas/tess2/**'
+      - 'apothecary/formulas/tess2.sh'
+      - 'apothecary/formulas/uriparser/**'
+      - 'apothecary/formulas/uriparser.sh'
+      - 'apothecary/formulas/opencv/**'
+      - 'apothecary/formulas/opencv.sh'
+      - 'apothecary/formulas/cairo/**'
+      - 'apothecary/formulas/cairo.sh'
+      - 'apothecary/formulas/fmt/**'
+      - 'apothecary/formulas/fmt.sh'
+      - 'apothecary/formulas/openssl/**'
+      - 'apothecary/formulas/openssl.sh'
+      - 'apothecary/formulas/nghttp2/**'
+      - 'apothecary/formulas/nghttp2.sh'
+      - 'apothecary/formulas/nghttp3/**'
+      - 'apothecary/formulas/nghttp3.sh'
+      - 'apothecary/formulas/ngtcp2/**'
+      - 'apothecary/formulas/ngtcp2.sh'
+      - 'apothecary/formulas/libssh2/**'
+      - 'apothecary/formulas/libssh2.sh'
+      - 'apothecary/formulas/curl/**'
+      - 'apothecary/formulas/curl.sh'
+      - 'apothecary/formulas/poco/**'
+      - 'apothecary/formulas/poco.sh'
+      - 'apothecary/formulas/dawn/**'
+      - 'apothecary/formulas/dawn.sh'
   pull_request:
-    paths-ignore:
-    - '**/*.md'
+    paths: *path-filter
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -41,9 +124,20 @@ jobs:
         else
           echo "::set-output name=disabled::false"
         fi
+  changes:
+    uses: ./.github/workflows/detect-path-changes.yml
+
   build-vs2022-arm64:
-    if: needs.pre-check.outputs.workflow_disabled != 'true'
-    needs: pre-check
+    if: |
+      needs.pre-check.outputs.workflow_disabled != 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.changes.outputs.engine == 'true' ||
+       needs.changes.outputs.vs-scripts == 'true' ||
+       (matrix.bundle == 1 && needs.changes.outputs.vs-bundle1 == 'true') ||
+       (matrix.bundle == 2 && needs.changes.outputs.vs-bundle2 == 'true'))
+    needs:
+      - pre-check
+      - changes
     runs-on: windows-2022
     strategy:
       matrix:

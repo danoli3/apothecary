@@ -1,0 +1,71 @@
+name: detect-path-changes
+
+on:
+  workflow_call:
+    outputs:
+      engine:
+        value: ${{ jobs.detect.outputs.engine }}
+      apple-scripts:
+        value: ${{ jobs.detect.outputs.apple-scripts }}
+      vs-scripts:
+        value: ${{ jobs.detect.outputs.vs-scripts }}
+      msys2-scripts:
+        value: ${{ jobs.detect.outputs.msys2-scripts }}
+      linux-scripts:
+        value: ${{ jobs.detect.outputs.linux-scripts }}
+      android-scripts:
+        value: ${{ jobs.detect.outputs.android-scripts }}
+      emscripten-scripts:
+        value: ${{ jobs.detect.outputs.emscripten-scripts }}
+      apple-bundle1:
+        value: ${{ jobs.detect.outputs.apple-bundle1 }}
+      apple-bundle2:
+        value: ${{ jobs.detect.outputs.apple-bundle2 }}
+      apple-bundle3:
+        value: ${{ jobs.detect.outputs.apple-bundle3 }}
+      vs-bundle1:
+        value: ${{ jobs.detect.outputs.vs-bundle1 }}
+      vs-bundle2:
+        value: ${{ jobs.detect.outputs.vs-bundle2 }}
+      linux-formulas:
+        value: ${{ jobs.detect.outputs.linux-formulas }}
+      android-formulas:
+        value: ${{ jobs.detect.outputs.android-formulas }}
+      emscripten-formulas:
+        value: ${{ jobs.detect.outputs.emscripten-formulas }}
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      engine: ${{ steps.filter.outputs.engine }}
+      apple-scripts: ${{ steps.filter.outputs.apple-scripts }}
+      vs-scripts: ${{ steps.filter.outputs.vs-scripts }}
+      msys2-scripts: ${{ steps.filter.outputs.msys2-scripts }}
+      linux-scripts: ${{ steps.filter.outputs.linux-scripts }}
+      android-scripts: ${{ steps.filter.outputs.android-scripts }}
+      emscripten-scripts: ${{ steps.filter.outputs.emscripten-scripts }}
+      apple-bundle1: ${{ steps.filter.outputs.apple-bundle1 }}
+      apple-bundle2: ${{ steps.filter.outputs.apple-bundle2 }}
+      apple-bundle3: ${{ steps.filter.outputs.apple-bundle3 }}
+      vs-bundle1: ${{ steps.filter.outputs.vs-bundle1 }}
+      vs-bundle2: ${{ steps.filter.outputs.vs-bundle2 }}
+      linux-formulas: ${{ steps.filter.outputs.linux-formulas }}
+      android-formulas: ${{ steps.filter.outputs.android-formulas }}
+      emscripten-formulas: ${{ steps.filter.outputs.emscripten-formulas }}
+    steps:
+      # reusable workflows always see event_name=workflow_call, so dorny
+      # cannot use the pull_request API. Diff against the PR base or the
+      # previous push SHA instead.
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          token: ''
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          filters: .github/path-filters.yml

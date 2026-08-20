@@ -1,14 +1,95 @@
 name: build-catos
 
 on:
-  workflow_dispatch:
   push:
-    paths-ignore:
-      - '**/README.md'
+    paths: &path-filter
+      - '.github/workflows/build-catos.yml'
+      - '.github/workflows/detect-path-changes.yml'
+      - '.github/path-filters.yml'
+      - '.github/actions/**'
+      - 'apothecary/apothecary'
+      - 'apothecary/ostype.sh'
+      - 'apothecary/toolchains/**'
+      - 'apothecary/formulas/_depends/**'
+      - 'scripts/build.sh'
+      - 'scripts/package.sh'
+      - 'scripts/package-individual.sh'
+      - 'scripts/load.sh'
+      - 'scripts/save.sh'
+      - 'scripts/secure.sh'
+      - 'scripts/downloader.sh'
+      - 'scripts/format.sh'
+      - 'scripts/calculate_formulas.sh'
+      - 'scripts/artifact/**'
+      - 'scripts/catos/**'
+      - 'apothecary/formulas/pixman/**'
+      - 'apothecary/formulas/pixman.sh'
+      - 'apothecary/formulas/zlib/**'
+      - 'apothecary/formulas/zlib.sh'
+      - 'apothecary/formulas/utf8/**'
+      - 'apothecary/formulas/utf8.sh'
+      - 'apothecary/formulas/libpng/**'
+      - 'apothecary/formulas/libpng.sh'
+      - 'apothecary/formulas/brotli/**'
+      - 'apothecary/formulas/brotli.sh'
+      - 'apothecary/formulas/pugixml/**'
+      - 'apothecary/formulas/pugixml.sh'
+      - 'apothecary/formulas/freetype/**'
+      - 'apothecary/formulas/freetype.sh'
+      - 'apothecary/formulas/libxml2/**'
+      - 'apothecary/formulas/libxml2.sh'
+      - 'apothecary/formulas/svgtiny/**'
+      - 'apothecary/formulas/svgtiny.sh'
+      - 'apothecary/formulas/FreeImage/**'
+      - 'apothecary/formulas/FreeImage.sh'
+      - 'apothecary/formulas/assimp/**'
+      - 'apothecary/formulas/assimp.sh'
+      - 'apothecary/formulas/glew/**'
+      - 'apothecary/formulas/glew.sh'
+      - 'apothecary/formulas/videoInput/**'
+      - 'apothecary/formulas/videoInput.sh'
+      - 'apothecary/formulas/rtAudio/**'
+      - 'apothecary/formulas/rtAudio.sh'
+      - 'apothecary/formulas/tess2/**'
+      - 'apothecary/formulas/tess2.sh'
+      - 'apothecary/formulas/uriparser/**'
+      - 'apothecary/formulas/uriparser.sh'
+      - 'apothecary/formulas/cairo/**'
+      - 'apothecary/formulas/cairo.sh'
+      - 'apothecary/formulas/glm/**'
+      - 'apothecary/formulas/glm.sh'
+      - 'apothecary/formulas/json/**'
+      - 'apothecary/formulas/json.sh'
+      - 'apothecary/formulas/glfw/**'
+      - 'apothecary/formulas/glfw.sh'
+      - 'apothecary/formulas/opencv/**'
+      - 'apothecary/formulas/opencv.sh'
+      - 'apothecary/formulas/portaudio/**'
+      - 'apothecary/formulas/portaudio.sh'
+      - 'apothecary/formulas/libusb/**'
+      - 'apothecary/formulas/libusb.sh'
+      - 'apothecary/formulas/fmt/**'
+      - 'apothecary/formulas/fmt.sh'
+      - 'apothecary/formulas/openssl/**'
+      - 'apothecary/formulas/openssl.sh'
+      - 'apothecary/formulas/nghttp2/**'
+      - 'apothecary/formulas/nghttp2.sh'
+      - 'apothecary/formulas/nghttp3/**'
+      - 'apothecary/formulas/nghttp3.sh'
+      - 'apothecary/formulas/ngtcp2/**'
+      - 'apothecary/formulas/ngtcp2.sh'
+      - 'apothecary/formulas/libssh2/**'
+      - 'apothecary/formulas/libssh2.sh'
+      - 'apothecary/formulas/curl/**'
+      - 'apothecary/formulas/curl.sh'
+      - 'apothecary/formulas/poco/**'
+      - 'apothecary/formulas/poco.sh'
+      - 'apothecary/formulas/dawn/**'
+      - 'apothecary/formulas/dawn.sh'
   pull_request:
-    paths-ignore:
-      - '**/README.md'
-      
+    paths: *path-filter
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
@@ -38,10 +119,22 @@ jobs:
         else
           echo "disabled=false" >> "$GITHUB_OUTPUT"
         fi
+  changes:
+    uses: ./.github/workflows/detect-path-changes.yml
+
   build-catos-platforms:
-    if: needs.pre-check.outputs.workflow_disabled != 'true'
+    if: |
+      needs.pre-check.outputs.workflow_disabled != 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       needs.changes.outputs.engine == 'true' ||
+       needs.changes.outputs.apple-scripts == 'true' ||
+       (matrix.bundle == 1 && needs.changes.outputs.apple-bundle1 == 'true') ||
+       (matrix.bundle == 2 && needs.changes.outputs.apple-bundle2 == 'true') ||
+       (matrix.bundle == 3 && needs.changes.outputs.apple-bundle3 == 'true'))
+    needs:
+      - pre-check
+      - changes
     runs-on: macos-26
-    needs: pre-check
     strategy:
       matrix:
         bundle: [1, 2, 3]
