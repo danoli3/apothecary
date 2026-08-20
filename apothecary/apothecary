@@ -1627,6 +1627,10 @@ function copyFormula() {
 
   cd $BUILD_DIR/$1
   copy $LIBS_DIR_REAL/$1
+  if [ "$TYPE" == "msys2" ]; then
+    promoteMsys2ArchPath "$LIBS_DIR_REAL/$1"
+    reindexMsys2GnuArchives "$LIBS_DIR_REAL/$1"
+  fi
   cd $APOTHECARY_DIR
 }
 
@@ -1670,6 +1674,136 @@ function cleanFormula() {
     clean
   fi
   cd $APOTHECARY_DIR
+}
+
+# clang64 llvm-ar writes a mixed GNU/MSVC symbol index that MinGW ld and lld
+# reject. Prefer binutils/gcc-ar. CPU folder is x86_64 (mingw64/ucrt64/clang64)
+# or aarch64 (clangarm64) so OF can prefer lib/msys2/x86_64.
+function msys2CpuArch() {
+  case "${ARCH:-}-${MSYSTEM:-}" in
+    *clangarm64*|*CLANGARM64*|aarch64*|arm64*) echo "aarch64" ;;
+    *) echo "x86_64" ;;
+  esac
+}
+
+function findGnuAr() {
+  local c path
+  for c in \
+      x86_64-w64-mingw32-gcc-ar \
+      x86_64-w64-mingw32-ar \
+      aarch64-w64-mingw32-gcc-ar \
+      aarch64-w64-mingw32-ar \
+      gcc-ar \
+      /usr/bin/ar \
+      ar
+  do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        continue
+      fi
+      echo "$path"
+      return 0
+    fi
+  done
+  return 1
+}
+
+function findGnuRanlib() {
+  local c path
+  for c in \
+      x86_64-w64-mingw32-gcc-ranlib \
+      x86_64-w64-mingw32-ranlib \
+      aarch64-w64-mingw32-gcc-ranlib \
+      aarch64-w64-mingw32-ranlib \
+      gcc-ranlib \
+      /usr/bin/ranlib \
+      ranlib
+  do
+    if command -v "$c" >/dev/null 2>&1; then
+      path=$(command -v "$c")
+      if "$path" --version 2>/dev/null | grep -qi llvm; then
+        continue
+      fi
+      echo "$path"
+      return 0
+    fi
+  done
+  return 1
+}
+
+function gnuReindexArchive() {
+  local archive="$1"
+  local ar_bin="$2"
+  local ranlib_bin="$3"
+  local tmpdir archive_abs objs f
+  [ -f "$archive" ] || return 0
+  case "$archive" in
+    *.dll.a) return 0 ;;
+  esac
+  archive_abs="$(cd "$(dirname "$archive")" && pwd)/$(basename "$archive")"
+  tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t apoar)
+  (
+    cd "$tmpdir" || exit 1
+    "$ar_bin" x "$archive_abs" >/dev/null 2>&1 || exit 1
+    objs=""
+    for f in *; do
+      case "$f" in
+        *.o|*.obj|*.O) objs="$objs $f" ;;
+      esac
+    done
+    if [ -z "$objs" ]; then
+      exit 0
+    fi
+    # shellcheck disable=SC2086
+    "$ar_bin" rcs "$archive_abs" $objs || exit 1
+    if [ -n "$ranlib_bin" ]; then
+      "$ranlib_bin" "$archive_abs" >/dev/null 2>&1 || true
+    fi
+  )
+  local status=$?
+  rm -rf "$tmpdir"
+  return $status
+}
+
+function reindexMsys2GnuArchives() {
+  local root="$1"
+  local ar_bin ranlib_bin archive
+  if ! ar_bin=$(findGnuAr); then
+    echoWarning " No GNU ar on PATH; skip MSYS2 static-lib reindex"
+    return 0
+  fi
+  ranlib_bin=$(findGnuRanlib || true)
+  echoInfo " Re-indexing MSYS2 static libraries with $(basename "$ar_bin")"
+  [ -d "$root/lib/msys2" ] || return 0
+  while IFS= read -r archive; do
+    [ -n "$archive" ] || continue
+    if gnuReindexArchive "$archive" "$ar_bin" "$ranlib_bin"; then
+      echoVerbose "  reindexed [$archive]"
+    else
+      echoWarning "  could not reindex [$archive]"
+    fi
+  done < <(find "$root/lib/msys2" -type f -name '*.a' ! -name '*.dll.a' -print 2>/dev/null)
+}
+
+function promoteMsys2ArchPath() {
+  local root="$1"
+  local cpu dest flavor src
+  cpu=$(msys2CpuArch)
+  dest="$root/lib/msys2/$cpu"
+  [ -d "$root/lib/msys2" ] || return 0
+  mkdir -p "$dest"
+  for src in "$root/lib/msys2"/*.a "$root/lib/msys2"/libsorder.make; do
+    [ -e "$src" ] || continue
+    cp -f "$src" "$dest/"
+  done
+  for flavor in clang64 mingw64 ucrt64 clangarm64 "${ARCH:-}"; do
+    [ -n "$flavor" ] || continue
+    [ "$flavor" = "$cpu" ] && continue
+    if [ -d "$root/lib/msys2/$flavor" ]; then
+      cp -a "$root/lib/msys2/$flavor/." "$dest/"
+    fi
+  done
 }
 
 # Combine several .a files into dest. Write to a temp first so dest can also
