@@ -1,0 +1,76 @@
+name: Restore named artifact
+description: Download one named artifact from a prior successful run of this workflow. PRs use the bleeding branch.
+
+inputs:
+  name:
+    description: Exact artifact name, e.g. libs-latest-vs-64-1
+    required: true
+  workflow-file:
+    description: Workflow file name, e.g. build-vs2022-x64.yml
+    required: true
+  path:
+    description: Directory to download into
+    required: false
+    default: out
+  pr-branch:
+    description: Branch to restore from on pull_request
+    required: false
+    default: bleeding
+
+runs:
+  using: composite
+  steps:
+    - name: Find prior run with this artifact
+      id: find
+      uses: actions/github-script@v9.0.0
+      with:
+        script: |
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const isPR = context.eventName === 'pull_request';
+          const branch = isPR
+            ? '${{ inputs.pr-branch }}'
+            : context.ref.replace(/^refs\/heads\//, '');
+          const workflowFile = '${{ inputs.workflow-file }}';
+          const artifactName = '${{ inputs.name }}';
+          core.info(`Looking for ${artifactName} on ${branch} (${workflowFile})`);
+          const runs = await github.rest.actions.listWorkflowRuns({
+            owner,
+            repo,
+            workflow_id: workflowFile,
+            branch,
+            status: 'success',
+            per_page: 10,
+          });
+          const run = (runs.data.workflow_runs || []).find((r) => r.id !== context.runId);
+          if (!run) {
+            core.info('No successful prior run found');
+            core.setOutput('run_id', '');
+            return;
+          }
+          core.info(`Using run ${run.id} ${run.html_url}`);
+          const arts = await github.rest.actions.listWorkflowRunArtifacts({
+            owner,
+            repo,
+            run_id: run.id,
+            per_page: 100,
+          });
+          const art = (arts.data.artifacts || []).find(
+            (a) => a.name === artifactName && !a.expired
+          );
+          if (!art) {
+            core.info(`Run ${run.id} has no artifact named ${artifactName}`);
+            core.setOutput('run_id', '');
+            return;
+          }
+          core.setOutput('run_id', String(run.id));
+
+    - name: Download named artifact
+      if: steps.find.outputs.run_id != ''
+      continue-on-error: true
+      uses: actions/download-artifact@v8.0.1
+      with:
+        name: ${{ inputs.name }}
+        path: ${{ inputs.path }}
+        github-token: ${{ github.token }}
+        run-id: ${{ steps.find.outputs.run_id }}
