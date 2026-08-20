@@ -13,10 +13,10 @@ FORMULA_TYPES=("osx" "vs" "ios" "watchos" "catos" "xros" "tvos" "android" "emscr
 FORMULA_DEPENDS=("zlib" "libpng")
 
 VER=3.19.13
-SHA256="001f66b90cb83cb9c5765efb7003b5bba1d635183ce0a96add6e09f4dc7ff65e"
+SHA256="499a4692b16aab3248e1474f6391f61690a37f8d1f50793d2c06177ef7c346e9"
 GIT_URL=https://github.com/danoli3/FreeImage
 GIT_TAG=$VER
-BUILD_ID=8
+BUILD_ID=9
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
