@@ -46,6 +46,35 @@ if [ -z "$FORMULAS" ]; then
     exit 0
 fi
 
+# MSYS2 bash treats backslashes as escapes, so the Windows 7-Zip path
+# "C:\Program Files\7-Zip\7z.exe" never runs. Find a real 7z.
+windows_zip() {
+    local ZIP_OUT="$1"
+    shift
+    local SEVENZ=""
+    if command -v 7z >/dev/null 2>&1; then
+        SEVENZ="$(command -v 7z)"
+    elif command -v 7z.exe >/dev/null 2>&1; then
+        SEVENZ="$(command -v 7z.exe)"
+    elif [ -x "/c/Program Files/7-Zip/7z.exe" ]; then
+        SEVENZ="/c/Program Files/7-Zip/7z.exe"
+    elif [ -x "/d/Program Files/7-Zip/7z.exe" ]; then
+        SEVENZ="/d/Program Files/7-Zip/7z.exe"
+    elif [ -x "C:/Program Files/7-Zip/7z.exe" ]; then
+        SEVENZ="C:/Program Files/7-Zip/7z.exe"
+    fi
+    if [ -z "$SEVENZ" ]; then
+        echo "Error: 7-Zip not found (need 7z on PATH or /c/Program Files/7-Zip/7z.exe)"
+        exit 1
+    fi
+    echo "Zipping with [$SEVENZ] -> $ZIP_OUT"
+    "$SEVENZ" a -tzip "$ZIP_OUT" "$@"
+    if [ ! -f "$ZIP_OUT" ]; then
+        echo "Error: zip not created: $ZIP_OUT"
+        exit 1
+    fi
+}
+
 
 CUR_BRANCH="master"
 EXIT_BEFORE=0
@@ -176,8 +205,7 @@ elif [ "$TARGET" == "msys2" ]; then
     if [ "${EXIT_BEFORE}" == "1" ]; then
         exit 0
     fi
-    "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
-    echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
+    windows_zip "$TARBALL" $LIBS
 elif [ "$TARGET" == "vs" ]; then
     if [ ! -z "${VS_VER+x}" ]; then
         if [ "${VS_VER}" == "16" ]; then
@@ -197,8 +225,7 @@ elif [ "$TARGET" == "vs" ]; then
     if [ "${EXIT_BEFORE}" == "1" ]; then
         exit 0
     fi
-    "C:\Program Files\7-Zip\7z.exe" a $TARBALL $LIBS
-    echo "C:\Program Files\7-Zip\7z.exe a $TARBALL $LIBS"
+    windows_zip "$TARBALL" $LIBS
 elif [ "$TARGET" == "emscripten" ]; then
     export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
     TARBALL=openFrameworksLibs_${CUR_BRANCH}_${TARGET}_${ARCH}.tar.bz2
