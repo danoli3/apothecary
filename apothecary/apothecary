@@ -881,11 +881,12 @@ if [ "$TYPE" = "msys2" ]; then
       fi
       ;;
   esac
-  # Native on windows-11-arm; cross only when the host is x86_64.
+  # CLANGARM64 already puts aarch64 clang on PATH. uname -m is still x86_64
+  # when setup-msys2 installs the x64 MSYS2 runtime, so do not treat that
+  # as a cross build (formulas then look for a missing msys2x86_64 toolchain).
   if [ "${ARCH:-}" == "clangarm64" ]; then
-    HOST_MACHINE=$(uname -m 2>/dev/null || true)
-    case "$HOST_MACHINE" in
-      aarch64|arm64|ARM64) export CROSSCOMPILING=0 ;;
+    case "${MSYSTEM:-}" in
+      CLANGARM64|clangarm64) export CROSSCOMPILING=0 ;;
       *) export CROSSCOMPILING=1 ;;
     esac
   fi
