@@ -87,6 +87,9 @@ Unknown commands may **passthrough** to the underlying `apothecary` binary.
 | repo root | Apothecary project root |
 | `apothecary/formulas/` | Library formulas |
 | `apothecary/apothecary` | Engine binary/script |
+| `scripts/calculate_formulas.sh` | Per-target / per-bundle formula lists |
+| `.github/path-filters.yml` | CI path groups (keep in sync with calculate_formulas) |
+| `.github/workflows/detect-path-changes.yml` | Reusable dorny/paths-filter job |
 | `out/` | Default `OUTPUT_FOLDER` (built libs) |
 | `build/` | Default `BUILD_DIR` (build cache) |
 
@@ -172,6 +175,59 @@ From `status` / help footers, prefer lines like:
 - Assuming `out/` is openFrameworks `libs/` (only if `OUTPUT_FOLDER` was set)  
 - Treating prebuilt **download** via OF (`of update libs`) as the same as **compiling** here  
 - Parsing gum / braille spinner frames  
+- Changing `scripts/calculate_formulas.sh` without updating `.github/path-filters.yml` and the matching workflow `on.paths`  
+- Putting `nghttp2` / `nghttp3` / `ngtcp2` / `libssh2` into published artifacts or xcframeworks (they are curl build-only)  
+- Editing openFrameworks from this repo unless the user asked  
+
+---
+
+## CI
+
+Stay in this repo. Commit titles are plain sentences (no `fix(x):` prefixes).
+
+### Path filters
+
+Two layers. Formula groups must match `scripts/calculate_formulas.sh`.
+
+1. **Workflow `on.paths`** — GitHub does not brace-expand; list both `formulas/name.sh` and `formulas/name/**`. Linux must not start for an openssl-only change.
+2. **Job-level bundles** — each build workflow calls `detect-path-changes.yml`. Skip a matrix bundle unless engine, that platform’s scripts, or that bundle’s formulas changed. `workflow_dispatch` always builds.
+
+`.github/workflows/*` is gitignored except a whitelist. New workflow files need `!/.github/workflows/<file>.yml` in `.gitignore`.
+
+`detect-path-changes.yml` is a `workflow_call`. Callers see `github.event_name == 'workflow_call'` inside it, so:
+
+- Callers OR `github.event_name == 'workflow_dispatch'` in the job `if`.
+- The detect job diffs with git (`token: ''`) against `github.event.pull_request.base.sha` or `github.event.before`.
+
+Engine paths (apothecary, toolchains, `calculate_formulas.sh`, `scripts/build.sh` / `package.sh`, `.github/workflows/**`, `.github/path-filters.yml`) rebuild **every bundle of every workflow that starts**.
+
+| Group | Rebuilds |
+|-------|----------|
+| `apple-bundle1` | pixman zlib utf8 libpng brotli pugixml freetype libxml2 svgtiny FreeImage assimp glew videoInput rtAudio tess2 uriparser cairo |
+| `apple-bundle2` | glm json zlib glfw opencv portaudio libusb (iOS subset is glm json opencv) |
+| `apple-bundle3` | fmt openssl nghttp2 nghttp3 ngtcp2 libssh2 curl poco dawn |
+| `vs-bundle1` / MSYS2 1 | pixman zlib libpng brotli freetype libxml2 svgtiny assimp FreeImage glew glfw glm json libusb kiss portaudio pugixml utf8 videoInput rtAudio tess2 uriparser opencv cairo |
+| `vs-bundle2` / MSYS2 2 | fmt openssl nghttp2 nghttp3 ngtcp2 libssh2 curl poco dawn |
+| `linux-formulas` | glm json utf8 brotli zlib libpng glew glfw freetype libxml2 svgtiny tess2 kiss FreeImage fmt uriparser |
+| `android-formulas` | linux-like core plus pugixml assimp opencv openssl nghttp\* libssh2 curl |
+| `emscripten-formulas` | default emscripten brew list (includes svgtiny) |
+
+Apple platforms: bundles 1/2/3. VS: bundles 1/2. MSYS2 / Android / Emscripten / Linux: no bundle matrix (whole job skips or runs).
+
+When all matrix bundles skip, downstream jobs skip too (iOS `wait-for-workflows` / `build-xcframework`, macOS smoke test). That is intended.
+
+### Artifacts
+
+- Retention: 90 days. Missing upload must fail (`if-no-files-found: error`) on VS.
+- VS restores one named artifact via `.github/actions/restore-named-artifact` (exact name like `libs-latest-vs-64-1`). PRs look up the last successful **bleeding** run of the same workflow file; missing artifact is a skip.
+- MSYS2: `cache: true`, `update: false` on pull_request. `clangarm64` runs on `windows-11-arm` with `release: true`. `MSYSTEM=CLANGARM64` is native — do not set `CROSSCOMPILING=1` or look for `msys2x86_64.toolchain.cmake`.
+- Package with `ALWAYS_BUILD` so PRs still produce the zip.
+
+### Formula lists and depends
+
+- `calculate_formulas.sh` is the brew order. Private curl HTTP/3 deps (`nghttp2` `nghttp3` `ngtcp2` `libssh2`) must appear **before** `curl` and stay in `FORMULAS_INTERNAL` (pickles yes, tarball/xcframework no).
+- A parent formula must not `load()` if a `FORMULA_DEPENDS` dir is missing (`formulaDependsReady` / `skipCachedFormula`).
+- Changing a bundle list here requires the same names in `.github/path-filters.yml` and each workflow’s `on.paths`.
 
 ---
 
