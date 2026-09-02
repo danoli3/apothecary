@@ -139,6 +139,9 @@ function build() {
     if [ "$TYPE" == "linux" ]; then
         cmake -S . -B "build_${TYPE}_${PLATFORM}" \
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/linux${PLATFORM}.toolchain.cmake" \
+            -DCMAKE_C_STANDARD="${C_STANDARD}" \
+            -DCMAKE_CXX_STANDARD="${CPP_STANDARD}" \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="build_${TYPE}_${PLATFORM}/Release" \
             -DCMAKE_INSTALL_LIBDIR=lib \
