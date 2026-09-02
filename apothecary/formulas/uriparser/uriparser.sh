@@ -109,7 +109,7 @@ function build() {
     elif [ "$TYPE" == "linux" ]; then
         cmake -S . -B "build_${TYPE}_${PLATFORM}" ${DEFS} \
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/linux${PLATFORM}.toolchain.cmake" \
-            -DCMAKE_C_STANDARD=99 \
+            -DCMAKE_C_STANDARD=17 \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="build_${TYPE}_${PLATFORM}/Release" \
             -DURIPARSER_ENABLE_INSTALL=ON \
