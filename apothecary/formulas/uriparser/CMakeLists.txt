@@ -42,7 +42,9 @@ project(uriparser
     LANGUAGES
         C
 )
-set(CMAKE_C_STANDARD 90)  # same as C89, value "89" not supported by CMake
+if(NOT DEFINED CMAKE_C_STANDARD)
+	set(CMAKE_C_STANDARD 90)  # same as C89, value "89" not supported by CMake
+endif()
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)  # i.e. -std=c90 rather than default -std=gnu90
 
