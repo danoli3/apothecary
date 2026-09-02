@@ -43,9 +43,9 @@ function download() {
 function prepare() {
     cp -f $FORMULA_DIR/CMakeLists.txt .
 
-    if [ "$TYPE" == "vs" ]; then
+    if [ "$TYPE" == "vs" ] || [ "$TYPE" == "linux" ]; then
         cp -f $FORMULA_DIR/config.h.in ./config.h.in
-    else
+    elif [ "$TYPE" == "osx" ]; then
         cp -f ./Xcode/config.h ./config.h
     fi
 }
