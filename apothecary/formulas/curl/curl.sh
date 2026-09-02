@@ -490,6 +490,9 @@ function build() {
         rm -rf "$BUILD_DIR"
         cmake -S . -B "$BUILD_DIR" \
             -DCMAKE_TOOLCHAIN_FILE="$APOTHECARY_DIR/toolchains/linux${PLATFORM}.toolchain.cmake" \
+            -DCMAKE_C_STANDARD="${C_STANDARD}" \
+            -DCMAKE_CXX_STANDARD="${CPP_STANDARD}" \
+            -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$BUILD_DIR/Release" \
             -DCMAKE_INSTALL_INCLUDEDIR=include \
@@ -536,6 +539,8 @@ function build() {
             -DLIBSSH2_LIBRARY="$LIBSSH2_LIBRARY" \
             -DCURL_USE_LIBPSL=OFF \
             -DUSE_LIBIDN2=OFF \
+            -DCURL_DISABLE_LDAP=ON \
+            -DCURL_DISABLE_LDAPS=ON \
             -DCURL_ZSTD=OFF \
             -DENABLE_ARES=OFF \
             -DENABLE_THREADED_RESOLVER=ON \
