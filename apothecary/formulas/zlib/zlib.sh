@@ -216,7 +216,6 @@ function build() {
             -DCMAKE_CXX_STANDARD=${CPP_STANDARD} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            ${MT_TYPE_DEFINES} \
             -DBUILD_SHARED_LIBS=OFF"
         cmake .. ${DEFINES} \
             -DCMAKE_CXX_FLAGS="-DUSE_PTHREADS=1 -Iinclude ${FLAG_RELEASE}" \
@@ -225,9 +224,6 @@ function build() {
             -DCMAKE_INSTALL_LIBDIR="lib" \
             -DZLIB_BUILD_EXAMPLES=OFF \
             -DSKIP_EXAMPLE=ON \
-            -DCMAKE_SYSTEM_NAME=$TYPE \
-            -DCMAKE_INSTALL_PREFIX=Release \
-            -DCMAKE_SYSTEM_PROCESSOR=$ARCH \
             -DCMAKE_INSTALL_PREFIX=Release \
             -DCMAKE_INCLUDE_OUTPUT_DIRECTORY=include \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
