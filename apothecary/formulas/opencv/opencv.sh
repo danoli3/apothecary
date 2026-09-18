@@ -12,7 +12,7 @@ FORMULA_DEPENDS=("zlib" "libpng" )
 # define the version
 VER=4.14.0
 SHA256="ee8fb9b30eb60850431b4656447080e3737b56e45719c92b67f245950609f86e"
-BUILD_ID=6
+BUILD_ID=7
 DEFINES=""
 FRAMEWORKS=""
 FILE_VERSION=4140
@@ -573,11 +573,10 @@ function build() {
                 -DWITH_ADE=OFF \
                 ${ZLIB_DEFS}"
 
-        if [[ "$ARCH" == "clangarm64" ]]; then
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=OFF -DWITH_NEON=OFF -DENABLE_NEON=OFF -DPNG_ARM_NEON=off"
-        else
-            EXTRA_DEFS="-DCV_ENABLE_INTRINSICS=ON -DCPU_BASELINE=SSE2 -DPNG_ARM_NEON=off"
-        fi
+        # CMake writes SIMD dispatch headers with MSYS paths like
+        # #include "/d/a/.../arithm.simd.hpp". Clang/GCC as Win32 compilers
+        # do not resolve that, so skip CPU dispatch on MinGW.
+        EXTRA_DEFS="-DCV_DISABLE_OPTIMIZATION=ON -DCV_ENABLE_INTRINSICS=OFF -DCPU_DISPATCH= -DCPU_BASELINE= -DWITH_NEON=OFF -DENABLE_NEON=OFF -DPNG_ARM_NEON=off"
 
         cmake .. ${DEFINES} \
             ${EXTRA_DEFS} \
