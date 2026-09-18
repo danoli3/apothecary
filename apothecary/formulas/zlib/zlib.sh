@@ -353,9 +353,21 @@ function copy() {
     elif [ "$TYPE" == "msys2" ]; then
         mkdir -p $1/include
         mkdir -p $1/lib/$TYPE/$PLATFORM
-        cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/ >/dev/null 2>&1
-        cp -v "build_${TYPE}_${ARCH}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a >/dev/null 2>&1
+        cp -Rv "build_${TYPE}_${ARCH}/Release/include/"* $1/include/
+        # MinGW/CMake WIN32 installs zlibstatic as libzlibstatic.a, not libz.a.
+        if [ -f "build_${TYPE}_${ARCH}/Release/lib/libz.a" ]; then
+            cp -v "build_${TYPE}_${ARCH}/Release/lib/libz.a" $1/lib/$TYPE/$PLATFORM/zlib.a
+        elif [ -f "build_${TYPE}_${ARCH}/Release/lib/libzlibstatic.a" ]; then
+            cp -v "build_${TYPE}_${ARCH}/Release/lib/libzlibstatic.a" $1/lib/$TYPE/$PLATFORM/zlib.a
+        else
+            echoError "zlib static library not found in build_${TYPE}_${ARCH}/Release/lib"
+            ls -la "build_${TYPE}_${ARCH}/Release/lib" || true
+            exit 1
+        fi
         secure "$1/lib/$TYPE/$PLATFORM/zlib.a" "zlib.a" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
+        if [ -f "build_${TYPE}_${ARCH}/Release/share/pkgconfig/zlib.pc" ]; then
+            cp -v "build_${TYPE}_${ARCH}/Release/share/pkgconfig/zlib.pc" $1/lib/$TYPE/$PLATFORM/zlib.pc
+        fi
     else
         make install
     fi
