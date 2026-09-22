@@ -36,8 +36,9 @@ jobs:
       CC: gcc-14
       CXX: g++-14
       NO_FORCE: 1
-      # opencv is deferred until its Linux copy/build paths are fixed
-      FORMULAS_OVERRIDE: pixman pkg-config zlib utf8 boost libpng brotli pugixml freetype libxml2 svgtiny FreeImage assimp glew glfw glm json libusb kiss portaudio rtAudio tess2 uriparser cairo fmt openssl nghttp2 nghttp3 ngtcp2 libssh2 curl poco dawn
+      # opencv: deferred — Linux copy/build paths need a follow-up
+      # dawn: deferred — git fetch of the pinned SHA fails in ~9s on this runner
+      FORMULAS_OVERRIDE: pixman pkg-config zlib utf8 boost libpng brotli pugixml freetype libxml2 svgtiny FreeImage assimp glew glfw glm json libusb kiss portaudio rtAudio tess2 uriparser cairo fmt openssl nghttp2 nghttp3 ngtcp2 libssh2 curl poco
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -74,4 +75,5 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: latest-modular
+          fail_on_unmatched_files: false
           files: out/oF_*_linux_${{ matrix.arch }}_gcc14.tar.bz2

@@ -20,7 +20,7 @@ FORMULA_DEPENDS=("zlib" "libpng" "pixman" "freetype")
 FORMULA_DEPENDS_MANUAL=1
 
 VER=1.18.4
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 
 SHA1="0a54ce94df6e9db9b9d55ada2ef58b6c47861fde"
