@@ -16,6 +16,7 @@
 !/.github/workflows/build-opencv-cuda-modular.yml
 !/.github/workflows/test-openframeworks-libraries.yml
 !/.github/workflows/validate-formula-sources.yml
+!/.github/workflows/build-modular-optional.yml
 !/apothecary/**/*
 !/scripts/**/*
 /apothecary/build
