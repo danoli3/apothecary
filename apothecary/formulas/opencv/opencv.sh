@@ -755,7 +755,10 @@ function build() {
 
         LIBPNG_ROOT="$LIBS_ROOT/libpng/"
         LIBPNG_INCLUDE_DIR="$LIBS_ROOT/libpng/include"
-        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
+        LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng16.a"
+        if [ ! -f "$LIBPNG_LIBRARY" ]; then
+            LIBPNG_LIBRARY="$LIBS_ROOT/libpng/lib/$TYPE/$PLATFORM/libpng.a"
+        fi
 
         CORE_DEFS="
         -DCMAKE_BUILD_TYPE=Release \
@@ -776,6 +779,9 @@ function build() {
         -DBUILD_DOCS=OFF \
         -DENABLE_BUILD_HARDENING=ON \
         -DBUILD_EXAMPLES=OFF \
+        -DBUILD_opencv_apps=OFF \
+        -DBUILD_opencv_python=OFF \
+        -DBUILD_opencv_java=OFF \
         -DBUILD_ANDROID_EXAMPLES=OFF \
         -DINSTALL_ANDROID_EXAMPLES=OFF \
         -DINSTALL_PYTHON_EXAMPLES=OFF \
