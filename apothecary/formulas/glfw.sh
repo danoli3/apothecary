@@ -14,7 +14,7 @@ VER=3.5.1
 SHA256="5234f4f29473e9a06bc7847d8371858dd135d38466eeeaa652fdc9f8f9ff0c20"
 SHA256_ZIP="e9a80355e8a0c59b15ae8576c2c3aeae792c2b1082ec426dc93bde70d5017fda"
 GIT_BRANCH=$VER
-BUILD_ID=2
+BUILD_ID=3
 DEFINES=""
 
 # download the source code and unpack it into LIB_NAME
@@ -236,7 +236,7 @@ function copy() {
         secure "$1/lib/$TYPE/$PLATFORM/libglfw3.a" "glfw3.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     elif [ "$TYPE" == "linux" ]; then
         mkdir -p $1/lib/$TYPE/$PLATFORM/
-        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/" $1/include
+        cp -Rv "build_${TYPE}_${PLATFORM}/Release/include/." "$1/include/"
         cp -v "build_${TYPE}_${PLATFORM}/Release/lib/libglfw3.a" $1/lib/$TYPE/$PLATFORM/libglfw3.a
         secure "$1/lib/$TYPE/$PLATFORM/libglfw3.a" "glfw3.pkl" "$VERSION" "$DEFINES" "$BUILD_ID" "$FORMULA_DEPENDS"
     fi
